@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Texas Counties — Rural-Urban &amp; Socioeconomic Status</title>
+<style>
+  :root{
+    --bg:#eef1f6; --panel:#ffffff; --ink:#161b26; --muted:#697084; --line:#e3e7ee; --accent:#0f5fa6;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+  #app{display:flex;flex-direction:column;height:100vh}
+  header{padding:13px 20px;border-bottom:1px solid var(--line);background:var(--panel);box-shadow:0 1px 3px rgba(20,27,38,.04)}
+  .htop{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  h1{font-size:19px;margin:0;font-weight:700;letter-spacing:-.01em}
+  .sub{font-size:12px;color:var(--muted)}
+  .modes{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;align-items:center}
+  .modes .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-right:2px}
+  .modes button{border:1px solid var(--line);background:#fff;color:var(--ink);padding:7px 13px;border-radius:999px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .12s}
+  .modes button .dot{width:11px;height:11px;border-radius:3px}
+  .modes button:hover{border-color:#b9c0cf;transform:translateY(-1px)}
+  .modes button.active{color:#fff;border-color:transparent;font-weight:600;box-shadow:0 2px 6px rgba(20,27,38,.18)}
+  main{flex:1;display:flex;min-height:0}
+  #mapwrap{flex:1;position:relative;min-width:0;background:radial-gradient(circle at 50% 30%,#f4f7fb,#e6eaf2)}
+  svg#map{width:100%;height:100%;display:block;cursor:grab}
+  svg#map:active{cursor:grabbing}
+  .county{stroke:#ffffff;stroke-width:.5px;stroke-linejoin:round;transition:fill-opacity .12s,stroke-width .12s}
+  .county:hover{stroke:#0d1320;stroke-width:1.3px}
+  .county.sel{stroke:#0d1320;stroke-width:2px}
+  .cityDot{fill:#11151d;stroke:#fff;stroke-width:1.2px;pointer-events:none}
+  .cityLbl{font-size:12px;font-weight:600;fill:#11151d;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round;pointer-events:none}
+  aside{width:370px;border-left:1px solid var(--line);background:var(--panel);overflow-y:auto;padding:18px}
+  .search{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:13px;margin-bottom:15px}
+  .legend h3,.detail h3{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 9px}
+  .legend{margin-bottom:16px;padding-bottom:15px;border-bottom:1px solid var(--line)}
+  .lrow{display:flex;align-items:center;gap:9px;font-size:12.5px;margin:5px 0}
+  .lsw{width:26px;height:14px;border-radius:3px;flex:none;border:1px solid rgba(0,0,0,.08)}
+  .lrow .cnt{margin-left:auto;color:var(--muted);font-size:11px}
+  .legdesc{font-size:11.5px;color:var(--muted);margin-top:9px;line-height:1.45}
+  .detail .cty{font-size:20px;font-weight:700;margin:2px 0 1px;letter-spacing:-.01em}
+  .detail .tot{font-size:12px;color:var(--muted);margin-bottom:13px}
+  .pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;color:#fff;margin-bottom:12px}
+  .metric{margin:11px 0}
+  .metric .top{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px}
+  .metric .top .nm{font-weight:600}
+  .metric .top .vals{color:var(--muted)}
+  .metric .top .vals b{color:var(--ink)}
+  .track{height:14px;background:#eef0f4;border-radius:5px;overflow:hidden}
+  .track > i{display:block;height:100%;border-radius:5px}
+  .rank{font-size:11px;color:var(--muted);margin-top:3px}
+  .ses-big{display:flex;align-items:baseline;gap:9px;margin:6px 0 2px}
+  .ses-big .v{font-size:26px;font-weight:800;letter-spacing:-.02em}
+  .ses-big .l{font-size:12px;color:var(--muted)}
+  .hint{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:6px}
+  footer{padding:7px 20px;border-top:1px solid var(--line);background:var(--panel);font-size:11px;color:var(--muted)}
+  .zc{position:absolute;bottom:12px;right:12px;display:flex;flex-direction:column;gap:5px}
+  .zc button{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:17px;cursor:pointer;color:var(--ink)}
+  .zc button:hover{background:#f1f5f9}
+  #tip{position:absolute;pointer-events:none;background:rgba(13,19,32,.92);color:#fff;font-size:12px;padding:6px 9px;border-radius:7px;opacity:0;transition:opacity .1s;z-index:9;white-space:nowrap}
+  #tip b{font-weight:700}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="htop">
+      <h1>Texas Counties — Rural-Urban Class &amp; Socioeconomic Status</h1>
+      <span class="sub">254 counties · pick a layer below · click any county for its full profile</span>
+    </div>
+    <div class="modes" id="modes"><span class="lbl">Layer</span></div>
+  </header>
+  <main>
+    <div id="mapwrap">
+      <svg id="map"></svg>
+      <div class="zc"><button id="zin">+</button><button id="zout">−</button><button id="zrst" style="font-size:12px">⟲</button></div>
+      <div id="tip"></div>
+    </div>
+    <aside>
+      <input class="search" id="search" list="ctylist" placeholder="Search a county…">
+      <datalist id="ctylist"></datalist>
+      <div class="legend" id="legend"></div>
+      <div class="detail" id="detail"></div>
+    </aside>
+  </main>
+  <footer id="foot"></footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson@3"></script>
+<script>
+const CDATA = {"001":{"n":"Anderson County","pop":57825,"inc":43355,"pov":19.8,"edu":11.7,"ru":3,"sesz":-0.746,"sesq":0},"003":{"n":"Andrews County","pop":18518,"inc":74233,"pov":10.7,"edu":10.4,"ru":4,"sesz":0.608,"sesq":4},"005":{"n":"Angelina County","pop":86791,"inc":47714,"pov":17.9,"edu":16.3,"ru":3,"sesz":-0.304,"sesq":1},"007":{"n":"Aransas County","pop":24449,"inc":44865,"pov":19.9,"edu":21.7,"ru":2,"sesz":-0.268,"sesq":2},"009":{"n":"Archer County","pop":8734,"inc":64476,"pov":10.6,"edu":23.4,"ru":2,"sesz":0.926,"sesq":4},"011":{"n":"Armstrong County","pop":1883,"inc":66563,"pov":10.7,"edu":23.2,"ru":2,"sesz":0.967,"sesq":4},"013":{"n":"Atascosa County","pop":50058,"inc":55265,"pov":15.7,"edu":13.3,"ru":1,"sesz":-0.093,"sesq":2},"015":{"n":"Austin County","pop":30712,"inc":65365,"pov":10.2,"edu":23.5,"ru":1,"sesz":0.98,"sesq":4},"017":{"n":"Bailey County","pop":7044,"inc":46485,"pov":15.8,"edu":17.7,"ru":4,"sesz":-0.142,"sesq":2},"019":{"n":"Bandera County","pop":21589,"inc":53683,"pov":13.4,"edu":23.8,"ru":1,"sesz":0.474,"sesq":3},"021":{"n":"Bastrop County","pop":102370,"inc":62941,"pov":12.6,"edu":20.4,"ru":1,"sesz":0.625,"sesq":4},"023":{"n":"Baylor County","pop":3464,"inc":40750,"pov":16.1,"edu":19.7,"ru":5,"sesz":-0.228,"sesq":2},"025":{"n":"Bee County","pop":31000,"inc":42032,"pov":26.7,"edu":10.2,"ru":3,"sesz":-1.283,"sesq":0},"027":{"n":"Bell County","pop":379811,"inc":54184,"pov":13.0,"edu":24.5,"ru":2,"sesz":0.544,"sesq":3},"029":{"n":"Bexar County","pop":2037344,"inc":55456,"pov":17.2,"edu":27.6,"ru":1,"sesz":0.451,"sesq":3},"031":{"n":"Blanco County","pop":12008,"inc":63071,"pov":10.1,"edu":27.1,"ru":4,"sesz":1.083,"sesq":4},"033":{"n":"Borden County","pop":723,"inc":81985,"pov":10.0,"edu":35.0,"ru":5,"sesz":1.952,"sesq":4},"035":{"n":"Bosque County","pop":18546,"inc":50882,"pov":14.9,"edu":18.5,"ru":4,"sesz":0.069,"sesq":2},"037":{"n":"Bowie County","pop":92321,"inc":47505,"pov":19.1,"edu":19.9,"ru":2,"sesz":-0.226,"sesq":2},"039":{"n":"Brazoria County","pop":381650,"inc":79270,"pov":10.1,"edu":29.7,"ru":1,"sesz":1.637,"sesq":4},"041":{"n":"Brazos County","pop":237980,"inc":46839,"pov":23.2,"edu":40.8,"ru":2,"sesz":0.424,"sesq":3},"043":{"n":"Brewster County","pop":9464,"inc":43894,"pov":16.0,"edu":39.4,"ru":4,"sesz":0.736,"sesq":4},"045":{"n":"Briscoe County","pop":1223,"inc":42647,"pov":16.2,"edu":22.7,"ru":5,"sesz":-0.05,"sesq":2},"047":{"n":"Brooks County","pop":6987,"inc":27378,"pov":31.0,"edu":17.6,"ru":5,"sesz":-1.624,"sesq":0},"049":{"n":"Brown County","pop":38294,"inc":45457,"pov":13.2,"edu":19.3,"ru":3,"sesz":0.065,"sesq":2},"051":{"n":"Burleson County","pop":18327,"inc":56235,"pov":14.8,"edu":17.1,"ru":2,"sesz":0.158,"sesq":3},"053":{"n":"Burnet County","pop":51064,"inc":59238,"pov":11.0,"edu":25.1,"ru":3,"sesz":0.834,"sesq":4},"055":{"n":"Caldwell County","pop":47184,"inc":52278,"pov":14.1,"edu":14.8,"ru":1,"sesz":-0.007,"sesq":2},"057":{"n":"Calhoun County","pop":19921,"inc":55469,"pov":14.2,"edu":15.0,"ru":4,"sesz":0.082,"sesq":3},"059":{"n":"Callahan County","pop":14017,"inc":44602,"pov":12.0,"edu":19.1,"ru":2,"sesz":0.108,"sesq":3},"061":{"n":"Cameron County","pop":423192,"inc":37132,"pov":27.9,"edu":17.3,"ru":2,"sesz":-1.177,"sesq":0},"063":{"n":"Camp County","pop":12652,"inc":42604,"pov":18.8,"edu":18.6,"ru":4,"sesz":-0.397,"sesq":1},"065":{"n":"Carson County","pop":5802,"inc":70087,"pov":8.9,"edu":30.4,"ru":2,"sesz":1.495,"sesq":4},"067":{"n":"Cass County","pop":28582,"inc":45345,"pov":20.4,"edu":16.4,"ru":3,"sesz":-0.521,"sesq":1},"069":{"n":"Castro County","pop":7328,"inc":45000,"pov":17.5,"edu":14.8,"ru":4,"sesz":-0.419,"sesq":1},"071":{"n":"Chambers County","pop":49178,"inc":76850,"pov":8.5,"edu":21.5,"ru":1,"sesz":1.309,"sesq":4},"073":{"n":"Cherokee County","pop":51143,"inc":46044,"pov":17.4,"edu":16.9,"ru":3,"sesz":-0.291,"sesq":1},"075":{"n":"Childress County","pop":6772,"inc":40794,"pov":21.2,"edu":17.3,"ru":5,"sesz":-0.655,"sesq":0},"077":{"n":"Clay County","pop":10402,"inc":51191,"pov":10.9,"edu":18.6,"ru":2,"sesz":0.334,"sesq":3},"079":{"n":"Cochran County","pop":2520,"inc":42798,"pov":21.9,"edu":8.2,"ru":5,"sesz":-1.048,"sesq":0},"081":{"n":"Coke County","pop":3315,"inc":45551,"pov":14.1,"edu":17.1,"ru":5,"sesz":-0.087,"sesq":2},"083":{"n":"Coleman County","pop":7765,"inc":43981,"pov":19.3,"edu":15.6,"ru":4,"sesz":-0.524,"sesq":1},"085":{"n":"Collin County","pop":1116601,"inc":94192,"pov":6.4,"edu":51.7,"ru":1,"sesz":3.25,"sesq":4},"087":{"n":"Collingsworth County","pop":2733,"inc":42750,"pov":17.3,"edu":18.4,"ru":5,"sesz":-0.307,"sesq":1},"089":{"n":"Colorado County","pop":20736,"inc":49504,"pov":13.7,"edu":18.6,"ru":3,"sesz":0.112,"sesq":3},"091":{"n":"Comal County","pop":174552,"inc":75356,"pov":7.1,"edu":35.3,"ru":1,"sesz":1.969,"sesq":4},"093":{"n":"Comanche County","pop":13786,"inc":47893,"pov":16.4,"edu":19.8,"ru":4,"sesz":-0.049,"sesq":2},"095":{"n":"Concho County","pop":3301,"inc":43355,"pov":26.6,"edu":11.9,"ru":5,"sesz":-1.166,"sesq":0},"097":{"n":"Cooke County","pop":42473,"inc":57646,"pov":14.8,"edu":20.5,"ru":3,"sesz":0.347,"sesq":3},"099":{"n":"Coryell County","pop":83772,"inc":51440,"pov":15.0,"edu":15.7,"ru":2,"sesz":-0.046,"sesq":2},"101":{"n":"Cottle County","pop":1302,"inc":34375,"pov":21.2,"edu":15.3,"ru":5,"sesz":-0.918,"sesq":0},"103":{"n":"Crane County","pop":4623,"inc":70398,"pov":10.1,"edu":12.4,"ru":5,"sesz":0.63,"sesq":4},"105":{"n":"Crockett County","pop":2881,"inc":51152,"pov":15.3,"edu":14.1,"ru":5,"sesz":-0.144,"sesq":2},"107":{"n":"Crosby County","pop":5072,"inc":37899,"pov":23.7,"edu":12.8,"ru":2,"sesz":-1.091,"sesq":0},"109":{"n":"Culberson County","pop":2181,"inc":33417,"pov":20.3,"edu":9.0,"ru":5,"sesz":-1.166,"sesq":0},"111":{"n":"Dallam County","pop":7180,"inc":51250,"pov":12.1,"edu":13.6,"ru":4,"sesz":0.038,"sesq":2},"113":{"n":"Dallas County","pop":2603816,"inc":56854,"pov":14.2,"edu":30.7,"ru":1,"sesz":0.816,"sesq":4},"115":{"n":"Dawson County","pop":12311,"inc":44657,"pov":22.9,"edu":12.5,"ru":4,"sesz":-0.871,"sesq":0},"117":{"n":"Deaf Smith County","pop":18487,"inc":51841,"pov":17.5,"edu":12.2,"ru":4,"sesz":-0.348,"sesq":1},"119":{"n":"Delta County","pop":5345,"inc":46138,"pov":17.2,"edu":21.3,"ru":5,"sesz":-0.081,"sesq":2},"121":{"n":"Denton County","pop":945644,"inc":83376,"pov":7.3,"edu":44.5,"ru":1,"sesz":2.581,"sesq":4},"123":{"n":"DeWitt County","pop":19853,"inc":53779,"pov":18.4,"edu":12.8,"ru":4,"sesz":-0.326,"sesq":1},"125":{"n":"Dickens County","pop":1641,"inc":41618,"pov":20.3,"edu":16.7,"ru":5,"sesz":-0.603,"sesq":1},"127":{"n":"Dimmit County","pop":8507,"inc":27832,"pov":24.6,"edu":14.1,"ru":4,"sesz":-1.363,"sesq":0},"129":{"n":"Donley County","pop":3276,"inc":43224,"pov":18.6,"edu":19.8,"ru":5,"sesz":-0.314,"sesq":1},"131":{"n":"Duval County","pop":9824,"inc":37382,"pov":25.5,"edu":9.3,"ru":4,"sesz":-1.374,"sesq":0},"133":{"n":"Eastland County","pop":17846,"inc":35325,"pov":18.7,"edu":13.3,"ru":4,"sesz":-0.823,"sesq":0},"135":{"n":"Ector County","pop":163206,"inc":60676,"pov":12.9,"edu":15.6,"ru":2,"sesz":0.332,"sesq":3},"137":{"n":"Edwards County","pop":1392,"inc":40313,"pov":22.1,"edu":20.8,"ru":5,"sesz":-0.57,"sesq":1},"139":{"n":"Ellis County","pop":203927,"inc":72213,"pov":8.8,"edu":23.1,"ru":1,"sesz":1.236,"sesq":4},"141":{"n":"El Paso County","pop":866275,"inc":44597,"pov":20.5,"edu":22.8,"ru":2,"sesz":-0.264,"sesq":2},"143":{"n":"Erath County","pop":43244,"inc":48819,"pov":18.1,"edu":29.7,"ru":3,"sesz":0.307,"sesq":3},"145":{"n":"Falls County","pop":17063,"inc":38032,"pov":21.7,"edu":12.9,"ru":2,"sesz":-0.957,"sesq":0},"147":{"n":"Fannin County","pop":36525,"inc":50761,"pov":13.8,"edu":16.7,"ru":3,"sesz":0.055,"sesq":2},"149":{"n":"Fayette County","pop":24783,"inc":56297,"pov":13.3,"edu":18.1,"ru":3,"sesz":0.299,"sesq":3},"151":{"n":"Fisher County","pop":3661,"inc":46827,"pov":15.5,"edu":18.2,"ru":5,"sesz":-0.092,"sesq":2},"153":{"n":"Floyd County","pop":5294,"inc":48555,"pov":21.0,"edu":15.9,"ru":5,"sesz":-0.494,"sesq":1},"155":{"n":"Foard County","pop":1079,"inc":46354,"pov":18.0,"edu":16.2,"ru":5,"sesz":-0.351,"sesq":1},"157":{"n":"Fort Bend County","pop":859721,"inc":95561,"pov":7.9,"edu":46.1,"ru":1,"sesz":2.944,"sesq":4},"159":{"n":"Franklin County","pop":10522,"inc":52944,"pov":15.2,"edu":23.6,"ru":4,"sesz":0.332,"sesq":3},"161":{"n":"Freestone County","pop":19813,"inc":48731,"pov":13.7,"edu":13.0,"ru":4,"sesz":-0.157,"sesq":2},"163":{"n":"Frio County","pop":18019,"inc":42476,"pov":27.5,"edu":7.2,"ru":4,"sesz":-1.455,"sesq":0},"165":{"n":"Gaines County","pop":21904,"inc":59032,"pov":15.4,"edu":12.4,"ru":3,"sesz":-0.012,"sesq":2},"167":{"n":"Galveston County","pop":354721,"inc":69369,"pov":12.1,"edu":30.0,"ru":1,"sesz":1.256,"sesq":4},"169":{"n":"Garza County","pop":5435,"inc":55039,"pov":24.6,"edu":13.9,"ru":5,"sesz":-0.635,"sesq":0},"171":{"n":"Gillespie County","pop":27202,"inc":58325,"pov":9.6,"edu":33.8,"ru":3,"sesz":1.283,"sesq":4},"173":{"n":"Glasscock County","pop":1070,"inc":75833,"pov":9.7,"edu":23.2,"ru":5,"sesz":1.281,"sesq":4},"175":{"n":"Goliad County","pop":7096,"inc":60492,"pov":14.4,"edu":17.6,"ru":2,"sesz":0.321,"sesq":3},"177":{"n":"Gonzales County","pop":19764,"inc":53006,"pov":16.9,"edu":12.3,"ru":4,"sesz":-0.275,"sesq":1},"179":{"n":"Gray County","pop":21131,"inc":47170,"pov":16.7,"edu":13.3,"ru":3,"sesz":-0.376,"sesq":1},"181":{"n":"Grayson County","pop":139988,"inc":54370,"pov":12.3,"edu":20.5,"ru":2,"sesz":0.416,"sesq":3},"183":{"n":"Gregg County","pop":124860,"inc":49287,"pov":15.1,"edu":20.8,"ru":2,"sesz":0.115,"sesq":3},"185":{"n":"Grimes County","pop":30385,"inc":50298,"pov":17.5,"edu":14.6,"ru":3,"sesz":-0.284,"sesq":1},"187":{"n":"Guadalupe County","pop":178368,"inc":70931,"pov":8.5,"edu":27.5,"ru":1,"sesz":1.415,"sesq":4},"189":{"n":"Hale County","pop":32247,"inc":47080,"pov":18.4,"edu":16.5,"ru":3,"sesz":-0.344,"sesq":1},"191":{"n":"Hall County","pop":2827,"inc":32921,"pov":24.1,"edu":14.3,"ru":5,"sesz":-1.184,"sesq":0},"193":{"n":"Hamilton County","pop":8320,"inc":47500,"pov":14.7,"edu":21.7,"ru":4,"sesz":0.132,"sesq":3},"195":{"n":"Hansford County","pop":5182,"inc":39229,"pov":11.6,"edu":14.3,"ru":5,"sesz":-0.225,"sesq":2},"197":{"n":"Hardeman County","pop":3529,"inc":42238,"pov":17.4,"edu":14.5,"ru":5,"sesz":-0.5,"sesq":1},"199":{"n":"Hardin County","pop":57126,"inc":59105,"pov":12.4,"edu":15.3,"ru":2,"sesz":0.308,"sesq":3},"201":{"n":"Harris County","pop":4758579,"inc":60146,"pov":16.5,"edu":31.0,"ru":1,"sesz":0.773,"sesq":4},"203":{"n":"Harrison County","pop":69584,"inc":51202,"pov":14.7,"edu":19.1,"ru":2,"sesz":0.117,"sesq":3},"205":{"n":"Hartley County","pop":5307,"inc":59280,"pov":9.5,"edu":17.2,"ru":5,"sesz":0.58,"sesq":4},"207":{"n":"Haskell County","pop":5390,"inc":46013,"pov":23.1,"edu":13.4,"ru":5,"sesz":-0.807,"sesq":0},"209":{"n":"Hays County","pop":256429,"inc":65935,"pov":13.2,"edu":37.4,"ru":1,"sesz":1.422,"sesq":4},"211":{"n":"Hemphill County","pop":3311,"inc":63778,"pov":9.6,"edu":21.0,"ru":5,"sesz":0.864,"sesq":4},"213":{"n":"Henderson County","pop":83658,"inc":45798,"pov":19.4,"edu":18.2,"ru":3,"sesz":-0.366,"sesq":1},"215":{"n":"Hidalgo County","pop":880921,"inc":38398,"pov":30.0,"edu":18.4,"ru":2,"sesz":-1.227,"sesq":0},"217":{"n":"Hill County","pop":36664,"inc":48823,"pov":12.6,"edu":17.1,"ru":3,"sesz":0.096,"sesq":3},"219":{"n":"Hockley County","pop":21455,"inc":48116,"pov":19.5,"edu":14.0,"ru":3,"sesz":-0.496,"sesq":1},"221":{"n":"Hood County","pop":64198,"inc":59049,"pov":10.2,"edu":26.1,"ru":3,"sesz":0.924,"sesq":4},"223":{"n":"Hopkins County","pop":37351,"inc":51877,"pov":14.6,"edu":18.3,"ru":3,"sesz":0.106,"sesq":3},"225":{"n":"Houston County","pop":22042,"inc":34297,"pov":26.1,"edu":14.1,"ru":3,"sesz":-1.282,"sesq":0},"227":{"n":"Howard County","pop":33127,"inc":51528,"pov":20.6,"edu":12.3,"ru":3,"sesz":-0.548,"sesq":1},"229":{"n":"Hudspeth County","pop":3331,"inc":29318,"pov":17.8,"edu":6.9,"ru":2,"sesz":-1.212,"sesq":0},"231":{"n":"Hunt County","pop":104917,"inc":51928,"pov":13.6,"edu":19.3,"ru":1,"sesz":0.215,"sesq":3},"233":{"n":"Hutchinson County","pop":20413,"inc":50651,"pov":13.0,"edu":13.8,"ru":3,"sesz":-0.026,"sesq":2},"235":{"n":"Irion County","pop":1432,"inc":54706,"pov":8.1,"edu":16.9,"ru":2,"sesz":0.531,"sesq":3},"237":{"n":"Jack County","pop":8623,"inc":51700,"pov":17.7,"edu":12.6,"ru":4,"sesz":-0.347,"sesq":1},"239":{"n":"Jackson County","pop":15081,"inc":60276,"pov":12.9,"edu":16.1,"ru":4,"sesz":0.343,"sesq":3},"241":{"n":"Jasper County","pop":32807,"inc":46088,"pov":19.2,"edu":12.4,"ru":3,"sesz":-0.603,"sesq":1},"243":{"n":"Jeff Davis County","pop":1740,"inc":53194,"pov":13.1,"edu":35.1,"ru":5,"sesz":0.981,"sesq":4},"245":{"n":"Jefferson County","pop":253939,"inc":48463,"pov":18.7,"edu":19.6,"ru":2,"sesz":-0.188,"sesq":2},"247":{"n":"Jim Hogg County","pop":4797,"inc":32049,"pov":25.2,"edu":12.3,"ru":5,"sesz":-1.366,"sesq":0},"249":{"n":"Jim Wells County","pop":38863,"inc":42005,"pov":21.2,"edu":12.7,"ru":3,"sesz":-0.826,"sesq":0},"251":{"n":"Johnson County","pop":188820,"inc":62066,"pov":10.7,"edu":18.3,"ru":1,"sesz":0.628,"sesq":4},"253":{"n":"Jones County","pop":19968,"inc":45694,"pov":22.0,"edu":11.5,"ru":2,"sesz":-0.83,"sesq":0},"255":{"n":"Karnes County","pop":14819,"inc":52252,"pov":21.8,"edu":14.4,"ru":4,"sesz":-0.511,"sesq":1},"257":{"n":"Kaufman County","pop":160718,"inc":65390,"pov":11.5,"edu":20.7,"ru":1,"sesz":0.774,"sesq":4},"259":{"n":"Kendall County","pop":46971,"inc":82390,"pov":7.5,"edu":40.9,"ru":1,"sesz":2.382,"sesq":4},"261":{"n":"Kenedy County","pop":52,"inc":36125,"pov":14.3,"edu":6.8,"ru":5,"sesz":-0.812,"sesq":0},"263":{"n":"Kent County","pop":727,"inc":45926,"pov":13.3,"edu":23.6,"ru":5,"sesz":0.262,"sesq":3},"265":{"n":"Kerr County","pop":53166,"inc":52473,"pov":13.9,"edu":25.6,"ru":3,"sesz":0.49,"sesq":3},"267":{"n":"Kimble County","pop":4355,"inc":42500,"pov":17.6,"edu":22.1,"ru":5,"sesz":-0.169,"sesq":2},"269":{"n":"King County","pop":189,"inc":65125,"pov":13.7,"edu":18.2,"ru":5,"sesz":0.517,"sesq":3},"271":{"n":"Kinney County","pop":3140,"inc":31468,"pov":21.1,"edu":9.6,"ru":5,"sesz":-1.243,"sesq":0},"273":{"n":"Kleberg County","pop":30629,"inc":42021,"pov":25.0,"edu":24.8,"ru":3,"sesz":-0.529,"sesq":1},"275":{"n":"Knox County","pop":3322,"inc":46146,"pov":20.4,"edu":19.6,"ru":5,"sesz":-0.358,"sesq":1},"277":{"n":"Lamar County","pop":50421,"inc":43562,"pov":14.4,"edu":17.6,"ru":3,"sesz":-0.138,"sesq":2},"279":{"n":"Lamb County","pop":12919,"inc":43396,"pov":20.0,"edu":15.9,"ru":4,"sesz":-0.571,"sesq":1},"281":{"n":"Lampasas County","pop":22267,"inc":58194,"pov":12.9,"edu":20.0,"ru":2,"sesz":0.46,"sesq":3},"283":{"n":"La Salle County","pop":6946,"inc":51792,"pov":29.6,"edu":13.1,"ru":5,"sesz":-1.074,"sesq":0},"285":{"n":"Lavaca County","pop":20479,"inc":53021,"pov":13.5,"edu":16.7,"ru":3,"sesz":0.135,"sesq":3},"287":{"n":"Lee County","pop":17758,"inc":55000,"pov":12.3,"edu":15.9,"ru":4,"sesz":0.229,"sesq":3},"289":{"n":"Leon County","pop":16067,"inc":44818,"pov":15.6,"edu":16.4,"ru":4,"sesz":-0.233,"sesq":2},"291":{"n":"Liberty County","pop":97993,"inc":49850,"pov":15.1,"edu":9.5,"ru":1,"sesz":-0.371,"sesq":1},"293":{"n":"Limestone County","pop":22185,"inc":42680,"pov":22.2,"edu":14.0,"ru":3,"sesz":-0.813,"sesq":0},"295":{"n":"Lipscomb County","pop":2964,"inc":57372,"pov":12.0,"edu":19.5,"ru":5,"sesz":0.472,"sesq":3},"297":{"n":"Live Oak County","pop":11444,"inc":55766,"pov":18.7,"edu":13.2,"ru":4,"sesz":-0.273,"sesq":1},"299":{"n":"Llano County","pop":22011,"inc":52178,"pov":12.3,"edu":25.7,"ru":3,"sesz":0.587,"sesq":4},"301":{"n":"Loving County","pop":54,"inc":81875,"pov":3.3,"edu":0.0,"ru":5,"sesz":0.821,"sesq":4},"303":{"n":"Lubbock County","pop":314633,"inc":50473,"pov":17.6,"edu":29.1,"ru":2,"sesz":0.357,"sesq":3},"305":{"n":"Lynn County","pop":5667,"inc":43524,"pov":18.3,"edu":18.2,"ru":2,"sesz":-0.358,"sesq":1},"307":{"n":"McCulloch County","pop":7565,"inc":45329,"pov":18.5,"edu":19.0,"ru":4,"sesz":-0.287,"sesq":1},"309":{"n":"McLennan County","pop":263608,"inc":48199,"pov":18.9,"edu":23.7,"ru":2,"sesz":-0.026,"sesq":2},"311":{"n":"McMullen County","pop":623,"inc":68750,"pov":11.1,"edu":23.3,"ru":5,"sesz":1.006,"sesq":4},"313":{"n":"Madison County","pop":13574,"inc":49428,"pov":17.9,"edu":13.6,"ru":4,"sesz":-0.377,"sesq":1},"315":{"n":"Marion County","pop":9631,"inc":37283,"pov":21.9,"edu":14.9,"ru":4,"sesz":-0.901,"sesq":0},"317":{"n":"Martin County","pop":5230,"inc":69722,"pov":13.6,"edu":20.4,"ru":2,"sesz":0.746,"sesq":4},"319":{"n":"Mason County","pop":3951,"inc":40708,"pov":12.7,"edu":20.0,"ru":5,"sesz":-0.001,"sesq":2},"321":{"n":"Matagorda County","pop":36274,"inc":45500,"pov":18.4,"edu":16.7,"ru":3,"sesz":-0.378,"sesq":1},"323":{"n":"Maverick County","pop":57770,"inc":38035,"pov":25.9,"edu":12.5,"ru":3,"sesz":-1.239,"sesq":0},"325":{"n":"Medina County","pop":52419,"inc":61059,"pov":12.3,"edu":19.8,"ru":1,"sesz":0.566,"sesq":3},"327":{"n":"Menard County","pop":1964,"inc":40606,"pov":21.6,"edu":17.8,"ru":5,"sesz":-0.663,"sesq":0},"329":{"n":"Midland County","pop":171496,"inc":78888,"pov":10.1,"edu":27.4,"ru":2,"sesz":1.525,"sesq":4},"331":{"n":"Milam County","pop":25268,"inc":47081,"pov":15.6,"edu":13.8,"ru":3,"sesz":-0.287,"sesq":1},"333":{"n":"Mills County","pop":4499,"inc":41827,"pov":14.6,"edu":18.2,"ru":5,"sesz":-0.171,"sesq":2},"335":{"n":"Mitchell County","pop":8989,"inc":49670,"pov":21.4,"edu":11.8,"ru":4,"sesz":-0.671,"sesq":0},"337":{"n":"Montague County","pop":20599,"inc":51774,"pov":13.8,"edu":15.5,"ru":3,"sesz":0.03,"sesq":2},"339":{"n":"Montgomery County","pop":654722,"inc":77416,"pov":9.3,"edu":34.7,"ru":1,"sesz":1.859,"sesq":4},"341":{"n":"Moore County","pop":21234,"inc":51527,"pov":12.2,"edu":14.3,"ru":3,"sesz":0.071,"sesq":2},"343":{"n":"Morris County","pop":12014,"inc":42961,"pov":20.2,"edu":15.5,"ru":4,"sesz":-0.613,"sesq":0},"345":{"n":"Motley County","pop":1267,"inc":43750,"pov":17.8,"edu":16.7,"ru":5,"sesz":-0.387,"sesq":1},"347":{"n":"Nacogdoches County","pop":64897,"inc":43598,"pov":21.6,"edu":24.5,"ru":3,"sesz":-0.285,"sesq":1},"349":{"n":"Navarro County","pop":53735,"inc":47920,"pov":20.0,"edu":16.1,"ru":3,"sesz":-0.44,"sesq":1},"351":{"n":"Newton County","pop":12193,"inc":40950,"pov":22.3,"edu":8.9,"ru":2,"sesz":-1.093,"sesq":0},"353":{"n":"Nolan County","pop":14565,"inc":44346,"pov":18.2,"edu":15.5,"ru":4,"sesz":-0.449,"sesq":1},"355":{"n":"Nueces County","pop":352829,"inc":55048,"pov":16.2,"edu":21.5,"ru":2,"sesz":0.233,"sesq":3},"357":{"n":"Ochiltree County","pop":9852,"inc":49928,"pov":10.5,"edu":15.2,"ru":4,"sesz":0.175,"sesq":3},"359":{"n":"Oldham County","pop":2097,"inc":63315,"pov":13.0,"edu":22.5,"ru":2,"sesz":0.703,"sesq":4},"361":{"n":"Orange County","pop":84993,"inc":55700,"pov":13.4,"edu":15.3,"ru":2,"sesz":0.152,"sesq":3},"363":{"n":"Palo Pinto County","pop":28920,"inc":45979,"pov":15.9,"edu":16.5,"ru":3,"sesz":-0.216,"sesq":2},"365":{"n":"Panola County","pop":22624,"inc":51569,"pov":15.7,"edu":15.5,"ru":3,"sesz":-0.096,"sesq":2},"367":{"n":"Parker County","pop":158079,"inc":74625,"pov":8.3,"edu":26.8,"ru":1,"sesz":1.497,"sesq":4},"369":{"n":"Parmer County","pop":9752,"inc":54184,"pov":13.5,"edu":17.7,"ru":4,"sesz":0.211,"sesq":3},"371":{"n":"Pecos County","pop":14983,"inc":52282,"pov":19.5,"edu":9.8,"ru":4,"sesz":-0.569,"sesq":1},"373":{"n":"Polk County","pop":51780,"inc":46182,"pov":15.0,"edu":14.0,"ru":3,"sesz":-0.264,"sesq":2},"375":{"n":"Potter County","pop":116634,"inc":43157,"pov":19.7,"edu":14.8,"ru":2,"sesz":-0.607,"sesq":1},"377":{"n":"Presidio County","pop":6043,"inc":27061,"pov":22.4,"edu":20.1,"ru":5,"sesz":-0.979,"sesq":0},"379":{"n":"Rains County","pop":12505,"inc":49872,"pov":14.5,"edu":11.7,"ru":4,"sesz":-0.235,"sesq":2},"381":{"n":"Randall County","pop":143791,"inc":67397,"pov":8.5,"edu":32.0,"ru":2,"sesz":1.519,"sesq":4},"383":{"n":"Reagan County","pop":3259,"inc":70478,"pov":10.0,"edu":10.6,"ru":5,"sesz":0.559,"sesq":3},"385":{"n":"Real County","pop":2821,"inc":34813,"pov":18.1,"edu":20.6,"ru":5,"sesz":-0.475,"sesq":1},"387":{"n":"Red River County","pop":11621,"inc":37955,"pov":18.2,"edu":12.6,"ru":4,"sesz":-0.751,"sesq":0},"389":{"n":"Reeves County","pop":13219,"inc":58384,"pov":21.5,"edu":10.8,"ru":4,"sesz":-0.486,"sesq":1},"391":{"n":"Refugio County","pop":6693,"inc":48112,"pov":16.3,"edu":11.8,"ru":5,"sesz":-0.391,"sesq":1},"393":{"n":"Roberts County","pop":785,"inc":73854,"pov":7.8,"edu":26.3,"ru":5,"sesz":1.485,"sesq":4},"395":{"n":"Robertson County","pop":16973,"inc":54201,"pov":15.8,"edu":16.1,"ru":2,"sesz":-0.004,"sesq":2},"397":{"n":"Rockwall County","pop":116931,"inc":94767,"pov":5.1,"edu":40.3,"ru":1,"sesz":2.843,"sesq":4},"399":{"n":"Runnels County","pop":9880,"inc":41732,"pov":16.9,"edu":18.3,"ru":4,"sesz":-0.314,"sesq":1},"401":{"n":"Rusk County","pop":52613,"inc":52329,"pov":16.4,"edu":14.5,"ru":2,"sesz":-0.164,"sesq":2},"403":{"n":"Sabine County","pop":9998,"inc":33257,"pov":17.6,"edu":16.0,"ru":4,"sesz":-0.69,"sesq":0},"405":{"n":"San Augustine County","pop":7889,"inc":35509,"pov":22.2,"edu":13.3,"ru":4,"sesz":-1.039,"sesq":0},"407":{"n":"San Jacinto County","pop":27983,"inc":44658,"pov":17.5,"edu":10.9,"ru":3,"sesz":-0.601,"sesq":1},"409":{"n":"San Patricio County","pop":69519,"inc":55229,"pov":17.3,"edu":14.9,"ru":2,"sesz":-0.124,"sesq":2},"411":{"n":"San Saba County","pop":5802,"inc":44698,"pov":16.8,"edu":14.4,"ru":5,"sesz":-0.4,"sesq":1},"413":{"n":"Schleicher County","pop":2426,"inc":55677,"pov":16.5,"edu":16.5,"ru":5,"sesz":0.009,"sesq":2},"415":{"n":"Scurry County","pop":16633,"inc":55889,"pov":15.8,"edu":16.5,"ru":4,"sesz":0.059,"sesq":2},"417":{"n":"Shackelford County","pop":3169,"inc":45187,"pov":13.4,"edu":24.9,"ru":5,"sesz":0.293,"sesq":3},"419":{"n":"Shelby County","pop":24108,"inc":40764,"pov":20.6,"edu":14.5,"ru":3,"sesz":-0.742,"sesq":0},"421":{"n":"Sherman County","pop":2434,"inc":56576,"pov":12.1,"edu":19.7,"ru":5,"sesz":0.453,"sesq":3},"423":{"n":"Smith County","pop":238014,"inc":53511,"pov":15.0,"edu":25.8,"ru":2,"sesz":0.457,"sesq":3},"425":{"n":"Somervell County","pop":9510,"inc":53162,"pov":9.7,"edu":23.9,"ru":4,"sesz":0.698,"sesq":4},"427":{"n":"Starr County","pop":65809,"inc":29294,"pov":33.2,"edu":10.3,"ru":3,"sesz":-2.034,"sesq":0},"429":{"n":"Stephens County","pop":9278,"inc":45336,"pov":19.4,"edu":16.6,"ru":4,"sesz":-0.45,"sesq":1},"431":{"n":"Sterling County","pop":1389,"inc":59286,"pov":12.6,"edu":15.9,"ru":5,"sesz":0.327,"sesq":3},"433":{"n":"Stonewall County","pop":1244,"inc":48000,"pov":14.6,"edu":13.7,"ru":5,"sesz":-0.203,"sesq":2},"435":{"n":"Sutton County","pop":3306,"inc":60543,"pov":14.2,"edu":17.7,"ru":5,"sesz":0.339,"sesq":3},"437":{"n":"Swisher County","pop":6981,"inc":38418,"pov":19.2,"edu":12.8,"ru":5,"sesz":-0.793,"sesq":0},"439":{"n":"Tarrant County","pop":2135743,"inc":64874,"pov":12.1,"edu":31.5,"ru":1,"sesz":1.201,"sesq":4},"441":{"n":"Taylor County","pop":144259,"inc":50818,"pov":16.0,"edu":24.5,"ru":2,"sesz":0.264,"sesq":3},"443":{"n":"Terrell County","pop":851,"inc":33750,"pov":18.9,"edu":15.3,"ru":5,"sesz":-0.79,"sesq":0},"445":{"n":"Terry County","pop":11699,"inc":44975,"pov":22.4,"edu":12.0,"ru":4,"sesz":-0.853,"sesq":0},"447":{"n":"Throckmorton County","pop":1589,"inc":44196,"pov":14.3,"edu":19.0,"ru":5,"sesz":-0.052,"sesq":2},"449":{"n":"Titus County","pop":31284,"inc":46698,"pov":18.6,"edu":15.9,"ru":3,"sesz":-0.393,"sesq":1},"451":{"n":"Tom Green County","pop":119398,"inc":51675,"pov":15.5,"edu":24.2,"ru":2,"sesz":0.305,"sesq":3},"453":{"n":"Travis County","pop":1307625,"inc":71767,"pov":12.0,"edu":48.6,"ru":1,"sesz":2.152,"sesq":4},"455":{"n":"Trinity County","pop":13850,"inc":40407,"pov":17.7,"edu":12.8,"ru":4,"sesz":-0.644,"sesq":0},"457":{"n":"Tyler County","pop":20084,"inc":43936,"pov":18.2,"edu":12.5,"ru":3,"sesz":-0.593,"sesq":1},"459":{"n":"Upshur County","pop":41864,"inc":50906,"pov":15.9,"edu":17.0,"ru":2,"sesz":-0.06,"sesq":2},"461":{"n":"Upton County","pop":3227,"inc":52257,"pov":14.2,"edu":9.9,"ru":5,"sesz":-0.231,"sesq":2},"463":{"n":"Uvalde County","pop":24810,"inc":41752,"pov":22.9,"edu":15.8,"ru":3,"sesz":-0.803,"sesq":0},"465":{"n":"Val Verde County","pop":47647,"inc":45521,"pov":18.9,"edu":18.6,"ru":3,"sesz":-0.324,"sesq":1},"467":{"n":"Van Zandt County","pop":61323,"inc":51935,"pov":15.6,"edu":17.1,"ru":3,"sesz":-0.009,"sesq":2},"469":{"n":"Victoria County","pop":91281,"inc":55631,"pov":15.4,"edu":20.1,"ru":2,"sesz":0.237,"sesq":3},"471":{"n":"Walker County","pop":78292,"inc":41855,"pov":26.1,"edu":20.6,"ru":3,"sesz":-0.789,"sesq":0},"473":{"n":"Waller County","pop":59455,"inc":57654,"pov":15.9,"edu":19.9,"ru":1,"sesz":0.251,"sesq":3},"475":{"n":"Ward County","pop":11255,"inc":64630,"pov":13.9,"edu":13.6,"ru":4,"sesz":0.287,"sesq":3},"477":{"n":"Washington County","pop":36156,"inc":56237,"pov":13.8,"edu":25.0,"ru":3,"sesz":0.571,"sesq":3},"479":{"n":"Webb County","pop":267731,"inc":42293,"pov":25.7,"edu":18.4,"ru":2,"sesz":-0.85,"sesq":0},"481":{"n":"Wharton County","pop":41651,"inc":49619,"pov":16.8,"edu":17.1,"ru":3,"sesz":-0.147,"sesq":2},"483":{"n":"Wheeler County","pop":4902,"inc":49352,"pov":14.0,"edu":16.6,"ru":5,"sesz":0.0,"sesq":2},"485":{"n":"Wichita County","pop":129842,"inc":46575,"pov":17.8,"edu":23.0,"ru":2,"sesz":-0.031,"sesq":2},"487":{"n":"Wilbarger County","pop":12712,"inc":48773,"pov":15.3,"edu":16.1,"ru":4,"sesz":-0.12,"sesq":2},"489":{"n":"Willacy County","pop":20218,"inc":29944,"pov":35.0,"edu":10.1,"ru":3,"sesz":-2.139,"sesq":0},"491":{"n":"Williamson County","pop":643889,"inc":83679,"pov":6.4,"edu":41.1,"ru":1,"sesz":2.496,"sesq":4},"493":{"n":"Wilson County","pop":51501,"inc":72445,"pov":10.9,"edu":20.5,"ru":1,"sesz":0.994,"sesq":4},"495":{"n":"Winkler County","pop":7540,"inc":59167,"pov":14.1,"edu":9.5,"ru":4,"sesz":-0.055,"sesq":2},"497":{"n":"Wise County","pop":72359,"inc":61709,"pov":9.9,"edu":17.5,"ru":1,"sesz":0.634,"sesq":4},"499":{"n":"Wood County","pop":46094,"inc":48534,"pov":15.3,"edu":16.4,"ru":3,"sesz":-0.113,"sesq":2},"501":{"n":"Yoakum County","pop":7589,"inc":68814,"pov":12.1,"edu":16.3,"ru":4,"sesz":0.634,"sesq":4},"503":{"n":"Young County","pop":17963,"inc":47194,"pov":13.9,"edu":19.6,"ru":4,"sesz":0.081,"sesq":3},"505":{"n":"Zapata County","pop":13855,"inc":31113,"pov":32.1,"edu":10.4,"ru":4,"sesz":-1.911,"sesq":0},"507":{"n":"Zavala County","pop":9532,"inc":30988,"pov":32.0,"edu":8.6,"ru":4,"sesz":-1.988,"sesq":0}};
+</script>
+<script>
+const fmt=n=>n.toLocaleString('en-US');
+const usd=n=>'$'+n.toLocaleString('en-US');
+
+// ---------- custom regions (authoritative, from Texas Region Builder, baked 2026-06-04) ----------
+const REGIONS=[
+  {id:1,name:'Central Texas / Austin',color:'#3b82f6'},
+  {id:2,name:'Dallas / Collin / NE Texas',color:'#4a0404'},
+  {id:3,name:'Houston / Gulf / East Texas',color:'#6287b5'},
+  {id:4,name:'Fort Worth / Denton / Panhandle',color:'#c8a96a'},
+  {id:5,name:'El Paso / Border / RGV',color:'#caa92f'},
+  {id:6,name:'San Antonio / Corpus Christi',color:'#809351'}
+];
+const REGION_COLORS={};const REGION_NAME={};REGIONS.forEach(R=>{REGION_COLORS[R.id]=R.color;REGION_NAME[R.id]=R.name;});
+const REGION_STATIC={"001":2,"003":5,"005":3,"007":6,"009":4,"011":4,"013":6,"015":3,"017":4,"019":6,"021":1,"023":4,"025":6,"027":1,"029":6,"031":1,"033":5,"035":1,"037":2,"039":3,"041":1,"043":5,"045":4,"047":5,"049":4,"051":1,"053":1,"055":1,"057":6,"059":4,"061":5,"063":2,"065":4,"067":2,"069":4,"071":3,"073":2,"075":4,"077":4,"079":4,"081":5,"083":4,"085":2,"087":4,"089":3,"091":6,"093":4,"095":5,"097":4,"099":1,"101":4,"103":5,"105":5,"107":4,"109":5,"111":4,"113":2,"115":5,"117":4,"119":2,"121":4,"123":6,"125":4,"127":5,"129":4,"131":5,"133":4,"135":5,"137":5,"139":2,"141":5,"143":4,"145":1,"147":2,"149":1,"151":4,"153":4,"155":4,"157":3,"159":2,"161":1,"163":6,"165":5,"167":3,"169":4,"171":6,"173":5,"175":6,"177":6,"179":4,"181":4,"183":2,"185":1,"187":6,"189":4,"191":4,"193":1,"195":4,"197":4,"199":3,"201":3,"203":2,"205":4,"207":4,"209":1,"211":4,"213":2,"215":5,"217":1,"219":4,"221":4,"223":2,"225":3,"227":5,"229":5,"231":2,"233":4,"235":5,"237":4,"239":6,"241":3,"243":5,"245":3,"247":5,"249":5,"251":4,"253":4,"255":6,"257":2,"259":6,"261":5,"263":4,"265":6,"267":5,"269":4,"271":5,"273":5,"275":4,"277":2,"279":4,"281":1,"283":5,"285":6,"287":1,"289":1,"291":3,"293":1,"295":4,"297":5,"299":1,"301":5,"303":4,"305":4,"307":5,"309":1,"311":5,"313":1,"315":2,"317":5,"319":5,"321":3,"323":5,"325":6,"327":5,"329":5,"331":1,"333":1,"335":4,"337":4,"339":3,"341":4,"343":2,"345":4,"347":3,"349":2,"351":3,"353":4,"355":6,"357":4,"359":4,"361":3,"363":4,"365":2,"367":4,"369":4,"371":5,"373":3,"375":4,"377":5,"379":2,"381":4,"383":5,"385":5,"387":2,"389":5,"391":6,"393":4,"395":1,"397":2,"399":4,"401":2,"403":3,"405":3,"407":3,"409":6,"411":1,"413":5,"415":4,"417":4,"419":3,"421":4,"423":2,"425":4,"427":5,"429":4,"431":5,"433":4,"435":5,"437":4,"439":4,"441":4,"443":5,"445":4,"447":4,"449":2,"451":5,"453":1,"455":3,"457":3,"459":2,"461":5,"463":5,"465":5,"467":2,"469":6,"471":3,"473":3,"475":5,"477":1,"479":5,"481":3,"483":4,"485":4,"487":4,"489":5,"491":1,"493":6,"495":5,"497":4,"499":2,"501":4,"503":4,"505":5,"507":5};
+Object.keys(CDATA).forEach(f=>{CDATA[f].rg=(REGION_STATIC[f]||0);});
+
+// ---------- layer definitions ----------
+const RU_LABELS={1:'Urban core / Large metro',2:'Suburban / Smaller metro',3:'Micropolitan (large rural town)',4:'Small-town rural',5:'Remote rural / Frontier'};
+const RU_COLORS={1:'#08519c',2:'#3182bd',3:'#9ecae1',4:'#fdae6b',5:'#d94801'};
+const RU_DESC={1:'In a metro area of 1M+ people (Houston, DFW, San Antonio, Austin).',2:'In a smaller Metropolitan Statistical Area (250K–1M or &lt;250K).',3:'Nonmetro county with an urban cluster of 20K+ residents.',4:'Nonmetro county, largest town roughly 7K–20K.',5:'Nonmetro county under ~7K people; sparsely settled / frontier.'};
+
+const SES_COLORS=['#a6611a','#dfc27d','#dfe7e5','#80cdc1','#018571']; // low→high
+const SES_LABELS=['Most disadvantaged','Lower-middle','Middle','Upper-middle','Most advantaged'];
+
+// numeric layers: build quantile breaks from data
+function quantileBreaks(vals,k){const s=[...vals].sort((a,b)=>a-b);const br=[];for(let i=1;i<k;i++)br.push(s[Math.floor(i*s.length/k)]);return br;}
+function classOf(v,br){let i=0;while(i<br.length&&v>=br[i])i++;return i;}
+function ramp(stops){return stops;}
+const GREEN=['#edf8e9','#c7e9c0','#a1d99b','#74c476','#31a354','#006d2c'];
+const RED  =['#fee5d9','#fcbba1','#fc9272','#fb6a4a','#de2d26','#a50f15'];
+
+const allInc=Object.values(CDATA).map(d=>d.inc);
+const allPov=Object.values(CDATA).map(d=>d.pov);
+const allEdu=Object.values(CDATA).map(d=>d.edu);
+const brInc=quantileBreaks(allInc,6), brPov=quantileBreaks(allPov,6), brEdu=quantileBreaks(allEdu,6);
+
+const LAYERS={
+  ru :{label:'Rural–Urban', dot:'linear-gradient(90deg,#08519c,#3182bd,#9ecae1,#fdae6b,#d94801)', kind:'cat'},
+  reg:{label:'Custom regions', dot:'linear-gradient(90deg,#3b82f6,#6287b5,#809351,#caa92f,#4a0404)', kind:'region'},
+  ses:{label:'SES index',   dot:'linear-gradient(90deg,#a6611a,#dfe7e5,#018571)', kind:'ses'},
+  inc:{label:'Median income', dot:'#31a354', kind:'num', ramp:GREEN, br:brInc, hi:'good',
+       fmt:usd, name:'Median household income'},
+  pov:{label:'Poverty rate', dot:'#de2d26', kind:'num', ramp:RED, br:brPov, hi:'bad',
+       fmt:v=>v+'%', name:'Persons in poverty'},
+  edu:{label:"Bachelor's+", dot:'#31a354', kind:'num', ramp:GREEN, br:brEdu, hi:'good',
+       fmt:v=>v+'%', name:"Bachelor's degree or higher (age 25+)"}
+};
+let mode='ru';
+
+// ranks
+const RANK={};['inc','pov','edu','sesz'].forEach(k=>{
+  const s=Object.entries(CDATA).sort((A,B)=>B[1][k]-A[1][k]);
+  s.forEach(([f],i)=>{(RANK[f]=RANK[f]||{})[k]=i+1;});
+});
+const N=Object.keys(CDATA).length;
+
+function fillFor(f){const d=CDATA[f];if(!d)return '#dfe3ea';
+  if(mode==='ru')return RU_COLORS[d.ru];
+  if(mode==='reg')return d.rg?REGION_COLORS[d.rg]:'#e4e8ef';
+  if(mode==='ses')return SES_COLORS[d.sesq];
+  const L=LAYERS[mode];return L.ramp[classOf(d[mode],L.br)];
+}
+
+// ---------- map setup ----------
+const CITIES=[
+  {n:'Houston',lon:-95.3698,lat:29.7604},{n:'San Antonio',lon:-98.4936,lat:29.4241},
+  {n:'Dallas',lon:-96.7970,lat:32.7767},{n:'Fort Worth',lon:-97.3308,lat:32.7555},
+  {n:'Austin',lon:-97.7431,lat:30.2672},{n:'El Paso',lon:-106.4850,lat:31.7619},
+  {n:'Corpus Christi',lon:-97.3964,lat:27.8006},{n:'Lubbock',lon:-101.8552,lat:33.5779},
+  {n:'Amarillo',lon:-101.8313,lat:35.2220},{n:'Laredo',lon:-99.5075,lat:27.5306},
+  {n:'Brownsville',lon:-97.4975,lat:25.9017},{n:'Midland',lon:-102.0779,lat:31.9974}
+];
+const svg=d3.select('#map'),gMap=svg.append('g'),gCounty=gMap.append('g'),gCity=gMap.append('g');
+const tip=document.getElementById('tip');
+let path,features=[],selFips=null,zoom,projection;
+const W=980,H=770;
+
+function detectGeoid(props,id){
+  if(props){
+    if(props.GEOID) return String(props.GEOID).padStart(5,'0');
+    if(props.STATE&&props.COUNTY) return String(props.STATE).padStart(2,'0')+String(props.COUNTY).padStart(3,'0');
+    if(props.FIPS) return String(props.FIPS).padStart(5,'0');
+    if(props.fips) return String(props.fips).padStart(5,'0');
+  }
+  if(id!=null) return String(id).padStart(5,'0');
+  return null;
+}
+
+async function load(){
+  const SOURCES=[
+    {url:'https://cdn.jsdelivr.net/gh/deldersveld/topojson@master/countries/us-states/TX-48-texas-counties.json',type:'topo'},
+    {url:'https://cdn.jsdelivr.net/gh/plotly/datasets@master/geojson-counties-fips.json',type:'geo'}
+  ];
+  let feats=null;
+  for(const s of SOURCES){
+    try{
+      const res=await fetch(s.url);if(!res.ok)throw new Error(res.status);const j=await res.json();
+      if(s.type==='topo'){
+        const key=Object.keys(j.objects)[0];const obj=j.objects[key];
+        feats=topojson.feature(j,obj).features;
+      } else feats=j.features;
+      feats=feats.map(ft=>{const g=detectGeoid(ft.properties,ft.id);ft.geoid=g;ft.fips=g?g.slice(-3):null;return ft;})
+                 .filter(ft=>ft.geoid&&ft.geoid.slice(0,2)==='48'&&CDATA[ft.fips]);
+      if(feats.length>=240) break;
+    }catch(e){console.warn('source failed',s.url,e);feats=null;}
+  }
+  if(!feats||!feats.length){document.getElementById('mapwrap').insertAdjacentHTML('beforeend','<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#697084">Could not load county boundaries (needs internet).</div>');return;}
+  features=feats;draw();
+}
+
+function draw(){
+  projection=d3.geoAlbers().rotate([99,0]).center([0,31.3]).parallels([28,36]);
+  projection.fitExtent([[18,18],[W-18,H-18]],{type:'FeatureCollection',features});
+  path=d3.geoPath(projection);
+  svg.attr('viewBox',`0 0 ${W} ${H}`);
+
+  gCounty.selectAll('path.county').data(features,d=>d.fips).join('path')
+    .attr('class','county').attr('d',path).attr('fill',d=>fillFor(d.fips))
+    .on('mousemove',(e,d)=>showTip(e,d.fips)).on('mouseleave',hideTip)
+    .on('click',(e,d)=>{select(d.fips);});
+
+  gCity.selectAll('g.city').data(CITIES).join(enter=>{
+    const g=enter.append('g').attr('class','city').attr('transform',d=>{const p=projection([d.lon,d.lat]);return `translate(${p[0]},${p[1]})`;});
+    g.append('circle').attr('class','cityDot').attr('r',3.3);
+    g.append('text').attr('class','cityLbl').attr('x',6).attr('y',4).text(d=>d.n);
+    return g;
+  });
+
+  zoom=d3.zoom().scaleExtent([1,9]).on('zoom',ev=>gMap.attr('transform',ev.transform));
+  svg.call(zoom);
+  document.getElementById('zin').onclick=()=>svg.transition().call(zoom.scaleBy,1.5);
+  document.getElementById('zout').onclick=()=>svg.transition().call(zoom.scaleBy,1/1.5);
+  document.getElementById('zrst').onclick=()=>svg.transition().call(zoom.transform,d3.zoomIdentity);
+  buildModes();renderLegend();renderDetail(null);buildSearch();renderFoot();
+}
+
+function paint(){gCounty.selectAll('path.county').attr('fill',d=>fillFor(d.fips));}
+
+// ---------- modes ----------
+function buildModes(){
+  const el=document.getElementById('modes');
+  Object.entries(LAYERS).forEach(([k,L])=>{
+    const b=document.createElement('button');b.dataset.k=k;
+    b.innerHTML=`<span class="dot" style="background:${L.dot}"></span>${L.label}`;
+    b.onclick=()=>{mode=k;paint();renderLegend();syncModes();renderDetail(selFips);renderFoot();};
+    el.appendChild(b);
+  });
+  syncModes();
+}
+function syncModes(){document.querySelectorAll('#modes button').forEach(b=>{
+  const on=b.dataset.k===mode;b.classList.toggle('active',on);
+  b.style.background=on?(mode==='inc'||mode==='edu'?'#31a354':mode==='pov'?'#de2d26':mode==='ses'?'#018571':mode==='reg'?'#809351':'#3182bd'):'#fff';
+});}
+
+// ---------- legend ----------
+function renderLegend(){
+  const el=document.getElementById('legend');const L=LAYERS[mode];
+  const counts=f=>Object.values(CDATA).filter(f).length;
+  if(mode==='ru'){
+    let h='<h3>Rural–Urban classification</h3>';
+    [1,2,3,4,5].forEach(t=>{const c=Object.values(CDATA).filter(d=>d.ru===t).length;
+      h+=`<div class="lrow"><span class="lsw" style="background:${RU_COLORS[t]}"></span>${RU_LABELS[t]}<span class="cnt">${c}</span></div>`;});
+    h+='<div class="legdesc">Top two tiers use 2023 OMB metro-area delineations; the three nonmetro tiers approximate USDA Rural-Urban Continuum Codes by county population. Click a county for details.</div>';
+    el.innerHTML=h;return;
+  }
+  if(mode==='reg'){
+    let h='<h3>Custom regions</h3>';
+    REGIONS.forEach(R=>{const c=Object.values(CDATA).filter(d=>d.rg===R.id).length;
+      h+=`<div class="lrow"><span class="lsw" style="background:${R.color}"></span>${R.name}<span class="cnt">${c}</span></div>`;});
+    const un=Object.values(CDATA).filter(d=>!d.rg).length;
+    if(un)h+=`<div class="lrow"><span class="lsw" style="background:#e4e8ef"></span>Unassigned<span class="cnt">${un}</span></div>`;
+    h+='<div class="legdesc">Your six saved regions from the Texas Region Builder. The same definitions are used in the race/ethnicity and families maps. Click a county for its region.</div>';
+    el.innerHTML=h;return;
+  }
+  if(mode==='ses'){
+    let h='<h3>Socioeconomic status index</h3>';
+    [4,3,2,1,0].forEach(q=>{const c=Object.values(CDATA).filter(d=>d.sesq===q).length;
+      h+=`<div class="lrow"><span class="lsw" style="background:${SES_COLORS[q]}"></span>${SES_LABELS[q]}<span class="cnt">${c}</span></div>`;});
+    h+='<div class="legdesc">Composite of median household income, poverty rate, and bachelor’s-degree share (equal-weighted z-scores). Counties split into quintiles. Higher = more advantaged.</div>';
+    el.innerHTML=h;return;
+  }
+  // numeric
+  let h=`<h3>${L.name}</h3>`;
+  const br=L.br,ramp=L.ramp;
+  const edges=[Math.min(...Object.values(CDATA).map(d=>d[mode])),...br,Math.max(...Object.values(CDATA).map(d=>d[mode]))];
+  for(let i=0;i<ramp.length;i++){
+    const lo=edges[i],hi=edges[i+1];
+    const c=Object.values(CDATA).filter(d=>classOf(d[mode],br)===i).length;
+    h+=`<div class="lrow"><span class="lsw" style="background:${ramp[i]}"></span>${L.fmt(Math.round(lo))} – ${L.fmt(Math.round(hi))}<span class="cnt">${c}</span></div>`;
+  }
+  const dir=L.hi==='bad'?'Darker red = higher poverty (worse).':'Darker green = higher value (better).';
+  h+=`<div class="legdesc">${dir} 6 equal-count (quantile) classes. Source: U.S. Census Bureau (ACS / SAIPE).</div>`;
+  el.innerHTML=h;
+}
+
+// ---------- detail ----------
+function bar(label,val,frac,color,sub){
+  return `<div class="metric"><div class="top"><span class="nm">${label}</span><span class="vals"><b>${val}</b> ${sub||''}</span></div>
+    <div class="track"><i style="width:${Math.max(2,Math.min(100,frac*100)).toFixed(1)}%;background:${color}"></i></div></div>`;
+}
+function renderDetail(f){
+  const el=document.getElementById('detail');
+  if(!f||!CDATA[f]){el.innerHTML='<h3>County profile</h3><div class="hint">Hover the map to compare, or click a county to pin its full socioeconomic + rural-urban profile here. Use the search box to jump to one.</div>';return;}
+  const d=CDATA[f];
+  const incMax=Math.max(...Object.values(CDATA).map(x=>x.inc));
+  const eduMax=Math.max(...Object.values(CDATA).map(x=>x.edu));
+  const povMax=Math.max(...Object.values(CDATA).map(x=>x.pov));
+  const sesPct=Math.round((N-RANK[f].sesz+1)/N*100);
+  let h=`<div class="cty">${d.n}</div><div class="tot">Population ${fmt(d.pop)} · rank #${rankPop(f)} of ${N} by population</div>`;
+  h+=`<span class="pill" style="background:${RU_COLORS[d.ru]}">${RU_LABELS[d.ru]}</span>`;
+  h+=d.rg?`<span class="pill" style="background:${REGION_COLORS[d.rg]};margin-left:6px">▰ ${REGION_NAME[d.rg]}</span>`:`<span class="pill" style="background:#94a3b8;margin-left:6px">▰ No region</span>`;
+  h+=`<div class="ses-big"><span class="v" style="color:${SES_COLORS[d.sesq]}">${d.sesz>0?'+':''}${d.sesz.toFixed(2)}</span><span class="l">SES index — ${SES_LABELS[d.sesq]}<br>${ordinal(sesPct)} percentile · rank #${RANK[f].sesz} of ${N}</span></div>`;
+  h+='<h3 style="margin-top:16px">Indicators</h3>';
+  h+=bar('Median household income',usd(d.inc),d.inc/incMax,'#31a354',`· #${RANK[f].inc}`);
+  h+=bar('Poverty rate',d.pov+'%',d.pov/povMax,'#de2d26',`· #${RANK[f].pov} highest`);
+  h+=bar("Bachelor's degree or higher",d.edu+'%',d.edu/eduMax,'#3182bd',`· #${RANK[f].edu}`);
+  h+='<div class="hint">Income / education: ACS 2014–2018 5-year. Poverty: Census SAIPE. Bars scaled to the statewide maximum; ranks are out of 254 counties (income & education ranked high→low, poverty high→low).</div>';
+  el.innerHTML=h;
+}
+const POPRANK={};Object.entries(CDATA).sort((a,b)=>b[1].pop-a[1].pop).forEach(([f],i)=>POPRANK[f]=i+1);
+function rankPop(f){return POPRANK[f];}
+function ordinal(n){const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+
+// ---------- selection / tip / search ----------
+function select(f){selFips=f;gCounty.selectAll('path.county').classed('sel',d=>d.fips===f);renderDetail(f);}
+function showTip(e,f){const d=CDATA[f];if(!d)return;const L=LAYERS[mode];let v;
+  if(mode==='ru')v=RU_LABELS[d.ru];
+  else if(mode==='reg')v=d.rg?REGION_NAME[d.rg]:'Unassigned';
+  else if(mode==='ses')v=`SES ${d.sesz>0?'+':''}${d.sesz.toFixed(2)} (${SES_LABELS[d.sesq]})`;
+  else v=`${L.name}: ${L.fmt(d[mode])}`;
+  tip.innerHTML=`<b>${d.n.replace(' County','')}</b> — ${v}`;
+  const r=document.getElementById('mapwrap').getBoundingClientRect();
+  tip.style.left=(e.clientX-r.left+12)+'px';tip.style.top=(e.clientY-r.top+12)+'px';tip.style.opacity=1;
+}
+function hideTip(){tip.style.opacity=0;}
+function buildSearch(){const dl=document.getElementById('ctylist'),map={};
+  Object.entries(CDATA).forEach(([f,d])=>{const o=document.createElement('option');o.value=d.n.replace(' County','');dl.appendChild(o);map[o.value.toLowerCase()]=f;});
+  document.getElementById('search').addEventListener('change',e=>{const f=map[e.target.value.trim().toLowerCase()];if(f){select(f);zoomTo(f);}});
+}
+function zoomTo(f){const node=gCounty.selectAll('path.county').filter(d=>d.fips===f).node();if(!node)return;
+  const b=node.getBBox(),cx=b.x+b.width/2,cy=b.y+b.height/2,k=Math.min(7,0.5*Math.min(W/b.width,H/b.height));
+  svg.transition().duration(500).call(zoom.transform,d3.zoomIdentity.translate(W/2,H/2).scale(k).translate(-cx,-cy));
+}
+function renderFoot(){
+  const inc=Object.values(CDATA).map(d=>d.inc),pov=Object.values(CDATA).map(d=>d.pov);
+  const med=a=>{const s=[...a].sort((x,y)=>x-y);return s[Math.floor(s.length/2)];};
+  document.getElementById('foot').innerHTML=`Statewide median of county median-incomes ${usd(med(inc))} · median county poverty ${med(pov)}% · ${N} counties. Rural tiers: 33 large-metro, 48 smaller-metro, 173 nonmetro. Sources: U.S. Census Bureau ACS 2014–2018 &amp; SAIPE; USDA ERS Rural-Urban Continuum methodology; OMB 2023 metro delineations.`;
+}
+
+load();
+</script>
+</body>
+</html>

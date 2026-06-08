@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Texas County Maps — All Maps</title>
+<style>
+  :root{--bg:#eef1f6;--panel:#fff;--ink:#161b26;--muted:#697084;--line:#e3e7ee;}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+  header.top{position:sticky;top:0;z-index:50;background:var(--panel);border-bottom:1px solid var(--line);box-shadow:0 1px 4px rgba(20,27,38,.07);padding:9px 18px}
+  .row1{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  h1{font-size:16px;margin:0;font-weight:700;letter-spacing:-.01em}
+  .sub{font-size:11.5px;color:var(--muted)}
+  nav{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+  nav a{text-decoration:none;border:1px solid var(--line);background:#fff;color:var(--ink);padding:6px 12px;border-radius:999px;font-size:12.5px;display:flex;align-items:center;gap:7px;transition:all .12s}
+  nav a:hover{border-color:#b9c0cf;transform:translateY(-1px)}
+  nav a .dot{width:10px;height:10px;border-radius:3px;flex:none}
+  section{padding:18px 18px 6px}
+  .shead{display:flex;align-items:baseline;gap:10px;margin:0 2px 8px}
+  .shead h2{font-size:16px;margin:0;font-weight:700}
+  .shead .desc{font-size:12px;color:var(--muted)}
+  .shead a.open{margin-left:auto;font-size:12px;color:#0f5fa6;text-decoration:none}
+  .shead a.open:hover{text-decoration:underline}
+  .frame{position:relative;height:86vh;min-height:560px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel);box-shadow:0 2px 10px rgba(20,27,38,.06)}
+  iframe{width:100%;height:100%;border:0;display:block;background:#fff}
+  .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px}
+  footer{padding:16px 20px 40px;color:var(--muted);font-size:11.5px;text-align:center}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="row1">
+    <h1>🗺 Texas County Maps</h1>
+    <span class="sub">All maps on one page · 254 counties · shared 6-region framework · scroll or jump below</span>
+  </div>
+  <nav id="nav"></nav>
+</header>
+<main id="main"></main>
+<footer>Each panel is the full interactive map. For a single-map view, open any map directly or use the tabbed <a href="index.html">index.html</a>.</footer>
+
+<script>
+  const MAPS=[
+    {id:'regions',  label:'Region Builder',        file:'tx_region_builder.html',              color:'#6366f1', desc:'Your six saved regions — the source of truth.'},
+    {id:'race',     label:'Race & Ethnicity',      file:'texas_race_map.html',                 color:'#1f78b4', desc:'County racial/ethnic composition (ACS 2023).'},
+    {id:'families', label:'Families & Households',  file:'texas_families_households_map.html',   color:'#2e8b57', desc:'Household and family types by county.'},
+    {id:'ses',      label:'Rural-Urban & SES',      file:'texas_rural_ses_map.html',            color:'#d94801', desc:'Rural-urban class + socioeconomic status index.'},
+    {id:'elections',label:'Elections',             file:'texas_elections_map.html',            color:'#cb181d', desc:'2022 Gov, 2024 Pres, 2026 primaries, shift.'},
+    {id:'officials',label:'Elected Officials',      file:'central_tx_officials.html',           color:'#0891b2', desc:'Central Texas elected officials directory.'}
+  ];
+  const nav=document.getElementById('nav'), main=document.getElementById('main');
+  MAPS.forEach(m=>{
+    const a=document.createElement('a');a.href='#'+m.id;
+    a.innerHTML=`<span class="dot" style="background:${m.color}"></span>${m.label}`;
+    nav.appendChild(a);
+    const sec=document.createElement('section');sec.id=m.id;
+    sec.innerHTML=`<div class="shead"><h2>${m.label}</h2><span class="desc">${m.desc}</span>
+      <a class="open" href="${m.file}" target="_blank" rel="noopener">Open full screen ↗</a></div>
+      <div class="frame"><div class="ph">Scroll to load…</div><iframe data-src="${m.file}" title="${m.label}" loading="lazy"></iframe></div>`;
+    main.appendChild(sec);
+  });
+  // lazy-load each iframe when it nears the viewport (keeps the page light)
+  const io=new IntersectionObserver((entries)=>{
+    entries.forEach(en=>{
+      if(en.isIntersecting){
+        const ifr=en.target.querySelector('iframe');
+        if(ifr && !ifr.src){ ifr.src=ifr.dataset.src; ifr.addEventListener('load',()=>{const ph=en.target.querySelector('.ph'); if(ph)ph.style.display='none';}); }
+        io.unobserve(en.target);
+      }
+    });
+  },{rootMargin:'600px'});
+  document.querySelectorAll('.frame').forEach(f=>io.observe(f));
+</script>
+</body>
+</html>

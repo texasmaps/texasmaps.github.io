@@ -1,0 +1,255 @@
+Rank,County,Region,Black population,% of county,Cumulative,Cumulative % of state
+1,"Harris","Houston/Gulf/East",890273,18.7%,890273,25.2%
+2,"Dallas","Dallas/Collin/NE",578968,22.2%,1469241,41.6%
+3,"Tarrant","FW/Denton/Panhandle",366947,17.2%,1836188,52.0%
+4,"Fort Bend","Houston/Gulf/East",174209,20.3%,2010397,57.0%
+5,"Bexar","San Antonio/Corpus",149264,7.3%,2159661,61.2%
+6,"Collin","Dallas/Collin/NE",117821,10.6%,2277482,64.5%
+7,"Travis","Central Texas/Austin",102188,7.8%,2379670,67.4%
+8,"Denton","FW/Denton/Panhandle",99365,10.5%,2479035,70.3%
+9,"Jefferson","Houston/Gulf/East",83512,32.9%,2562547,72.6%
+10,"Bell","Central Texas/Austin",82125,21.6%,2644672,75.0%
+11,"Brazoria","Houston/Gulf/East",59286,15.5%,2703958,76.6%
+12,"Williamson","Central Texas/Austin",42712,6.6%,2746670,77.8%
+13,"Galveston","Houston/Gulf/East",42681,12.0%,2789351,79.1%
+14,"Smith","Dallas/Collin/NE",39597,16.6%,2828948,80.2%
+15,"Montgomery","Houston/Gulf/East",37118,5.7%,2866066,81.2%
+16,"McLennan","Central Texas/Austin",35935,13.6%,2902001,82.2%
+17,"Ellis","Dallas/Collin/NE",26896,13.2%,2928897,83.0%
+18,"Kaufman","Dallas/Collin/NE",26783,16.7%,2955680,83.8%
+19,"El Paso","El Paso/Border/RGV",25346,2.9%,2981026,84.5%
+20,"Brazos","Central Texas/Austin",24510,10.3%,3005536,85.2%
+21,"Gregg","Dallas/Collin/NE",23969,19.2%,3029505,85.9%
+22,"Bowie","Dallas/Collin/NE",22837,24.7%,3052342,86.5%
+23,"Lubbock","FW/Denton/Panhandle",21230,6.7%,3073572,87.1%
+24,"Walker","Houston/Gulf/East",15506,19.8%,3089078,87.5%
+25,"Harrison","Dallas/Collin/NE",14210,20.4%,3103288,87.9%
+26,"Waller","Houston/Gulf/East",13895,23.4%,3117183,88.3%
+27,"Nueces","San Antonio/Corpus",13160,3.7%,3130343,88.7%
+28,"Guadalupe","San Antonio/Corpus",13040,7.3%,3143383,89.1%
+29,"Wichita","FW/Denton/Panhandle",13037,10.0%,3156420,89.5%
+30,"Potter","FW/Denton/Panhandle",11919,10.2%,3168339,89.8%
+31,"Taylor","FW/Denton/Panhandle",11066,7.7%,3179405,90.1%
+32,"Nacogdoches","Houston/Gulf/East",11063,17.0%,3190468,90.4%
+33,"Midland","FW/Denton/Panhandle",10995,6.4%,3201463,90.7%
+34,"Coryell","Central Texas/Austin",10658,12.7%,3212121,91.0%
+35,"Angelina","Houston/Gulf/East",10603,12.2%,3222724,91.3%
+36,"Anderson","Dallas/Collin/NE",10519,18.2%,3233243,91.6%
+37,"Hays","Central Texas/Austin",9766,3.8%,3243009,91.9%
+38,"Rockwall","Dallas/Collin/NE",9679,8.3%,3252688,92.2%
+39,"Johnson","FW/Denton/Panhandle",8914,4.7%,3261602,92.4%
+40,"Hunt","Dallas/Collin/NE",8053,7.7%,3269655,92.7%
+41,"Liberty","Houston/Gulf/East",7806,8.0%,3277461,92.9%
+42,"Ector","FW/Denton/Panhandle",7650,4.7%,3285111,93.1%
+43,"Grayson","FW/Denton/Panhandle",7441,5.3%,3292552,93.3%
+44,"Orange","Houston/Gulf/East",7153,8.4%,3299705,93.5%
+45,"Rusk","Dallas/Collin/NE",6920,13.2%,3306625,93.7%
+46,"Cherokee","Dallas/Collin/NE",6638,13.0%,3313263,93.9%
+47,"Lamar","Dallas/Collin/NE",6239,12.4%,3319502,94.1%
+48,"Bastrop","Central Texas/Austin",5854,5.7%,3325356,94.2%
+49,"Navarro","Dallas/Collin/NE",5704,10.6%,3331060,94.4%
+50,"Washington","Central Texas/Austin",5470,15.1%,3336530,94.6%
+51,"Wharton","Houston/Gulf/East",5167,12.4%,3341697,94.7%
+52,"Jasper","Houston/Gulf/East",5061,15.4%,3346758,94.8%
+53,"Victoria","San Antonio/Corpus",4999,5.5%,3351757,95.0%
+54,"Hidalgo","El Paso/Border/RGV",4814,0.5%,3356571,95.1%
+55,"Cass","Dallas/Collin/NE",4781,16.7%,3361352,95.3%
+56,"Houston","Houston/Gulf/East",4750,21.5%,3366102,95.4%
+57,"Randall","FW/Denton/Panhandle",4639,3.2%,3370741,95.5%
+58,"Henderson","Dallas/Collin/NE",4408,5.3%,3375149,95.7%
+59,"Comal","San Antonio/Corpus",4271,2.4%,3379420,95.8%
+60,"Polk","Houston/Gulf/East",4057,7.8%,3383477,95.9%
+61,"Tom Green","San Antonio/Corpus",4009,3.4%,3387486,96.0%
+62,"Limestone","Central Texas/Austin",3770,17.0%,3391256,96.1%
+63,"Shelby","Dallas/Collin/NE",3751,15.6%,3395007,96.2%
+64,"Matagorda","Houston/Gulf/East",3669,10.1%,3398676,96.3%
+65,"Chambers","Houston/Gulf/East",3554,7.2%,3402230,96.4%
+66,"Grimes","Central Texas/Austin",3491,11.5%,3405721,96.5%
+67,"Falls","Central Texas/Austin",3387,19.8%,3409108,96.6%
+68,"Robertson","Central Texas/Austin",3385,19.9%,3412493,96.7%
+69,"Hardin","Houston/Gulf/East",3183,5.6%,3415676,96.8%
+70,"Upshur","Dallas/Collin/NE",2995,7.2%,3418671,96.9%
+71,"Titus","Dallas/Collin/NE",2963,9.5%,3421634,97.0%
+72,"Freestone","Central Texas/Austin",2903,14.7%,3424537,97.1%
+73,"Austin","Houston/Gulf/East",2690,8.8%,3427227,97.1%
+74,"Hopkins","Dallas/Collin/NE",2641,7.1%,3429868,97.2%
+75,"Panola","Dallas/Collin/NE",2577,11.4%,3432445,97.3%
+76,"Colorado","Houston/Gulf/East",2550,12.3%,3434995,97.3%
+77,"Milam","Central Texas/Austin",2341,9.3%,3437336,97.4%
+78,"Fannin","Dallas/Collin/NE",2299,6.3%,3439635,97.5%
+79,"San Jacinto","Houston/Gulf/East",2274,8.1%,3441909,97.5%
+80,"Morris","Dallas/Collin/NE",2207,18.4%,3444116,97.6%
+81,"Newton","Houston/Gulf/East",2185,17.9%,3446301,97.7%
+82,"Parker","FW/Denton/Panhandle",2183,1.4%,3448484,97.7%
+83,"Tyler","Houston/Gulf/East",2130,10.6%,3450614,97.8%
+84,"Burleson","Central Texas/Austin",2119,11.6%,3452733,97.9%
+85,"Hill","Central Texas/Austin",2102,5.7%,3454835,97.9%
+86,"Madison","Central Texas/Austin",2086,15.4%,3456921,98.0%
+87,"Marion","Dallas/Collin/NE",2079,21.6%,3459000,98.0%
+88,"Jones","FW/Denton/Panhandle",2055,10.3%,3461055,98.1%
+89,"Caldwell","Central Texas/Austin",1914,4.1%,3462969,98.1%
+90,"Red River","Dallas/Collin/NE",1903,16.4%,3464872,98.2%
+91,"Cameron","El Paso/Border/RGV",1872,0.4%,3466744,98.2%
+92,"Bee","San Antonio/Corpus",1852,6.0%,3468596,98.3%
+93,"Wood","Dallas/Collin/NE",1844,4.0%,3470440,98.4%
+94,"Lee","Central Texas/Austin",1841,10.4%,3472281,98.4%
+95,"Camp","Dallas/Collin/NE",1786,14.1%,3474067,98.5%
+96,"San Augustine","Houston/Gulf/East",1746,22.1%,3475813,98.5%
+97,"Van Zandt","Dallas/Collin/NE",1667,2.7%,3477480,98.6%
+98,"Howard","FW/Denton/Panhandle",1615,4.9%,3479095,98.6%
+99,"Medina","San Antonio/Corpus",1471,2.8%,3480566,98.6%
+100,"DeWitt","San Antonio/Corpus",1452,7.3%,3482018,98.7%
+101,"Fayette","Central Texas/Austin",1431,5.8%,3483449,98.7%
+102,"Cooke","FW/Denton/Panhandle",1411,3.3%,3484860,98.8%
+103,"Hale","FW/Denton/Panhandle",1297,4.0%,3486157,98.8%
+104,"Brown","San Antonio/Corpus",1235,3.2%,3487392,98.8%
+105,"Trinity","Houston/Gulf/East",1202,8.7%,3488594,98.9%
+106,"Gonzales","San Antonio/Corpus",1187,6.0%,3489781,98.9%
+107,"Leon","Central Texas/Austin",1172,7.3%,3490953,98.9%
+108,"Karnes","San Antonio/Corpus",1027,6.9%,3491980,99.0%
+109,"Wise","FW/Denton/Panhandle",1009,1.4%,3492989,99.0%
+110,"San Patricio","San Antonio/Corpus",1000,1.4%,3493989,99.0%
+111,"Kleberg","San Antonio/Corpus",995,3.2%,3494984,99.0%
+112,"Webb","El Paso/Border/RGV",995,0.4%,3495979,99.1%
+113,"Moore","FW/Denton/Panhandle",971,4.6%,3496950,99.1%
+114,"Gray","FW/Denton/Panhandle",930,4.4%,3497880,99.1%
+115,"Wilson","San Antonio/Corpus",912,1.8%,3498792,99.2%
+116,"Jackson","Houston/Gulf/East",894,5.9%,3499686,99.2%
+117,"Lampasas","Central Texas/Austin",822,3.7%,3500508,99.2%
+118,"Lavaca","San Antonio/Corpus",817,4.0%,3501325,99.2%
+119,"Kerr","San Antonio/Corpus",813,1.5%,3502138,99.3%
+120,"Dawson","FW/Denton/Panhandle",803,6.5%,3502941,99.3%
+121,"Wilbarger","FW/Denton/Panhandle",770,6.1%,3503711,99.3%
+122,"Frio","San Antonio/Corpus",749,4.2%,3504460,99.3%
+123,"Palo Pinto","FW/Denton/Panhandle",737,2.5%,3505197,99.3%
+124,"Hood","FW/Denton/Panhandle",657,1.0%,3505854,99.4%
+125,"Burnet","Central Texas/Austin",636,1.2%,3506490,99.4%
+126,"Hockley","FW/Denton/Panhandle",611,2.8%,3507101,99.4%
+127,"Atascosa","San Antonio/Corpus",601,1.2%,3507702,99.4%
+128,"Erath","FW/Denton/Panhandle",595,1.4%,3508297,99.4%
+129,"Nolan","FW/Denton/Panhandle",573,3.9%,3508870,99.4%
+130,"Val Verde","El Paso/Border/RGV",573,1.2%,3509443,99.5%
+131,"Garza","FW/Denton/Panhandle",558,10.3%,3510001,99.5%
+132,"Swisher","FW/Denton/Panhandle",544,7.8%,3510545,99.5%
+133,"Gaines","FW/Denton/Panhandle",541,2.5%,3511086,99.5%
+134,"Ward","FW/Denton/Panhandle",538,4.8%,3511624,99.5%
+135,"Franklin","Dallas/Collin/NE",537,5.1%,3512161,99.5%
+136,"Pecos","El Paso/Border/RGV",534,3.6%,3512695,99.6%
+137,"Mitchell","FW/Denton/Panhandle",509,5.7%,3513204,99.6%
+138,"Hutchinson","FW/Denton/Panhandle",486,2.4%,3513690,99.6%
+139,"Calhoun","San Antonio/Corpus",467,2.3%,3514157,99.6%
+140,"Terry","FW/Denton/Panhandle",461,3.9%,3514618,99.6%
+141,"Sabine","Houston/Gulf/East",459,4.6%,3515077,99.6%
+142,"Childress","FW/Denton/Panhandle",451,6.7%,3515528,99.6%
+143,"Delta","Dallas/Collin/NE",446,8.3%,3515974,99.6%
+144,"Scurry","FW/Denton/Panhandle",445,2.7%,3516419,99.7%
+145,"Refugio","San Antonio/Corpus",411,6.1%,3516830,99.7%
+146,"Eastland","FW/Denton/Panhandle",401,2.2%,3517231,99.7%
+147,"Kendall","San Antonio/Corpus",388,0.8%,3517619,99.7%
+148,"Rains","Dallas/Collin/NE",357,2.9%,3517976,99.7%
+149,"Hartley","FW/Denton/Panhandle",355,6.7%,3518331,99.7%
+150,"Lamb","FW/Denton/Panhandle",353,2.7%,3518684,99.7%
+151,"Andrews","FW/Denton/Panhandle",347,1.9%,3519031,99.7%
+152,"Goliad","San Antonio/Corpus",339,4.8%,3519370,99.7%
+153,"Haskell","FW/Denton/Panhandle",317,5.9%,3519687,99.7%
+154,"Coleman","San Antonio/Corpus",302,3.9%,3519989,99.8%
+155,"Runnels","San Antonio/Corpus",296,3.0%,3520285,99.8%
+156,"Jack","FW/Denton/Panhandle",293,3.4%,3520578,99.8%
+157,"Willacy","El Paso/Border/RGV",293,1.4%,3520871,99.8%
+158,"Stephens","FW/Denton/Panhandle",290,3.1%,3521161,99.8%
+159,"Winkler","FW/Denton/Panhandle",275,3.6%,3521436,99.8%
+160,"Aransas","San Antonio/Corpus",273,1.1%,3521709,99.8%
+161,"Young","FW/Denton/Panhandle",254,1.4%,3521963,99.8%
+162,"Callahan","FW/Denton/Panhandle",245,1.7%,3522208,99.8%
+163,"La Salle","El Paso/Border/RGV",240,3.5%,3522448,99.8%
+164,"Live Oak","San Antonio/Corpus",238,2.1%,3522686,99.8%
+165,"Bandera","San Antonio/Corpus",232,1.1%,3522918,99.8%
+166,"Jim Wells","San Antonio/Corpus",231,0.6%,3523149,99.8%
+167,"Llano","Central Texas/Austin",231,1.0%,3523380,99.9%
+168,"Bosque","Central Texas/Austin",217,1.2%,3523597,99.9%
+169,"Collingsworth","FW/Denton/Panhandle",216,7.9%,3523813,99.9%
+170,"Reeves","El Paso/Border/RGV",188,1.4%,3524001,99.9%
+171,"Somervell","FW/Denton/Panhandle",183,1.9%,3524184,99.9%
+172,"Donley","FW/Denton/Panhandle",177,5.4%,3524361,99.9%
+173,"Starr","El Paso/Border/RGV",164,0.2%,3524525,99.9%
+174,"Reagan","FW/Denton/Panhandle",159,4.9%,3524684,99.9%
+175,"Hamilton","Central Texas/Austin",158,1.9%,3524842,99.9%
+176,"Uvalde","El Paso/Border/RGV",154,0.6%,3524996,99.9%
+177,"Oldham","FW/Denton/Panhandle",153,7.3%,3525149,99.9%
+178,"Deaf Smith","FW/Denton/Panhandle",148,0.8%,3525297,99.9%
+179,"San Saba","Central Texas/Austin",141,2.4%,3525438,99.9%
+180,"Fisher","FW/Denton/Panhandle",140,3.8%,3525578,99.9%
+181,"Hall","FW/Denton/Panhandle",140,5.0%,3525718,99.9%
+182,"Maverick","El Paso/Border/RGV",133,0.2%,3525851,99.9%
+183,"Cochran","FW/Denton/Panhandle",127,5.0%,3525978,99.9%
+184,"Floyd","FW/Denton/Panhandle",126,2.4%,3526104,99.9%
+185,"Concho","San Antonio/Corpus",122,3.7%,3526226,99.9%
+186,"Hardeman","FW/Denton/Panhandle",121,3.4%,3526347,99.9%
+187,"Clay","FW/Denton/Panhandle",117,1.1%,3526464,99.9%
+188,"Crosby","FW/Denton/Panhandle",112,2.2%,3526576,99.9%
+189,"Knox","FW/Denton/Panhandle",100,3.0%,3526676,99.9%
+190,"Blanco","Central Texas/Austin",92,0.8%,3526768,99.9%
+191,"Lynn","FW/Denton/Panhandle",88,1.6%,3526856,100.0%
+192,"Castro","FW/Denton/Panhandle",86,1.2%,3526942,100.0%
+193,"Kimble","San Antonio/Corpus",84,1.9%,3527026,100.0%
+194,"Wheeler","FW/Denton/Panhandle",81,1.7%,3527107,100.0%
+195,"Zavala","El Paso/Border/RGV",79,0.8%,3527186,100.0%
+196,"Crane","FW/Denton/Panhandle",74,1.6%,3527260,100.0%
+197,"Comanche","FW/Denton/Panhandle",70,0.5%,3527330,100.0%
+198,"Duval","El Paso/Border/RGV",69,0.7%,3527399,100.0%
+199,"Archer","FW/Denton/Panhandle",67,0.8%,3527466,100.0%
+200,"Cottle","FW/Denton/Panhandle",64,4.9%,3527530,100.0%
+201,"Martin","FW/Denton/Panhandle",64,1.2%,3527594,100.0%
+202,"Dimmit","El Paso/Border/RGV",60,0.7%,3527654,100.0%
+203,"McCulloch","San Antonio/Corpus",58,0.8%,3527712,100.0%
+204,"Coke","FW/Denton/Panhandle",57,1.7%,3527769,100.0%
+205,"Brooks","El Paso/Border/RGV",54,0.8%,3527823,100.0%
+206,"Gillespie","San Antonio/Corpus",51,0.2%,3527874,100.0%
+207,"Briscoe","FW/Denton/Panhandle",45,3.7%,3527919,100.0%
+208,"Real","San Antonio/Corpus",39,1.4%,3527958,100.0%
+209,"Shackelford","FW/Denton/Panhandle",37,1.2%,3527995,100.0%
+210,"Zapata","El Paso/Border/RGV",37,0.3%,3528032,100.0%
+211,"Parmer","FW/Denton/Panhandle",35,0.4%,3528067,100.0%
+212,"Carson","FW/Denton/Panhandle",35,0.6%,3528102,100.0%
+213,"Motley","FW/Denton/Panhandle",33,2.6%,3528135,100.0%
+214,"Upton","FW/Denton/Panhandle",30,0.9%,3528165,100.0%
+215,"Bailey","FW/Denton/Panhandle",30,0.4%,3528195,100.0%
+216,"Mills","Central Texas/Austin",27,0.6%,3528222,100.0%
+217,"Brewster","El Paso/Border/RGV",27,0.3%,3528249,100.0%
+218,"Baylor","FW/Denton/Panhandle",26,0.8%,3528275,100.0%
+219,"Hudspeth","El Paso/Border/RGV",25,0.8%,3528300,100.0%
+220,"Dickens","FW/Denton/Panhandle",24,1.5%,3528324,100.0%
+221,"Edwards","San Antonio/Corpus",22,1.6%,3528346,100.0%
+222,"Schleicher","San Antonio/Corpus",18,0.7%,3528364,100.0%
+223,"Crockett","San Antonio/Corpus",17,0.6%,3528381,100.0%
+224,"Dallam","FW/Denton/Panhandle",14,0.2%,3528395,100.0%
+225,"Lipscomb","FW/Denton/Panhandle",12,0.4%,3528407,100.0%
+226,"Hansford","FW/Denton/Panhandle",11,0.2%,3528418,100.0%
+227,"Hemphill","FW/Denton/Panhandle",11,0.3%,3528429,100.0%
+228,"Jeff Davis","El Paso/Border/RGV",11,0.6%,3528440,100.0%
+229,"Yoakum","FW/Denton/Panhandle",11,0.1%,3528451,100.0%
+230,"Borden","FW/Denton/Panhandle",11,1.5%,3528462,100.0%
+231,"Montague","FW/Denton/Panhandle",10,0.0%,3528472,100.0%
+232,"Armstrong","FW/Denton/Panhandle",10,0.5%,3528482,100.0%
+233,"Menard","San Antonio/Corpus",8,0.4%,3528490,100.0%
+234,"Stonewall","FW/Denton/Panhandle",7,0.6%,3528497,100.0%
+235,"Kent","FW/Denton/Panhandle",6,0.8%,3528503,100.0%
+236,"Jim Hogg","El Paso/Border/RGV",5,0.1%,3528508,100.0%
+237,"Culberson","El Paso/Border/RGV",4,0.2%,3528512,100.0%
+238,"Sherman","FW/Denton/Panhandle",4,0.2%,3528516,100.0%
+239,"Sutton","San Antonio/Corpus",4,0.1%,3528520,100.0%
+240,"Foard","FW/Denton/Panhandle",3,0.3%,3528523,100.0%
+241,"Kinney","El Paso/Border/RGV",3,0.1%,3528526,100.0%
+242,"Mason","San Antonio/Corpus",3,0.1%,3528529,100.0%
+243,"Roberts","FW/Denton/Panhandle",2,0.3%,3528531,100.0%
+244,"Sterling","FW/Denton/Panhandle",2,0.1%,3528533,100.0%
+245,"Glasscock","FW/Denton/Panhandle",0,0.0%,3528533,100.0%
+246,"Irion","San Antonio/Corpus",0,0.0%,3528533,100.0%
+247,"Kenedy","El Paso/Border/RGV",0,0.0%,3528533,100.0%
+248,"King","FW/Denton/Panhandle",0,0.0%,3528533,100.0%
+249,"Loving","El Paso/Border/RGV",0,0.0%,3528533,100.0%
+250,"McMullen","El Paso/Border/RGV",0,0.0%,3528533,100.0%
+251,"Ochiltree","FW/Denton/Panhandle",0,0.0%,3528533,100.0%
+252,"Presidio","El Paso/Border/RGV",0,0.0%,3528533,100.0%
+253,"Terrell","El Paso/Border/RGV",0,0.0%,3528533,100.0%
+254,"Throckmorton","FW/Denton/Panhandle",0,0.0%,3528533,100.0%

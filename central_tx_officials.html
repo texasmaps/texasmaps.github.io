@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Central Texas Elected Officials</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f4f8; color: #1e293b; min-height: 100vh; }
+
+/* ─── HEADER ─────────────────────────────────────────────── */
+header {
+  background: #ffffff;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 12px 20px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+header h1 { font-size: 1.15rem; font-weight: 700; color: #0f172a; flex: 1; min-width: 200px; }
+header .subtitle { font-size: 0.72rem; color: #64748b; font-weight: 400; }
+
+.filters { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.filter-label { font-size: 0.7rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.filter-btn {
+  padding: 4px 12px; border-radius: 20px; border: 1.5px solid #cbd5e1;
+  background: #ffffff; color: #475569; cursor: pointer; font-size: 0.75rem; font-weight: 500;
+  transition: all 0.12s;
+}
+.filter-btn:hover { border-color: #94a3b8; }
+.filter-btn.active-all { background: #0f172a; border-color: #0f172a; color: #fff; }
+.filter-btn.active-D   { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+.filter-btn.active-R   { background: #dc2626; border-color: #dc2626; color: #fff; }
+.filter-btn.active-I   { background: #059669; border-color: #059669; color: #fff; }
+.filter-btn.active-NP  { background: #64748b; border-color: #64748b; color: #fff; }
+
+.map-ctrl-btn {
+  padding: 5px 10px; border-radius: 6px; border: 1.5px solid #cbd5e1;
+  background: #fff; color: #475569; cursor: pointer; font-size: 0.75rem; font-weight: 600;
+  transition: all 0.12s;
+}
+.map-ctrl-btn:hover { background: #f1f5f9; border-color: #94a3b8; }
+
+/* ─── LAYOUT ─────────────────────────────────────────────── */
+.layout { display: flex; height: calc(100vh - 56px); }
+.layout.resizing { cursor: col-resize; user-select: none; }
+.layout.resizing iframe, .layout.resizing svg { pointer-events: none; }
+
+/* ─── DRAG HANDLE ─────────────────────────────────────────── */
+#panel-resizer {
+  flex: 0 0 6px; background: #e2e8f0; cursor: col-resize;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; z-index: 5; transition: background 0.12s;
+}
+#panel-resizer:hover, #panel-resizer.active { background: #2563eb; }
+.resizer-grip {
+  width: 2px; height: 34px; border-radius: 2px;
+  background: #94a3b8; transition: background 0.12s;
+}
+#panel-resizer:hover .resizer-grip, #panel-resizer.active .resizer-grip { background: #ffffff; }
+
+/* ─── MAP ────────────────────────────────────────────────── */
+#map-panel {
+  flex: 1 1 auto; min-width: 280px; background: #e8f0fe; position: relative; overflow: hidden;
+}
+#map-panel svg { width: 100%; height: 100%; cursor: grab; }
+#map-panel svg:active { cursor: grabbing; }
+
+.county-bg   { fill: #dde6f0; stroke: #b0c4de; stroke-width: 0.4; }
+.county-central { fill: #bfdbfe; stroke: #60a5fa; stroke-width: 0.8; cursor: pointer; }
+.county-central:hover { fill: #93c5fd; stroke: #3b82f6; stroke-width: 1.2; }
+.county-selected { fill: #2563eb !important; stroke: #1d4ed8 !important; stroke-width: 1.5 !important; }
+.state-border { fill: none; stroke: #334155; stroke-width: 2; }
+
+.county-label {
+  font-size: 7px; fill: #334155; text-anchor: middle; dominant-baseline: middle;
+  pointer-events: none; font-weight: 600;
+  text-shadow: 0 0 3px #e8f0fe, 0 0 3px #e8f0fe;
+}
+.county-label-central { fill: #1e3a8a; font-size: 7.5px; font-weight: 700; }
+.county-label-selected { fill: #ffffff; }
+
+.map-overlay-hint {
+  position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+  background: rgba(255,255,255,0.92); color: #64748b; font-size: 0.7rem;
+  padding: 4px 12px; border-radius: 20px; pointer-events: none;
+  border: 1px solid #e2e8f0; white-space: nowrap;
+}
+
+.zoom-controls {
+  position: absolute; top: 12px; right: 12px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.zoom-btn {
+  width: 30px; height: 30px; background: #fff; border: 1.5px solid #cbd5e1;
+  border-radius: 6px; cursor: pointer; font-size: 1rem; display: flex;
+  align-items: center; justify-content: center; font-weight: 700; color: #475569;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: all 0.1s;
+}
+.zoom-btn:hover { background: #f1f5f9; border-color: #94a3b8; }
+
+.map-legend {
+  position: absolute; top: 12px; left: 12px;
+  background: rgba(255,255,255,0.92); border: 1.5px solid #e2e8f0;
+  border-radius: 8px; padding: 8px 12px; font-size: 0.7rem;
+}
+.legend-title { color: #64748b; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 6px; }
+.legend-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; color: #475569; }
+.legend-swatch { width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0; }
+
+/* ─── PANEL ──────────────────────────────────────────────── */
+#officials-panel {
+  flex: 0 0 430px; width: 430px; min-width: 300px; max-width: 70vw; background: #ffffff;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+#panel-header {
+  padding: 14px 16px 10px; border-bottom: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+}
+#panel-header h2 { font-size: 1.05rem; color: #0f172a; font-weight: 700; }
+#panel-sub { font-size: 0.72rem; color: #64748b; margin-top: 2px; }
+
+#officials-list { flex: 1; overflow-y: auto; padding: 12px; }
+#officials-list::-webkit-scrollbar { width: 4px; }
+#officials-list::-webkit-scrollbar-track { background: #f8fafc; }
+#officials-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+
+.empty-state {
+  text-align: center; padding: 50px 24px; color: #94a3b8;
+}
+.empty-state .arrow { font-size: 2rem; margin-bottom: 10px; }
+.empty-state p { font-size: 0.82rem; line-height: 1.7; color: #64748b; }
+
+/* ─── TIER SECTIONS ──────────────────────────────────────── */
+.tier-section { margin-bottom: 14px; }
+.tier-label {
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 4px; display: inline-block; margin-bottom: 8px;
+}
+.tier-b { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.tier-c { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+
+/* ─── OFFICIAL CARDS ─────────────────────────────────────── */
+.official-card {
+  background: #f8fafc; border-radius: 8px; padding: 9px 11px;
+  margin-bottom: 6px; border: 1.5px solid #e2e8f0;
+  border-left: 4px solid transparent; transition: box-shadow 0.12s, border-color 0.12s;
+}
+.official-card { cursor: pointer; }
+.official-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.12); border-color: #cbd5e1; }
+.official-card:active { transform: scale(0.996); }
+.official-card.dem-card { border-left-color: #2563eb; background: #f0f7ff; border-color: #dbeafe; }
+.official-card.rep-card { border-left-color: #dc2626; background: #fff5f5; border-color: #fee2e2; }
+.official-card.ind-card { border-left-color: #059669; background: #f0fdf4; border-color: #d1fae5; }
+.official-card.np-card  { border-left-color: #94a3b8; background: #f8fafc; border-color: #e2e8f0; }
+.official-card.incoming-card {
+  border-style: dashed; opacity: 0.92;
+}
+.official-card.incoming-card.dem-card { background: #f0f9ff; border-color: #7dd3fc; border-left-color: #0ea5e9; }
+
+.card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+.card-name { font-weight: 600; font-size: 0.86rem; color: #0f172a; }
+.card-name.incoming-name { color: #0369a1; }
+
+.party-badge {
+  font-size: 0.62rem; font-weight: 700; padding: 2px 7px; border-radius: 12px;
+  white-space: nowrap; flex-shrink: 0;
+}
+.badge-D  { background: #dbeafe; color: #1d4ed8; }
+.badge-R  { background: #fee2e2; color: #dc2626; }
+.badge-I  { background: #d1fae5; color: #059669; }
+.badge-NP { background: #f1f5f9; color: #64748b; }
+
+.card-office { font-size: 0.76rem; color: #475569; margin-top: 2px; }
+.card-note   { font-size: 0.68rem; color: #f59e0b; margin-top: 3px; font-weight: 500; }
+.card-note.incoming-note { color: #0ea5e9; }
+.card-note.vacating-note { color: #f97316; }
+
+.card-links { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.card-link {
+  font-size: 0.65rem; padding: 2px 8px; border-radius: 12px;
+  text-decoration: none; font-weight: 500; border: 1px solid;
+  transition: opacity 0.1s;
+}
+.card-link:hover { opacity: 0.75; }
+
+/* ─── OFFICIAL DETAIL POP-UP ─────────────────────────────── */
+#odetail { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: center; justify-content: center; padding: 22px; }
+#odetail.on { display: flex; }
+.od-card { background: #fff; border-radius: 16px; width: min(780px, 95vw); max-height: 92vh; overflow-y: auto; box-shadow: 0 24px 70px rgba(0,0,0,0.28); border-top: 7px solid #94a3b8; }
+.od-card.D { border-top-color: #2563eb; } .od-card.R { border-top-color: #dc2626; } .od-card.I { border-top-color: #059669; } .od-card.NP { border-top-color: #94a3b8; }
+.od-hd { display: flex; align-items: flex-start; gap: 20px; padding: 26px 28px 18px; }
+.od-photo { width: 160px; height: 160px; border-radius: 16px; object-fit: cover; object-position: center top; flex-shrink: 0; background: #e2e8f0; border: 3px solid #fff; box-shadow: 0 4px 14px rgba(0,0,0,0.16); }
+.od-avatar { width: 160px; height: 160px; border-radius: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 3.4rem; font-weight: 700; color: #fff; letter-spacing: 0.02em; box-shadow: 0 4px 14px rgba(0,0,0,0.16); }
+.od-name { font-size: 1.7rem; font-weight: 700; color: #0f172a; line-height: 1.18; }
+.od-office { font-size: 1rem; color: #475569; margin-top: 5px; }
+.od-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 11px; align-items: center; }
+.od-x { margin-left: auto; flex-shrink: 0; width: 32px; height: 32px; border: none; background: #f1f5f9; border-radius: 8px; cursor: pointer; font-size: 1.15rem; color: #475569; line-height: 1; }
+.od-x:hover { background: #e2e8f0; }
+.od-body { padding: 0 28px 26px; }
+.od-sec { margin-top: 18px; }
+.od-lbl { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #94a3b8; margin-bottom: 6px; }
+.od-note { font-size: 0.85rem; color: #b45309; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 9px 11px; line-height: 1.45; }
+.od-note.inc { color: #0369a1; background: #f0f9ff; border-color: #bae6fd; }
+.od-links a { display: inline-flex; align-items: center; gap: 5px; font-size: 0.8rem; padding: 8px 13px; border-radius: 9px; text-decoration: none; font-weight: 600; border: 1px solid; margin: 0 7px 7px 0; }
+.link-web      { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+.link-results  { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+.link-bp       { background: #fefce8; color: #a16207; border-color: #fef08a; }
+.link-unknown  { background: #f1f5f9; color: #64748b; border-color: #cbd5e1; cursor: default; }
+
+@media (max-width: 700px) {
+  .layout { flex-direction: column; }
+  #officials-panel { width: 100%; min-width: unset; height: 50vh; }
+  #map-panel { height: 50vh; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Central Texas Elected Officials <span class="subtitle">— Tiers B & C | 30 Counties</span></h1>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+    <span class="filter-label">Party</span>
+    <div class="filters" id="party-filters">
+      <button class="filter-btn active-all" data-party="all">All</button>
+      <button class="filter-btn" data-party="D">Democrat</button>
+      <button class="filter-btn" data-party="I">Independent</button>
+      <button class="filter-btn" data-party="NP">Nonpartisan</button>
+      <button class="filter-btn" data-party="R">Republican</button>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- MAP -->
+  <div id="map-panel">
+    <svg id="map"></svg>
+    <div class="zoom-controls">
+      <button class="zoom-btn" id="zoomIn" title="Zoom in">+</button>
+      <button class="zoom-btn" id="zoomOut" title="Zoom out">−</button>
+      <button class="zoom-btn" id="zoomReset" title="Reset" style="font-size:0.6rem">⌂</button>
+    </div>
+    <div class="map-legend">
+      <div class="legend-title">Legend</div>
+      <div class="legend-row"><div class="legend-swatch" style="background:#bfdbfe;border:1px solid #60a5fa"></div>Central TX (30 counties)</div>
+      <div class="legend-row"><div class="legend-swatch" style="background:#2563eb;border:1px solid #1d4ed8"></div>Selected county</div>
+      <div class="legend-row"><div class="legend-swatch" style="background:#dde6f0;border:1px solid #b0c4de"></div>Other TX counties</div>
+      <div style="margin-top:6px;color:#94a3b8;font-size:0.65rem">Scroll or pinch to zoom · drag to pan</div>
+    </div>
+    <div class="map-overlay-hint" id="map-hint">Click a highlighted county to view officials</div>
+  </div>
+
+  <!-- DRAG HANDLE -->
+  <div id="panel-resizer" title="Drag to resize"><span class="resizer-grip"></span></div>
+
+  <!-- PANEL -->
+  <div id="officials-panel">
+    <div id="panel-header">
+      <h2 id="panel-title">Select a County</h2>
+      <div id="panel-sub">Click any blue county on the map</div>
+    </div>
+    <div id="officials-list">
+      <div class="empty-state">
+        <div class="arrow">👈</div>
+        <p>Click any highlighted county on the map.<br><br>
+          <strong>Democrats &amp; Independents listed first.</strong><br>
+          Dashed cards = Dem primary winners who will likely take office after the November general election.
+          <br><br>
+          <em style="font-size:0.75rem;color:#94a3b8">⚠ Some names/links need verification — data current as of June 2026. Always cross-check before use.</em>
+        </p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Official detail pop-up -->
+<div id="odetail">
+  <div class="od-card" id="od-card"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  DATA — Officials by County
+//  status: 'incumbent' | 'vacating' | 'incoming'
+//  party:  D | R | I | NP
+//  tier:   B | C
+//  links:  { web, ballotpedia, results }  (null if uncertain)
+// ══════════════════════════════════════════════════════════
+
+const COUNTIES = {
+  'Travis': {
+    fips: '48453', pop: '~1,404,419',
+    officials: [
+      // ── TIER B ─────────────────────────────────────────
+      // State Senators
+      {
+        name: 'Sarah Eckhardt', photo: 'https://senate.texas.gov/members/d14/img/SE_headshot_2020.jpg', office: 'State Senator, SD 14', party: 'D', tier: 'B',
+        status: 'vacating', note: 'Running for TX Comptroller (Nov 2026 general) — retains senate seat until Jan 2027',
+        links: {
+          web: 'https://senate.texas.gov/member.php?d=14',
+          ballotpedia: 'https://ballotpedia.org/Sarah_Eckhardt',
+          results: 'https://ballotpedia.org/Texas_State_Senate_District_14'
+        }
+      },
+      {
+        name: 'Judith Zaffirini', photo: 'https://senate.texas.gov/members/d21/img/Zaffirini_2017.jpg', office: 'State Senator, SD 21 (partial)', party: 'D', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://senate.texas.gov/member.php?d=21',
+          ballotpedia: 'https://ballotpedia.org/Judith_Zaffirini',
+          results: null
+        }
+      },
+      // State Reps — Democrats
+      {
+        name: 'Sheryl Cole', photo: 'https://house.texas.gov/images/members/3625.jpg', office: 'State Rep., HD 46', party: 'D', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://house.texas.gov/members/member-page/?district=46',
+          ballotpedia: 'https://ballotpedia.org/Sheryl_Cole',
+          results: null
+        }
+      },
+      {
+        name: 'Vikki Goodwin', photo: 'https://house.texas.gov/images/members/3820.jpg', office: 'State Rep., HD 47', party: 'D', tier: 'B',
+        status: 'vacating', note: 'Won Dem primary runoff for Lt. Gov. (May 2026) — faces Dan Patrick (R) in Nov.',
+        links: {
+          web: 'https://house.texas.gov/members/member-page/?district=47',
+          ballotpedia: 'https://ballotpedia.org/Vikki_Goodwin',
+          results: 'https://ballotpedia.org/Texas_House_of_Representatives_District_47'
+        }
+      },
+      {
+        name: 'Pooja Sethi', photo: 'https://images.squarespace-cdn.com/content/v1/6813097b22fce2334c9dddfb/7818c9d6-7dbc-4454-bea1-a28ea1d89ee3/PoojaHS-167.jpg', office: 'HD 47 — Dem primary winner (incoming)', party: 'D', tier: 'B',
+        status: 'incoming', note: 'Won Dem primary with 76% · faces R Jennifer Mushtaler in Nov. · HD 47 is safe Dem',
+        links: {
+          web: 'https://www.poojafortexas.com',
+          ballotpedia: 'https://ballotpedia.org/Pooja_Sethi',
+          results: 'https://www.kut.org/politics/2026-05-26/austin-tx-election-results-primary-runoff-travis-williamson-hays-county'
+        }
+      },
+      {
+        name: 'Donna Howard', photo: 'https://house.texas.gov/images/members/3310.jpg', office: 'State Rep., HD 48', party: 'D', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://house.texas.gov/members/member-page/?district=48',
+          ballotpedia: 'https://ballotpedia.org/Donna_Howard',
+          results: null
+        }
+      },
+      {
+        name: 'Gina Hinojosa', photo: 'https://house.texas.gov/images/members/3210.jpg', office: 'State Rep., HD 49', party: 'D', tier: 'B',
+        status: 'vacating', note: 'Won Dem gubernatorial primary (Mar 2026) — faces Gov. Abbott (R) in Nov.',
+        links: {
+          web: 'https://house.texas.gov/members/3210',
+          ballotpedia: 'https://ballotpedia.org/Gina_Hinojosa',
+          results: 'https://ballotpedia.org/Gina_Hinojosa'
+        }
+      },
+      {
+        name: 'Montserrat Garibay', photo: 'https://images.squarespace-cdn.com/content/v1/68ed224f5e7bd548437f5a86/833a753d-65c5-45f1-af79-30c96d746d44/MONTSERRAT+%281%29.png', office: 'HD 49 — Dem primary winner (incoming)', party: 'D', tier: 'B',
+        status: 'incoming', note: 'Won Dem runoff 62.3% · NO Republican opponent filed · effectively the next rep',
+        links: {
+          web: 'https://www.montserratfortexas.com',
+          ballotpedia: 'https://ballotpedia.org/Montserrat_Garibay',
+          results: 'https://www.kut.org/politics/2026-05-26/austin-tx-primary-election-runoff-kathie-tovo-montserrat-garibay-texas-district-49'
+        }
+      },
+      {
+        name: 'James Talarico', photo: 'https://house.texas.gov/images/members/3685.jpg', office: 'State Rep., HD 50', party: 'D', tier: 'B',
+        status: 'vacating', note: 'Running for U.S. Senate (Dem nominee) — faces Ken Paxton (R) in Nov.',
+        links: {
+          web: 'https://house.texas.gov/members/3685',
+          ballotpedia: 'https://ballotpedia.org/James_Talarico',
+          results: 'https://ballotpedia.org/United_States_Senate_election_in_Texas,_2026'
+        }
+      },
+      {
+        name: 'Samantha Lopez-Resendez', photo: 'https://www.samanthafortexas.com/hero-image.jpeg', office: 'HD 50 — Dem primary winner (incoming)', party: 'D', tier: 'B',
+        status: 'incoming', note: 'Won Dem primary 51.6% · former Chief of Staff to Rep. Donna Howard · HD 50 is safe Dem',
+        links: {
+          web: 'https://www.samanthafortexas.com',
+          ballotpedia: 'https://ballotpedia.org/Samantha_Lopez-Resendez',
+          results: 'https://www.fox7austin.com/election/2026-election-candidates-texas-house-district-50'
+        }
+      },
+      {
+        name: 'Lulu Flores', photo: 'https://house.texas.gov/images/members/4150.jpg', office: 'State Rep., HD 51', party: 'D', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://house.texas.gov/members/member-page/?district=51',
+          ballotpedia: 'https://ballotpedia.org/Lulu_Flores',
+          results: null
+        }
+      },
+      // County officials — Democrats
+      {
+        name: 'Andy Brown', photo: 'https://www.traviscountytx.gov/images/commissioners_court/judge/JudgeBrown-headshot.jpg', office: 'County Judge', party: 'D', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://www.traviscountytx.gov/commissioners-court/county-judge',
+          ballotpedia: 'https://ballotpedia.org/Andy_Brown_(Travis_County,_Texas)',
+          results: null
+        }
+      },
+      {
+        name: 'Sally Hernandez', photo: 'https://www.tcsheriff.org/images/About/Sheriff-Uniform-MS-2.jpg', office: 'County Sheriff', party: 'D', tier: 'B',
+        status: 'incumbent', note: 'Term ends Dec 31, 2028',
+        links: {
+          web: 'https://www.traviscountytx.gov/sheriff',
+          ballotpedia: 'https://ballotpedia.org/Sally_Hernandez_(Texas)',
+          results: null
+        }
+      },
+      {
+        name: 'José Garza', photo: 'https://districtattorney.traviscountytx.gov/wp-content/uploads/2022/11/jose-garza-district-attorney-1-1727-%C3%97-2506-px-706x1024.png', office: 'District Attorney', party: 'D', tier: 'B',
+        status: 'incumbent', note: 'Term ends Dec 31, 2028',
+        links: {
+          web: 'https://www.traviscountytx.gov/da',
+          ballotpedia: 'https://ballotpedia.org/José_Garza_(Travis_County,_Texas)',
+          results: null
+        }
+      },
+      {
+        name: 'Delia Garza', photo: 'https://www.traviscountytx.gov/images/county_attorney/DG_LoWV_Headshot-02.jpg', office: 'County Attorney', party: 'D', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://www.traviscountytx.gov/county-attorney',
+          ballotpedia: 'https://ballotpedia.org/Delia_Garza',
+          results: null
+        }
+      },
+      // State Reps — Republican
+      {
+        name: 'Ellen Troxclair', photo: 'https://house.texas.gov/images/members/4385.jpg', office: 'State Rep., HD 19', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Covers Westlake/far west Travis area',
+        links: {
+          web: 'https://house.texas.gov/members/member-page/?district=19',
+          ballotpedia: 'https://ballotpedia.org/Ellen_Troxclair',
+          results: null
+        }
+      },
+      {
+        name: 'Donna Campbell', photo: 'https://senate.texas.gov/members/d25/img/headshot.jpg', office: 'State Senator, SD 25 (partial)', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Also covers Hays, Blanco',
+        links: {
+          web: 'https://senate.texas.gov/member.php?d=25',
+          ballotpedia: 'https://ballotpedia.org/Donna_Campbell',
+          results: null
+        }
+      },
+      // ── TIER C ─────────────────────────────────────────
+      {
+        name: 'Celia Israel', photo: 'https://tax-office.traviscountytx.gov/images/celia-israel-full.jpg', office: 'Tax Assessor-Collector', party: 'D', tier: 'C',
+        status: 'incumbent', note: 'Term ends Dec 31, 2028',
+        links: {
+          web: 'https://www.traviscountytx.gov/tax-office',
+          ballotpedia: 'https://ballotpedia.org/Celia_Israel',
+          results: null
+        }
+      },
+      {
+        name: 'Dyana Limon-Mercado', office: 'County Clerk', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: {
+          web: 'https://www.traviscountytx.gov/county-clerk',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'Dolores Ortega Carter', office: 'County Treasurer', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: {
+          web: 'https://www.traviscountytx.gov/treasurer',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'Jeff Travillion', photo: 'https://www.traviscountytx.gov/images/commissioners_court/travillion.jpg', office: 'Commissioner, Precinct 1', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: {
+          web: 'https://www.traviscountytx.gov/commissioners-court/precinct-1',
+          ballotpedia: 'https://ballotpedia.org/Jeff_Travillion',
+          results: null
+        }
+      },
+      {
+        name: 'Brigid Shea', photo: 'https://www.traviscountytx.gov/images/commissioners_court/Commissioner_Brigid_Shea.png', office: 'Commissioner, Precinct 2', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: {
+          web: 'https://www.traviscountytx.gov/commissioners-court/precinct-2',
+          ballotpedia: 'https://ballotpedia.org/Brigid_Shea',
+          results: null
+        }
+      },
+      {
+        name: 'Ann Howard', photo: 'https://www.traviscountytx.gov/images/Commissioner_Ann_Howard.jpg', office: 'Commissioner, Precinct 3', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: {
+          web: 'https://www.traviscountytx.gov/commissioners-court/precinct-3',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'Margaret Gomez', photo: 'https://www.traviscountytx.gov/images/commissioners_court/gomez1.jpg', office: 'Commissioner, Precinct 4', party: 'D', tier: 'C',
+        status: 'incumbent',
+        links: {
+          web: 'https://www.traviscountytx.gov/commissioners-court/precinct-4',
+          ballotpedia: 'https://ballotpedia.org/Margaret_Gomez',
+          results: null
+        }
+      },
+    ]
+  },
+
+  'Williamson': {
+    fips: '48491', pop: '~727,480',
+    officials: [
+      {
+        name: 'John Bucy III', photo: 'https://house.texas.gov/images/members/3595.jpg', office: 'State Rep., HD 136', party: 'D', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://house.texas.gov/members/member-page/?district=136',
+          ballotpedia: 'https://ballotpedia.org/John_Bucy_III',
+          results: null
+        }
+      },
+      {
+        name: 'Bill Gravell', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://www.wilcotx.gov/188/Elected-Officials',
+          ballotpedia: 'https://ballotpedia.org/Bill_Gravell',
+          results: null
+        }
+      },
+      {
+        name: 'Stacey Soule', office: 'District Attorney', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://www.wilcotx.gov/188/Elected-Officials',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'Terry Wilson', photo: 'https://house.texas.gov/images/members/3525.jpg', office: 'State Rep., HD 20', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://house.texas.gov/members/member-page/?district=20',
+          ballotpedia: 'https://ballotpedia.org/Terry_Wilson_(Texas)',
+          results: null
+        }
+      },
+      {
+        name: 'Caroline Harris Davila', photo: 'https://house.texas.gov/images/members/4205.jpg', office: 'State Rep., HD 52', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://house.texas.gov/members/member-page/?district=52',
+          ballotpedia: 'https://ballotpedia.org/Caroline_Harris_Davila',
+          results: null
+        }
+      },
+      {
+        name: 'Charles Schwertner', photo: 'https://senate.texas.gov/members/d05/img/headshot.jpg', office: 'State Senator, SD 5', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://senate.texas.gov/member.php?d=5',
+          ballotpedia: 'https://ballotpedia.org/Charles_Schwertner',
+          results: null
+        }
+      },
+      {
+        name: 'Pete Flores', photo: 'https://senate.texas.gov/members/d24/img/Flores_86-0634D-001-web.jpg', office: 'State Senator, SD 24 (partial)', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://senate.texas.gov/member.php?d=24',
+          ballotpedia: 'https://ballotpedia.org/Pete_Flores_(Texas)',
+          results: null
+        }
+      },
+      {
+        name: 'Sheriff — verify', office: 'County Sheriff', party: 'R', tier: 'B',
+        status: 'incumbent', note: '⚠ Chody removed from office — current sheriff needs verification',
+        links: { web: 'https://www.wilcotx.gov/188/Elected-Officials', ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Hays': {
+    fips: '48209', pop: '~241,067',
+    officials: [
+      {
+        name: 'Erin Zwiener', photo: 'https://house.texas.gov/images/members/3710.jpg', office: 'State Rep., HD 45', party: 'D', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://house.texas.gov/members/member-page/?district=45',
+          ballotpedia: 'https://ballotpedia.org/Erin_Zwiener',
+          results: null
+        }
+      },
+      {
+        name: 'Judith Zaffirini', photo: 'https://senate.texas.gov/members/d21/img/Zaffirini_2017.jpg', office: 'State Senator, SD 21', party: 'D', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://senate.texas.gov/member.php?d=21',
+          ballotpedia: 'https://ballotpedia.org/Judith_Zaffirini',
+          results: null
+        }
+      },
+      {
+        name: 'Ruben Becerra', office: 'County Judge (incumbent 2025)', party: 'D', tier: 'B',
+        status: 'vacating', note: 'Lost Dem primary 2026 to Michelle Gutierrez Cohen',
+        links: {
+          web: 'https://www.hayscountytx.gov/federal-state-and-county',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'Michelle Gutierrez Cohen', office: 'County Judge — Dem primary winner', party: 'D', tier: 'B',
+        status: 'incoming', note: 'Won Dem primary · faces R Geoffrey Tahuahua in Nov. · result uncertain — verify',
+        links: {
+          web: null,
+          ballotpedia: null,
+          results: 'https://www.kxan.com/news/your-local-election-hq/district-attorney-and-county-judge-your-guide-to-the-hays-county-primary-races/'
+        }
+      },
+      {
+        name: 'Kelly Higgins', office: 'District Attorney (outgoing)', party: 'D', tier: 'B',
+        status: 'vacating', note: 'Did not file for re-election — successor TBD',
+        links: {
+          web: 'https://www.hayscountytx.gov/federal-state-and-county',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'Carrie Isaac', photo: 'https://house.texas.gov/images/members/4265.jpg', office: 'State Rep., HD 73', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://house.texas.gov/members/member-page/?district=73',
+          ballotpedia: 'https://ballotpedia.org/Carrie_Isaac',
+          results: null
+        }
+      },
+      {
+        name: 'Donna Campbell', photo: 'https://senate.texas.gov/members/d25/img/headshot.jpg', office: 'State Senator, SD 25 (partial)', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://senate.texas.gov/member.php?d=25',
+          ballotpedia: 'https://ballotpedia.org/Donna_Campbell',
+          results: null
+        }
+      },
+    ]
+  },
+
+  'Bell': {
+    fips: '48027', pop: '~402,248',
+    officials: [
+      {
+        name: 'Joseph Solomon', office: 'Mayor, Killeen', party: 'NP', tier: 'B',
+        status: 'incumbent', note: 'Elected May 2026 · nonpartisan city election',
+        links: {
+          web: 'https://www.killeentexas.gov/153/City-Council',
+          ballotpedia: 'https://ballotpedia.org/Joseph_Solomon_(Mayor_of_Killeen,_Texas,_candidate_2026)',
+          results: 'https://www.kwtx.com/2026/05/04/joseph-solomon-vows-listen-residents-after-winning-killeen-mayoral-race/'
+        }
+      },
+      {
+        name: 'Jon Burrows', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://www.bellcountytx.com/county_government/county_judge/index.php',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'Stephanie Newell', office: 'District Attorney', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Elected Nov. 2024, took office Jan. 2025',
+        links: {
+          web: 'https://www.bellcountytx.com/county_government/district_attorney/index.php',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'Bill Cooke', office: 'County Sheriff', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://www.bellcountytx.com/county_government/sheriff/',
+          ballotpedia: null,
+          results: 'https://kdhnews.com/news/local/cooke-wins-bell-county-sheriff-race-with-ease/article_772b7a04-db77-11ee-90a8-1f77d65726db.html'
+        }
+      },
+      {
+        name: 'Brad Buckley', office: 'State Rep., HD 54', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://house.texas.gov/members/member-page/?district=54',
+          ballotpedia: 'https://ballotpedia.org/Brad_Buckley',
+          results: null
+        }
+      },
+      {
+        name: 'Wanda Hickland', office: 'State Rep., HD 55', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify first name — listed as Hickland per 89th Leg. records',
+        links: {
+          web: 'https://house.texas.gov/members/member-page/?district=55',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'Pete Flores', photo: 'https://senate.texas.gov/members/d24/img/Flores_86-0634D-001-web.jpg', office: 'State Senator, SD 24', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://senate.texas.gov/member.php?d=24',
+          ballotpedia: 'https://ballotpedia.org/Pete_Flores_(Texas)',
+          results: null
+        }
+      },
+      {
+        name: 'Tim Davis', office: 'Mayor, Temple', party: 'NP', tier: 'B',
+        status: 'incumbent', note: 'Verify current status — Temple uses nonpartisan elections',
+        links: { web: 'https://www.templetx.gov/government/city-council', ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'McLennan': {
+    fips: '48309', pop: '~260,000',
+    officials: [
+      {
+        name: 'Jim Holmes', office: 'Mayor, Waco', party: 'NP', tier: 'B',
+        status: 'incumbent', note: 'Re-elected May 2026 · nonpartisan election',
+        links: {
+          web: 'https://www.waco-texas.com/Government/City-Council/Mayor',
+          ballotpedia: null,
+          results: 'https://www.kwtx.com/2026/05/03/waco-mayor-jim-holmes-re-elected-after-dominating-win-over/'
+        }
+      },
+      {
+        name: 'Scott Felton', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://www.mclennan.gov/534/County-Judge',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'Parnell McNamara', office: 'County Sheriff', party: 'R', tier: 'B',
+        status: 'incumbent', note: '⚠ Under special prosecutor investigation (May 2025) — verify current status',
+        links: {
+          web: 'https://www.co.mclennan.tx.us/sheriff',
+          ballotpedia: 'https://ballotpedia.org/Parnell_McNamara',
+          results: 'https://www.kwtx.com/2025/05/13/ellis-county-da-appointed-special-prosecutor-ongoing-investigation-mclennan-county-sheriff-parnell-mcnamara/'
+        }
+      },
+      {
+        name: 'Josh Tetens', office: 'District Attorney', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://www.mclennan.gov/282/District-Attorney',
+          ballotpedia: null,
+          results: 'https://baylorlariat.com/2022/11/09/josh-tetens-elected-as-mclennan-county-district-attorney/'
+        }
+      },
+      {
+        name: 'Ben Orr', office: 'State Rep., HD 13', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify full name against 89th Leg. roster',
+        links: {
+          web: 'https://house.texas.gov/members/member-page/?district=13',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'Curry (HD 56)', office: 'State Rep., HD 56', party: 'R', tier: 'B',
+        status: 'incumbent', note: '⚠ First name unconfirmed — verify against 89th Leg. official roster',
+        links: {
+          web: 'https://house.texas.gov/members/member-page/?district=56',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'Brian Birdwell', office: 'State Senator, SD 22', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://senate.texas.gov/member.php?d=22',
+          ballotpedia: 'https://ballotpedia.org/Brian_Birdwell',
+          results: null
+        }
+      },
+    ]
+  },
+
+  'Brazos': {
+    fips: '48041', pop: '~233,849',
+    officials: [
+      {
+        name: 'Duane Peters', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://www.brazoscountytx.gov/97/County-Judge',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'Jarvis Parsons', office: 'District Attorney', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://www.brazoscountytx.gov/da',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'Wharton (HD 12)', office: 'State Rep., HD 12', party: 'R', tier: 'B',
+        status: 'incumbent', note: '⚠ First name unconfirmed — verify against 89th Leg. roster',
+        links: {
+          web: 'https://house.texas.gov/members/member-page/?district=12',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'John Dyson', office: 'State Rep., HD 14', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify — listed as Dyson per 89th Leg. records',
+        links: {
+          web: 'https://house.texas.gov/members/member-page/?district=14',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'Charles Schwertner', photo: 'https://senate.texas.gov/members/d05/img/headshot.jpg', office: 'State Senator, SD 5', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://senate.texas.gov/member.php?d=5',
+          ballotpedia: 'https://ballotpedia.org/Charles_Schwertner',
+          results: null
+        }
+      },
+      {
+        name: 'John Nichols', office: 'Mayor, College Station', party: 'NP', tier: 'B',
+        status: 'incumbent', note: 'Verify current status — nonpartisan election',
+        links: { web: 'https://www.cstx.gov/government/city_council', ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Bastrop': {
+    fips: '48021', pop: '~118,908',
+    officials: [
+      {
+        name: 'Terry Gerdes', office: 'State Rep., HD 17', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Also covers Caldwell, Lee, Milam, Burleson counties',
+        links: {
+          web: 'https://house.texas.gov/members/member-page/?district=17',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'Charles Schwertner', photo: 'https://senate.texas.gov/members/d05/img/headshot.jpg', office: 'State Senator, SD 5', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://senate.texas.gov/member.php?d=5',
+          ballotpedia: 'https://ballotpedia.org/Charles_Schwertner',
+          results: null
+        }
+      },
+      {
+        name: 'Paul Pape', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://www.co.bastrop.tx.us/judge',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'Maurice Cook', office: 'County Sheriff', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://www.co.bastrop.tx.us/sheriff',
+          ballotpedia: null,
+          results: null
+        }
+      },
+    ]
+  },
+
+  'Caldwell': {
+    fips: '48055', pop: '~45,883',
+    officials: [
+      {
+        name: 'Judith Zaffirini', photo: 'https://senate.texas.gov/members/d21/img/Zaffirini_2017.jpg', office: 'State Senator, SD 21', party: 'D', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://senate.texas.gov/member.php?d=21',
+          ballotpedia: 'https://ballotpedia.org/Judith_Zaffirini',
+          results: null
+        }
+      },
+      {
+        name: 'Terry Gerdes', office: 'State Rep., HD 17', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://house.texas.gov/members/member-page/?district=17',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'Hoppy Haden', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Grimes': {
+    fips: '48185', pop: '~30,000',
+    officials: [
+      {
+        name: 'Wharton (HD 12)', office: 'State Rep., HD 12', party: 'R', tier: 'B',
+        status: 'incumbent', note: '⚠ First name unconfirmed',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=12', ballotpedia: null, results: null }
+      },
+      {
+        name: 'Lois Kolkhorst', office: 'State Senator, SD 18', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Also covers Burleson, Fayette, Lee, Washington',
+        links: {
+          web: 'https://senate.texas.gov/member.php?d=18',
+          ballotpedia: 'https://ballotpedia.org/Lois_Kolkhorst',
+          results: null
+        }
+      },
+      {
+        name: 'Joe Fauth', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Washington': {
+    fips: '48477', pop: '~35,000',
+    officials: [
+      {
+        name: 'Wharton (HD 12)', office: 'State Rep., HD 12', party: 'R', tier: 'B',
+        status: 'incumbent', note: '⚠ First name unconfirmed',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=12', ballotpedia: null, results: null }
+      },
+      {
+        name: 'Lois Kolkhorst', office: 'State Senator, SD 18', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://senate.texas.gov/member.php?d=18',
+          ballotpedia: 'https://ballotpedia.org/Lois_Kolkhorst',
+          results: null
+        }
+      },
+      {
+        name: 'John Brieden', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Coryell': {
+    fips: '48099', pop: '~83,093',
+    officials: [
+      {
+        name: 'Ernest Slawson', office: 'State Rep., HD 59', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Also covers Hamilton, Hood, Erath counties',
+        links: {
+          web: 'https://house.texas.gov/members/member-page/?district=59',
+          ballotpedia: null,
+          results: null
+        }
+      },
+      {
+        name: 'Pete Flores', photo: 'https://senate.texas.gov/members/d24/img/Flores_86-0634D-001-web.jpg', office: 'State Senator, SD 24', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://senate.texas.gov/member.php?d=24',
+          ballotpedia: 'https://ballotpedia.org/Pete_Flores_(Texas)',
+          results: null
+        }
+      },
+      {
+        name: 'Roger Miller', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Hill': {
+    fips: '48217', pop: '~36,000',
+    officials: [
+      {
+        name: 'Ben Orr', office: 'State Rep., HD 13', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Also covers Bosque, Falls, Freestone, Leon, Limestone, McLennan (part)',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=13', ballotpedia: null, results: null }
+      },
+      {
+        name: 'Brian Birdwell', office: 'State Senator, SD 22', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: {
+          web: 'https://senate.texas.gov/member.php?d=22',
+          ballotpedia: 'https://ballotpedia.org/Brian_Birdwell',
+          results: null
+        }
+      },
+      {
+        name: 'Justin Lewis', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Burnet': {
+    fips: '48053', pop: '~49,000',
+    officials: [
+      {
+        name: 'Ellen Troxclair', photo: 'https://house.texas.gov/images/members/4385.jpg', office: 'State Rep., HD 19', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=19', ballotpedia: 'https://ballotpedia.org/Ellen_Troxclair', results: null }
+      },
+      {
+        name: 'Pete Flores', photo: 'https://senate.texas.gov/members/d24/img/Flores_86-0634D-001-web.jpg', office: 'State Senator, SD 24', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://senate.texas.gov/member.php?d=24', ballotpedia: 'https://ballotpedia.org/Pete_Flores_(Texas)', results: null }
+      },
+      {
+        name: 'James Oakley', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Fayette': {
+    fips: '48149', pop: '~24,000',
+    officials: [
+      {
+        name: 'Kitzman (HD 85)', office: 'State Rep., HD 85', party: 'R', tier: 'B',
+        status: 'incumbent', note: '⚠ First name unconfirmed — verify against 89th Leg. official roster',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=85', ballotpedia: null, results: null }
+      },
+      {
+        name: 'Lois Kolkhorst', office: 'State Senator, SD 18', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://senate.texas.gov/member.php?d=18', ballotpedia: 'https://ballotpedia.org/Lois_Kolkhorst', results: null }
+      },
+      {
+        name: 'Joe Schultz', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Limestone': {
+    fips: '48293', pop: '~22,000',
+    officials: [
+      {
+        name: 'Ben Orr', office: 'State Rep., HD 13', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=13', ballotpedia: null, results: null }
+      },
+      {
+        name: 'Charles Schwertner', photo: 'https://senate.texas.gov/members/d05/img/headshot.jpg', office: 'State Senator, SD 5', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://senate.texas.gov/member.php?d=5', ballotpedia: 'https://ballotpedia.org/Charles_Schwertner', results: null }
+      },
+      {
+        name: 'Richard Duncan', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Llano': {
+    fips: '48299', pop: '~21,000',
+    officials: [
+      {
+        name: 'John Virdell', office: 'State Rep., HD 53', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify — listed as Virdell per 89th Leg. records',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=53', ballotpedia: null, results: null }
+      },
+      {
+        name: 'Pete Flores', photo: 'https://senate.texas.gov/members/d24/img/Flores_86-0634D-001-web.jpg', office: 'State Senator, SD 24', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://senate.texas.gov/member.php?d=24', ballotpedia: 'https://ballotpedia.org/Pete_Flores_(Texas)', results: null }
+      },
+      {
+        name: 'Ron Cunningham', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Burleson': {
+    fips: '48051', pop: '~18,657',
+    officials: [
+      {
+        name: 'Terry Gerdes', office: 'State Rep., HD 17', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=17', ballotpedia: null, results: null }
+      },
+      {
+        name: 'Lois Kolkhorst', office: 'State Senator, SD 18', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://senate.texas.gov/member.php?d=18', ballotpedia: 'https://ballotpedia.org/Lois_Kolkhorst', results: null }
+      },
+      {
+        name: 'Mike Sutherland', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Bosque': {
+    fips: '48035', pop: '~18,697',
+    officials: [
+      {
+        name: 'Ben Orr', office: 'State Rep., HD 13', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=13', ballotpedia: null, results: null }
+      },
+      {
+        name: 'Brian Birdwell', office: 'State Senator, SD 22', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://senate.texas.gov/member.php?d=22', ballotpedia: 'https://ballotpedia.org/Brian_Birdwell', results: null }
+      },
+      {
+        name: 'Cindy Lee Bart', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Milam': {
+    fips: '48331', pop: '~25,000',
+    officials: [
+      {
+        name: 'Terry Gerdes', office: 'State Rep., HD 17', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=17', ballotpedia: null, results: null }
+      },
+      {
+        name: 'Charles Schwertner', photo: 'https://senate.texas.gov/members/d05/img/headshot.jpg', office: 'State Senator, SD 5', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://senate.texas.gov/member.php?d=5', ballotpedia: 'https://ballotpedia.org/Charles_Schwertner', results: null }
+      },
+      {
+        name: 'Steve Young', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Robertson': {
+    fips: '48395', pop: '~17,000',
+    officials: [
+      {
+        name: 'Wharton (HD 12)', office: 'State Rep., HD 12', party: 'R', tier: 'B',
+        status: 'incumbent', note: '⚠ First name unconfirmed',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=12', ballotpedia: null, results: null }
+      },
+      {
+        name: 'Charles Schwertner', photo: 'https://senate.texas.gov/members/d05/img/headshot.jpg', office: 'State Senator, SD 5', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://senate.texas.gov/member.php?d=5', ballotpedia: 'https://ballotpedia.org/Charles_Schwertner', results: null }
+      },
+      {
+        name: 'Ty Prause', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Freestone': {
+    fips: '48161', pop: '~19,000',
+    officials: [
+      {
+        name: 'Ben Orr', office: 'State Rep., HD 13', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=13', ballotpedia: null, results: null }
+      },
+      {
+        name: 'Charles Schwertner', photo: 'https://senate.texas.gov/members/d05/img/headshot.jpg', office: 'State Senator, SD 5', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://senate.texas.gov/member.php?d=5', ballotpedia: 'https://ballotpedia.org/Charles_Schwertner', results: null }
+      },
+      {
+        name: 'Linda Grant', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Madison': {
+    fips: '48313', pop: '~13,000',
+    officials: [
+      {
+        name: 'Wharton (HD 12)', office: 'State Rep., HD 12', party: 'R', tier: 'B',
+        status: 'incumbent', note: '⚠ First name unconfirmed',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=12', ballotpedia: null, results: null }
+      },
+      {
+        name: 'Charles Schwertner', photo: 'https://senate.texas.gov/members/d05/img/headshot.jpg', office: 'State Senator, SD 5', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://senate.texas.gov/member.php?d=5', ballotpedia: 'https://ballotpedia.org/Charles_Schwertner', results: null }
+      },
+      {
+        name: 'Milburn Duer', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Falls': {
+    fips: '48145', pop: '~14,000',
+    officials: [
+      {
+        name: 'Ben Orr', office: 'State Rep., HD 13', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=13', ballotpedia: null, results: null }
+      },
+      {
+        name: 'Brian Birdwell', office: 'State Senator, SD 22', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://senate.texas.gov/member.php?d=22', ballotpedia: 'https://ballotpedia.org/Brian_Birdwell', results: null }
+      },
+      {
+        name: 'Jay Elliott', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Leon': {
+    fips: '48289', pop: '~16,000',
+    officials: [
+      {
+        name: 'Ben Orr', office: 'State Rep., HD 13', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=13', ballotpedia: null, results: null }
+      },
+      {
+        name: 'Charles Schwertner', photo: 'https://senate.texas.gov/members/d05/img/headshot.jpg', office: 'State Senator, SD 5', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://senate.texas.gov/member.php?d=5', ballotpedia: 'https://ballotpedia.org/Charles_Schwertner', results: null }
+      },
+      {
+        name: 'Kevin Noack', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Lee': {
+    fips: '48287', pop: '~17,000',
+    officials: [
+      {
+        name: 'Terry Gerdes', office: 'State Rep., HD 17', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=17', ballotpedia: null, results: null }
+      },
+      {
+        name: 'Lois Kolkhorst', office: 'State Senator, SD 18', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://senate.texas.gov/member.php?d=18', ballotpedia: 'https://ballotpedia.org/Lois_Kolkhorst', results: null }
+      },
+      {
+        name: 'Paul Fischer', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Lampasas': {
+    fips: '48281', pop: '~21,000',
+    officials: [
+      {
+        name: 'David Spiller', office: 'State Rep., HD 68', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Also covers San Saba, Mills',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=68', ballotpedia: 'https://ballotpedia.org/David_Spiller', results: null }
+      },
+      {
+        name: 'Pete Flores', photo: 'https://senate.texas.gov/members/d24/img/Flores_86-0634D-001-web.jpg', office: 'State Senator, SD 24', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://senate.texas.gov/member.php?d=24', ballotpedia: 'https://ballotpedia.org/Pete_Flores_(Texas)', results: null }
+      },
+      {
+        name: 'Wayne Boultinghouse', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Blanco': {
+    fips: '48031', pop: '~12,000',
+    officials: [
+      {
+        name: 'Ellen Troxclair', photo: 'https://house.texas.gov/images/members/4385.jpg', office: 'State Rep., HD 19', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=19', ballotpedia: 'https://ballotpedia.org/Ellen_Troxclair', results: null }
+      },
+      {
+        name: 'Donna Campbell', photo: 'https://senate.texas.gov/members/d25/img/headshot.jpg', office: 'State Senator, SD 25', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://senate.texas.gov/member.php?d=25', ballotpedia: 'https://ballotpedia.org/Donna_Campbell', results: null }
+      },
+      {
+        name: 'Connie Magee', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'San Saba': {
+    fips: '48411', pop: '~6,000',
+    officials: [
+      {
+        name: 'David Spiller', office: 'State Rep., HD 68', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=68', ballotpedia: 'https://ballotpedia.org/David_Spiller', results: null }
+      },
+      {
+        name: 'Charles Perry', office: 'State Senator, SD 28', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://senate.texas.gov/member.php?d=28', ballotpedia: 'https://ballotpedia.org/Charles_Perry_(Texas)', results: null }
+      },
+      {
+        name: 'Lora Hicks', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Hamilton': {
+    fips: '48193', pop: '~8,000',
+    officials: [
+      {
+        name: 'Ernest Slawson', office: 'State Rep., HD 59', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=59', ballotpedia: null, results: null }
+      },
+      {
+        name: 'Brian Birdwell', office: 'State Senator, SD 22', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://senate.texas.gov/member.php?d=22', ballotpedia: 'https://ballotpedia.org/Brian_Birdwell', results: null }
+      },
+      {
+        name: 'Justin Dickerson', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+
+  'Mills': {
+    fips: '48333', pop: '~5,000',
+    officials: [
+      {
+        name: 'David Spiller', office: 'State Rep., HD 68', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://house.texas.gov/members/member-page/?district=68', ballotpedia: 'https://ballotpedia.org/David_Spiller', results: null }
+      },
+      {
+        name: 'Charles Perry', office: 'State Senator, SD 28', party: 'R', tier: 'B',
+        status: 'incumbent',
+        links: { web: 'https://senate.texas.gov/member.php?d=28', ballotpedia: 'https://ballotpedia.org/Charles_Perry_(Texas)', results: null }
+      },
+      {
+        name: 'Tim Sloane', office: 'County Judge', party: 'R', tier: 'B',
+        status: 'incumbent', note: 'Verify current status',
+        links: { web: null, ballotpedia: null, results: null }
+      },
+    ]
+  },
+};
+
+// ── LOOKUPS ──────────────────────────────────────────────────────────────────
+
+const FIPS_TO_COUNTY = {};
+Object.entries(COUNTIES).forEach(([name, d]) => { FIPS_TO_COUNTY[d.fips] = name; });
+const CENTRAL_FIPS = new Set(Object.values(COUNTIES).map(d => d.fips));
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+
+let selectedCounty = null;
+let partyFilter = 'all';
+
+// ── FILTER BUTTONS ───────────────────────────────────────────────────────────
+
+document.querySelectorAll('#party-filters .filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#party-filters .filter-btn').forEach(b => {
+      b.className = 'filter-btn';
+    });
+    const p = btn.dataset.party;
+    partyFilter = p;
+    btn.classList.add(p === 'all' ? 'active-all' : `active-${p}`);
+    if (selectedCounty) renderOfficials(selectedCounty);
+  });
+});
+
+// ── OFFICIALS RENDERING ──────────────────────────────────────────────────────
+
+const PARTY_ORDER = { D: 0, I: 1, NP: 2, R: 3 };
+const TIER_ORDER  = { B: 0, C: 1 };
+const STATUS_ORDER = { incumbent: 0, vacating: 1, incoming: 2 };
+
+function sortOfficials(officials) {
+  return [...officials].sort((a, b) => {
+    const pd = PARTY_ORDER[a.party] - PARTY_ORDER[b.party];
+    if (pd !== 0) return pd;
+    const td = TIER_ORDER[a.tier] - TIER_ORDER[b.tier];
+    if (td !== 0) return td;
+    return STATUS_ORDER[a.status] - STATUS_ORDER[b.status];
+  });
+}
+
+function partyLabel(p) {
+  return { D: 'Democrat', R: 'Republican', I: 'Independent', NP: 'Nonpartisan' }[p] || p;
+}
+
+function renderLinks(links) {
+  if (!links) return '';
+  const parts = [];
+  if (links.web)
+    parts.push(`<a class="card-link link-web" href="${links.web}" target="_blank" rel="noopener">🌐 Official</a>`);
+  if (links.ballotpedia)
+    parts.push(`<a class="card-link link-bp" href="${links.ballotpedia}" target="_blank" rel="noopener">📋 Ballotpedia</a>`);
+  if (links.results)
+    parts.push(`<a class="card-link link-results" href="${links.results}" target="_blank" rel="noopener">🗳 Results</a>`);
+  if (!links.web && !links.ballotpedia && !links.results)
+    parts.push(`<span class="card-link link-unknown">⚠ Links unverified</span>`);
+  return parts.length ? `<div class="card-links">${parts.join('')}</div>` : '';
+}
+
+let DETAIL_DATA = [];   // flat list of rendered officials, indexed by card data-didx
+function renderCards(officials) {
+  DETAIL_DATA = [];
+  const byTier = { B: [], C: [] };
+  officials.forEach(o => (byTier[o.tier] || byTier['B']).push(o));
+
+  const tierLabels = { B: 'Tier B — Builder', C: 'Tier C — Coverage' };
+  let html = '';
+  for (const tier of ['B','C']) {
+    const group = byTier[tier];
+    if (!group.length) continue;
+    html += `<div class="tier-section">
+      <span class="tier-label tier-${tier.toLowerCase()}">${tierLabels[tier]}</span>`;
+    group.forEach(o => {
+      const pc = { D: 'dem', R: 'rep', I: 'ind', NP: 'np' }[o.party] || 'np';
+      const isIncoming = o.status === 'incoming';
+      const isVacating = o.status === 'vacating';
+      const cardClass = `official-card ${pc}-card${isIncoming ? ' incoming-card' : ''}`;
+      const nameClass = `card-name${isIncoming ? ' incoming-name' : ''}`;
+      const statusBadge = isIncoming
+        ? `<span style="font-size:0.6rem;background:#e0f2fe;color:#0369a1;padding:1px 6px;border-radius:10px;font-weight:600;white-space:nowrap">↑ INCOMING</span>`
+        : isVacating
+        ? `<span style="font-size:0.6rem;background:#fff7ed;color:#c2410c;padding:1px 6px;border-radius:10px;font-weight:600;white-space:nowrap">↗ VACATING</span>`
+        : '';
+      const noteClass = isIncoming ? 'card-note incoming-note' : isVacating ? 'card-note vacating-note' : 'card-note';
+      const didx = DETAIL_DATA.push(o) - 1;
+      html += `<div class="${cardClass}" data-didx="${didx}">
+        <div class="card-top">
+          <div>
+            <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+              <span class="${nameClass}">${o.name}</span>
+              ${statusBadge}
+            </div>
+            <div class="card-office">${o.office}</div>
+            ${o.note ? `<div class="${noteClass}">ℹ ${o.note}</div>` : ''}
+          </div>
+          <span class="party-badge badge-${o.party}">${partyLabel(o.party)}</span>
+        </div>
+        ${renderLinks(o.links)}
+      </div>`;
+    });
+    html += '</div>';
+  }
+  return html;
+}
+
+function renderOfficials(countyName) {
+  const data = COUNTIES[countyName];
+  if (!data) return;
+
+  document.getElementById('panel-title').textContent = `${countyName} County`;
+  document.getElementById('panel-sub').textContent = `Population ${data.pop} · click map to change county`;
+
+  let officials = data.officials.filter(o => {
+    if (partyFilter === 'all') return true;
+    return o.party === partyFilter;
+  });
+
+  const sorted = sortOfficials(officials);
+  const list = document.getElementById('officials-list');
+  list.innerHTML = sorted.length
+    ? renderCards(sorted)
+    : '<p style="color:#64748b;font-size:0.82rem;padding:20px 16px">No officials match the current party filter.</p>';
+}
+
+// ── MAP ──────────────────────────────────────────────────────────────────────
+
+const svg = d3.select('#map');
+const g   = svg.append('g');
+
+const zoom = d3.zoom()
+  .scaleExtent([1, 20])
+  .on('zoom', event => {
+    g.attr('transform', event.transform);
+    const k = event.transform.k;
+    // Scale labels so they stay readable at any zoom
+    g.selectAll('.county-label').style('font-size', `${8 / Math.sqrt(k)}px`);
+    // Thin strokes at high zoom
+    g.selectAll('.county-bg').style('stroke-width', `${0.4 / k}`);
+    g.selectAll('.county-central').style('stroke-width', (d) => {
+      const fips = d.id.toString().padStart(5, '0');
+      const sel = FIPS_TO_COUNTY[fips] === selectedCounty;
+      return sel ? `${1.5 / k}` : `${0.8 / k}`;
+    });
+  });
+
+svg.call(zoom);
+
+// Zoom buttons
+document.getElementById('zoomIn').addEventListener('click', () => {
+  svg.transition().duration(300).call(zoom.scaleBy, 1.6);
+});
+document.getElementById('zoomOut').addEventListener('click', () => {
+  svg.transition().duration(300).call(zoom.scaleBy, 0.625);
+});
+document.getElementById('zoomReset').addEventListener('click', () => {
+  svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity);
+});
+
+async function initMap() {
+  const panel = document.getElementById('map-panel');
+  const W = panel.clientWidth, H = panel.clientHeight;
+
+  let topo;
+  try {
+    topo = await d3.json('https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json');
+  } catch(e) {
+    panel.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:0.85rem;flex-direction:column;gap:8px">' +
+      '<span style="font-size:2rem">⚠️</span><span>Map tiles failed to load — check network connection.</span></div>';
+    return;
+  }
+
+  const allCounties = topojson.feature(topo, topo.objects.counties);
+  const allStates   = topojson.feature(topo, topo.objects.states);
+
+  // Filter to Texas
+  const txCounties = { ...allCounties, features: allCounties.features.filter(f => f.id.toString().startsWith('48')) };
+  const txState    = { ...allStates,   features: allStates.features.filter(f => f.id === '48') };
+
+  const pad = 24;
+  const projection = d3.geoMercator().fitExtent([[pad, pad], [W - pad, H - pad]], txCounties);
+  const pathGen = d3.geoPath().projection(projection);
+
+  // viewBox lets the whole drawing scale cleanly when the panel is resized
+  svg.attr('viewBox', `0 0 ${W} ${H}`).attr('preserveAspectRatio', 'xMidYMid meet');
+
+  // Draw non-central counties
+  g.selectAll('.county-bg')
+    .data(txCounties.features.filter(f => !CENTRAL_FIPS.has(f.id.toString().padStart(5,'0'))))
+    .join('path')
+    .attr('class', 'county-bg')
+    .attr('d', pathGen);
+
+  // Draw central counties
+  const centralPaths = g.selectAll('.county-central')
+    .data(txCounties.features.filter(f => CENTRAL_FIPS.has(f.id.toString().padStart(5,'0'))))
+    .join('path')
+    .attr('class', 'county-central')
+    .attr('d', pathGen)
+    .on('click', function(event, d) {
+      event.stopPropagation();
+      const fips = d.id.toString().padStart(5, '0');
+      const name = FIPS_TO_COUNTY[fips];
+      if (!name) return;
+
+      g.selectAll('.county-central').classed('county-selected', false);
+      d3.select(this).classed('county-selected', true);
+
+      // Update label classes
+      g.selectAll('.county-label')
+        .classed('county-label-selected', false)
+        .classed('county-label-central', true);
+      g.selectAll(`.lbl-${fips}`)
+        .classed('county-label-selected', true)
+        .classed('county-label-central', false);
+
+      selectedCounty = name;
+      renderOfficials(name);
+      document.getElementById('map-hint').style.display = 'none';
+    });
+
+  // Labels for ALL Texas counties (visible when zoomed in)
+  g.selectAll('.county-label')
+    .data(txCounties.features)
+    .join('text')
+    .attr('class', d => {
+      const fips = d.id.toString().padStart(5, '0');
+      const isCentral = CENTRAL_FIPS.has(fips);
+      return `county-label lbl-${fips}${isCentral ? ' county-label-central' : ''}`;
+    })
+    .attr('x', d => pathGen.centroid(d)[0])
+    .attr('y', d => pathGen.centroid(d)[1])
+    .text(d => {
+      const fips = d.id.toString().padStart(5, '0');
+      return FIPS_TO_COUNTY[fips] || '';  // Only label the 30 central counties
+    });
+
+  // State border
+  g.append('path')
+    .datum(txState.features[0])
+    .attr('class', 'state-border')
+    .attr('d', pathGen);
+
+  // Click on empty space to deselect
+  svg.on('click', () => {
+    svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity);
+  });
+}
+
+initMap();
+
+/* ─── Draggable resizer between map and officials panel ─── */
+(function () {
+  const layout = document.querySelector('.layout');
+  const resizer = document.getElementById('panel-resizer');
+  const panel = document.getElementById('officials-panel');
+  if (!layout || !resizer || !panel) return;
+
+  let dragging = false;
+
+  function widthFromEvent(clientX) {
+    const rect = layout.getBoundingClientRect();
+    // panel width = distance from cursor to the right edge of the layout
+    let w = rect.right - clientX;
+    const min = 300;
+    const max = Math.min(rect.width - 280 - 6, rect.width * 0.7);
+    return Math.max(min, Math.min(max, w));
+  }
+
+  function onMove(e) {
+    if (!dragging) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const w = widthFromEvent(clientX);
+    panel.style.flex = '0 0 ' + w + 'px';
+    panel.style.width = w + 'px';
+    if (e.cancelable) e.preventDefault();
+  }
+
+  function stop() {
+    if (!dragging) return;
+    dragging = false;
+    layout.classList.remove('resizing');
+    resizer.classList.remove('active');
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', stop);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', stop);
+  }
+
+  function start(e) {
+    dragging = true;
+    layout.classList.add('resizing');
+    resizer.classList.add('active');
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', stop);
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', stop);
+    if (e.cancelable) e.preventDefault();
+  }
+
+  resizer.addEventListener('mousedown', start);
+  resizer.addEventListener('touchstart', start, { passive: false });
+
+  // Double-click the handle to reset to default width
+  resizer.addEventListener('dblclick', function () {
+    panel.style.flex = '0 0 430px';
+    panel.style.width = '430px';
+  });
+})();
+
+/* ─── Click an official card to open a large detail pop-up ─── */
+function openOfficialDetail(o) {
+  const inc = o.status === 'incoming', vac = o.status === 'vacating';
+  const cls = (o.party === 'D' || o.party === 'R' || o.party === 'I') ? o.party : 'NP';
+  const avatarColors = { D: '#2563eb', R: '#dc2626', I: '#059669', NP: '#64748b' };
+  const initials = o.name.replace(/^(Judge|Hon\.|Dr\.|Sheriff)\s+/i, '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  const avatar = `<div class="od-avatar" style="background:${avatarColors[cls]}">${initials}</div>`;
+  const photo = o.photo
+    ? `<img class="od-photo" src="${o.photo}" alt="${o.name}" referrerpolicy="no-referrer" onerror="this.outerHTML=this.getAttribute('data-fb')" data-fb='${avatar.replace(/'/g, "&#39;")}'>`
+    : avatar;
+
+  let badges = `<span class="party-badge badge-${o.party}">${partyLabel(o.party)}</span>`;
+  if (inc) badges += `<span style="font-size:0.66rem;background:#e0f2fe;color:#0369a1;padding:2px 8px;border-radius:10px;font-weight:700">↑ Incoming</span>`;
+  if (vac) badges += `<span style="font-size:0.66rem;background:#fff7ed;color:#c2410c;padding:2px 8px;border-radius:10px;font-weight:700">↗ Vacating</span>`;
+
+  let links = '';
+  const L = o.links || {};
+  if (L.web) links += `<a style="background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe" href="${L.web}" target="_blank" rel="noopener">🌐 Official site</a>`;
+  if (L.ballotpedia) links += `<a style="background:#fefce8;color:#a16207;border-color:#fef08a" href="${L.ballotpedia}" target="_blank" rel="noopener">📋 Ballotpedia</a>`;
+  if (L.results) links += `<a style="background:#f0fdf4;color:#15803d;border-color:#bbf7d0" href="${L.results}" target="_blank" rel="noopener">🗳 Election results</a>`;
+
+  const card = document.getElementById('od-card');
+  card.className = 'od-card ' + cls;
+  card.innerHTML = `
+    <div class="od-hd">
+      ${photo}
+      <div style="flex:1;min-width:0">
+        <div class="od-name">${o.name}</div>
+        <div class="od-office">${o.office || ''}</div>
+        <div class="od-badges">${badges}</div>
+      </div>
+      <button class="od-x" id="od-close" title="Close">✕</button>
+    </div>
+    <div class="od-body">
+      ${o.note ? `<div class="od-sec"><div class="od-lbl">Note</div><div class="od-note${inc ? ' inc' : ''}">${o.note}</div></div>` : ''}
+      ${links ? `<div class="od-sec od-links"><div class="od-lbl">Links</div><div>${links}</div></div>` : ''}
+    </div>`;
+  document.getElementById('odetail').classList.add('on');
+  document.getElementById('od-close').addEventListener('click', closeOfficialDetail);
+}
+function closeOfficialDetail() { document.getElementById('odetail').classList.remove('on'); }
+
+document.getElementById('officials-list').addEventListener('click', ev => {
+  if (ev.target.closest('a')) return;          // let links work normally
+  const card = ev.target.closest('.official-card');
+  if (!card || card.dataset.didx === undefined) return;
+  const o = DETAIL_DATA[+card.dataset.didx];
+  if (o) openOfficialDetail(o);
+});
+document.getElementById('odetail').addEventListener('click', ev => { if (ev.target.id === 'odetail') closeOfficialDetail(); });
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape') closeOfficialDetail(); });
+</script>
+</body>
+</html>

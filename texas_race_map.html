@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Texas Counties — Race &amp; Ethnicity Map</title>
+<style>
+  :root{
+    --hisp:#1f78b4; --white:#6a3d9a; --black:#e6550d; --asian:#238b45; --other:#7a7a7a;
+    --bg:#eef1f6; --panel:#ffffff; --ink:#161b26; --muted:#697084; --line:#e3e7ee;
+    --accent:#0f5fa6;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+  #app{display:flex;flex-direction:column;height:100vh}
+  header{padding:13px 20px;border-bottom:1px solid var(--line);background:var(--panel);box-shadow:0 1px 3px rgba(20,27,38,.04)}
+  .htop{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  h1{font-size:19px;margin:0;font-weight:700;letter-spacing:-.01em}
+  .sub{font-size:12px;color:var(--muted)}
+  .modes{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;align-items:center}
+  .modes .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-right:2px}
+  .modes button{border:1px solid var(--line);background:#fff;color:var(--ink);padding:7px 13px;border-radius:999px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .12s}
+  .modes button .dot{width:11px;height:11px;border-radius:3px}
+  .modes button:hover{border-color:#b9c0cf;transform:translateY(-1px)}
+  .modes button.active{color:#fff;border-color:transparent;font-weight:600;box-shadow:0 2px 6px rgba(20,27,38,.18)}
+  main{flex:1;display:flex;min-height:0}
+  #mapwrap{flex:1;position:relative;min-width:0;background:radial-gradient(circle at 50% 30%,#f4f7fb,#e6eaf2)}
+  svg#map{width:100%;height:100%;display:block;cursor:grab}
+  svg#map:active{cursor:grabbing}
+  .county{stroke:#ffffff;stroke-width:.5px;stroke-linejoin:round;transition:fill-opacity .12s,stroke-width .12s}
+  .county:hover{stroke:#0d1320;stroke-width:1.3px}
+  .county.sel{stroke:#0d1320;stroke-width:2px}
+  .cityDot{fill:#11151d;stroke:#fff;stroke-width:1.2px;pointer-events:none}
+  .cityLbl{font-size:12px;font-weight:600;fill:#11151d;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round;pointer-events:none}
+  aside{width:360px;border-left:1px solid var(--line);background:var(--panel);overflow-y:auto;padding:18px}
+  .search{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:13px;margin-bottom:15px}
+  .legend h3,.detail h3{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 9px}
+  .legend{margin-bottom:18px;padding-bottom:17px;border-bottom:1px solid var(--line)}
+  .lrow{display:flex;align-items:center;gap:9px;font-size:12px;margin:4px 0}
+  .lsw{width:28px;height:14px;border-radius:3px;flex:none;border:1px solid rgba(0,0,0,.08)}
+  .detail .cty{font-size:19px;font-weight:700;margin:2px 0 1px;letter-spacing:-.01em}
+  .detail .tot{font-size:12px;color:var(--muted);margin-bottom:13px}
+  .detail .rank{display:inline-block;font-size:11px;color:var(--muted);margin-left:6px}
+  .bar{margin:10px 0}
+  .bar .top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+  .bar .top .nm{font-weight:600;display:flex;align-items:center;gap:6px}
+  .bar .top .nm i{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .bar .top .vals{color:var(--muted)}
+  .bar .top .vals b{color:var(--ink)}
+  .track{height:15px;background:#eef0f4;border-radius:5px;overflow:hidden}
+  .fill{height:100%;border-radius:5px;transition:width .25s}
+  .hint{font-size:12px;color:var(--muted);line-height:1.55;margin-top:8px}
+  .rgrow:hover{background:#f1f5f9}
+  .ctyrows{margin-top:2px}
+  .ctyrow{position:relative;display:flex;justify-content:space-between;align-items:center;font-size:12.5px;padding:5px 7px;border-radius:6px;cursor:pointer;overflow:hidden}
+  .ctyrow:hover{background:#eef2f7}
+  .ctyrow .ci{position:relative;z-index:1;display:flex;align-items:center;gap:6px}
+  .ctyrow .ci i{width:9px;height:9px;border-radius:2px;display:inline-block}
+  .ctyrow .cp{position:relative;z-index:1;color:var(--muted);font-variant-numeric:tabular-nums}
+  .ctyrow .cbar{position:absolute;left:0;bottom:0;height:3px;opacity:.55;border-radius:2px}
+  footer{padding:8px 20px;border-top:1px solid var(--line);background:var(--panel);font-size:11px;color:var(--muted)}
+  .tooltip{position:absolute;pointer-events:none;background:#11151d;color:#fff;padding:7px 10px;border-radius:7px;font-size:12px;opacity:0;transition:opacity .1s;white-space:nowrap;z-index:5;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+  .tooltip b{font-weight:700}
+  .err{padding:24px;color:#b00020;font-size:13px;line-height:1.5}
+  .ctl{position:absolute;left:14px;top:14px;display:flex;flex-direction:column;gap:5px}
+  .ctl button{width:32px;height:32px;border:1px solid var(--line);background:#fff;border-radius:7px;font-size:17px;cursor:pointer;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .ctl button:hover{background:#f3f5f9}
+  .toggles{position:absolute;right:14px;top:14px;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:12px;display:flex;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .toggles label{display:flex;align-items:center;gap:5px;cursor:pointer}
+  .loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="htop">
+      <h1>Texas Counties — Race &amp; Ethnicity</h1>
+      <span class="sub">Choose a group to shade all 254 counties by its population share · click a county for exact counts</span>
+    </div>
+    <div class="modes" id="modes"><span class="lbl">Color by</span></div>
+    <div class="modes" id="regionctl" style="margin-top:7px">
+      <span class="lbl">Regions</span>
+      <button data-rg="off">Off</button>
+      <button data-rg="out" class="active" style="background:#374151;color:#fff;border-color:transparent;font-weight:600">Bold boundaries</button>
+      <button data-rg="fill">Fill by region</button>
+    </div>
+  </header>
+  <main>
+    <div id="mapwrap">
+      <svg id="map" viewBox="0 0 980 770" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="loading" id="loading">Loading Texas county map…</div>
+      <div class="ctl"><button id="zin">+</button><button id="zout">−</button><button id="zreset" title="Reset view" style="font-size:14px">⤾</button></div>
+      <div class="toggles">
+        <label><input type="checkbox" id="tCities" checked> Cities</label>
+        <label><input type="checkbox" id="tLabels"> County labels</label>
+      </div>
+      <div class="tooltip" id="tip"></div>
+    </div>
+    <aside>
+      <input class="search" id="search" list="ctylist" placeholder="🔍  Search a county…">
+      <datalist id="ctylist"></datalist>
+      <div class="legend" id="legend"></div>
+      <div class="detail" id="detail">
+        <h3>County detail</h3>
+        <div class="hint">Hover any county to preview; click to pin its full breakdown here. Bars show the <b>actual number of people</b> in each group, largest to smallest — so you can directly compare the size of the Latino, White, Black and Asian populations.</div>
+      </div>
+    </aside>
+  </main>
+  <footer id="foot">Loading…</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson@3"></script>
+<script>
+const TXDATA = {"001":{"n":"Anderson County","t":57825,"w":32271,"b":10519,"a":330,"h":11182,"o":3523},"003":{"n":"Andrews County","t":18518,"w":7322,"b":347,"a":77,"h":10525,"o":247},"005":{"n":"Angelina County","t":86791,"w":51241,"b":10603,"a":824,"h":20104,"o":4019},"007":{"n":"Aransas County","t":24449,"w":16525,"b":273,"a":267,"h":6542,"o":842},"009":{"n":"Archer County","t":8734,"w":7547,"b":67,"a":18,"h":787,"o":315},"011":{"n":"Armstrong County","t":1883,"w":1622,"b":10,"a":23,"h":180,"o":48},"013":{"n":"Atascosa County","t":50058,"w":15926,"b":601,"a":278,"h":32389,"o":864},"015":{"n":"Austin County","t":30712,"w":18717,"b":2690,"a":234,"h":8359,"o":712},"017":{"n":"Bailey County","t":7044,"w":2205,"b":30,"a":50,"h":4548,"o":211},"019":{"n":"Bandera County","t":21589,"w":15956,"b":232,"a":78,"h":4366,"o":957},"021":{"n":"Bastrop County","t":102370,"w":46827,"b":5854,"a":689,"h":45026,"o":3974},"023":{"n":"Baylor County","t":3464,"w":2630,"b":26,"a":0,"h":473,"o":335},"025":{"n":"Bee County","t":31000,"w":8641,"b":1852,"a":181,"h":19187,"o":1139},"027":{"n":"Bell County","t":379811,"w":163585,"b":82125,"a":10947,"h":98037,"o":25117},"029":{"n":"Bexar County","t":2037344,"w":544259,"b":149264,"a":62508,"h":1212855,"o":68458},"031":{"n":"Blanco County","t":12008,"w":9121,"b":92,"a":44,"h":2209,"o":542},"033":{"n":"Borden County","t":723,"w":580,"b":11,"a":0,"h":110,"o":22},"035":{"n":"Bosque County","t":18546,"w":14013,"b":217,"a":89,"h":3492,"o":735},"037":{"n":"Bowie County","t":92321,"w":56874,"b":22837,"a":1162,"h":7726,"o":3722},"039":{"n":"Brazoria County","t":381650,"w":163852,"b":59286,"a":27626,"h":119727,"o":11159},"041":{"n":"Brazos County","t":237980,"w":127348,"b":24510,"a":13388,"h":64536,"o":8198},"043":{"n":"Brewster County","t":9464,"w":5246,"b":27,"a":114,"h":3980,"o":97},"045":{"n":"Briscoe County","t":1223,"w":840,"b":45,"a":0,"h":321,"o":17},"047":{"n":"Brooks County","t":6987,"w":572,"b":54,"a":0,"h":6290,"o":71},"049":{"n":"Brown County","t":38294,"w":27004,"b":1235,"a":213,"h":8503,"o":1339},"051":{"n":"Burleson County","t":18327,"w":11552,"b":2119,"a":67,"h":4003,"o":586},"053":{"n":"Burnet County","t":51064,"w":36432,"b":636,"a":323,"h":11782,"o":1891},"055":{"n":"Caldwell County","t":47184,"w":16787,"b":1914,"a":321,"h":26565,"o":1597},"057":{"n":"Calhoun County","t":19921,"w":8242,"b":467,"a":1054,"h":9816,"o":342},"059":{"n":"Callahan County","t":14017,"w":11528,"b":245,"a":77,"h":1487,"o":680},"061":{"n":"Cameron County","t":423192,"w":37309,"b":1872,"a":3116,"h":378059,"o":2836},"063":{"n":"Camp County","t":12652,"w":6754,"b":1786,"a":143,"h":3377,"o":592},"065":{"n":"Carson County","t":5802,"w":4773,"b":35,"a":8,"h":608,"o":378},"067":{"n":"Cass County","t":28582,"w":21369,"b":4781,"a":208,"h":1467,"o":757},"069":{"n":"Castro County","t":7328,"w":2199,"b":86,"a":91,"h":4783,"o":169},"071":{"n":"Chambers County","t":49178,"w":31031,"b":3554,"a":742,"h":12418,"o":1433},"073":{"n":"Cherokee County","t":51143,"w":30049,"b":6638,"a":311,"h":12143,"o":2002},"075":{"n":"Childress County","t":6772,"w":3663,"b":451,"a":8,"h":2305,"o":345},"077":{"n":"Clay County","t":10402,"w":9116,"b":117,"a":91,"h":705,"o":373},"079":{"n":"Cochran County","t":2520,"w":861,"b":127,"a":0,"h":1501,"o":31},"081":{"n":"Coke County","t":3315,"w":2501,"b":57,"a":4,"h":691,"o":62},"083":{"n":"Coleman County","t":7765,"w":5993,"b":302,"a":68,"h":1252,"o":150},"085":{"n":"Collin County","t":1116601,"w":572361,"b":117821,"a":196106,"h":178350,"o":51963},"087":{"n":"Collingsworth County","t":2733,"w":1471,"b":216,"a":0,"h":891,"o":155},"089":{"n":"Colorado County","t":20736,"w":11493,"b":2550,"a":100,"h":6218,"o":375},"091":{"n":"Comal County","t":174552,"w":113270,"b":4271,"a":2247,"h":48664,"o":6100},"093":{"n":"Comanche County","t":13786,"w":9196,"b":70,"a":63,"h":4002,"o":455},"095":{"n":"Concho County","t":3301,"w":2019,"b":122,"a":54,"h":1024,"o":82},"097":{"n":"Cooke County","t":42473,"w":30431,"b":1411,"a":294,"h":8719,"o":1618},"099":{"n":"Coryell County","t":83772,"w":46233,"b":10658,"a":1664,"h":16992,"o":8225},"101":{"n":"Cottle County","t":1302,"w":769,"b":64,"a":0,"h":338,"o":131},"103":{"n":"Crane County","t":4623,"w":1222,"b":74,"a":113,"h":3160,"o":54},"105":{"n":"Crockett County","t":2881,"w":1067,"b":17,"a":0,"h":1795,"o":2},"107":{"n":"Crosby County","t":5072,"w":1976,"b":112,"a":50,"h":2831,"o":103},"109":{"n":"Culberson County","t":2181,"w":194,"b":4,"a":23,"h":1899,"o":61},"111":{"n":"Dallam County","t":7180,"w":3040,"b":14,"a":3,"h":3781,"o":342},"113":{"n":"Dallas County","t":2603816,"w":705258,"b":578968,"a":176404,"h":1061995,"o":81191},"115":{"n":"Dawson County","t":12311,"w":4381,"b":803,"a":51,"h":6815,"o":261},"117":{"n":"Deaf Smith County","t":18487,"w":4038,"b":148,"a":8,"h":14000,"o":293},"119":{"n":"Delta County","t":5345,"w":4194,"b":446,"a":4,"h":466,"o":235},"121":{"n":"Denton County","t":945644,"w":511104,"b":99365,"a":97075,"h":191815,"o":46285},"123":{"n":"DeWitt County","t":19853,"w":10653,"b":1452,"a":91,"h":7017,"o":640},"125":{"n":"Dickens County","t":1641,"w":1044,"b":24,"a":1,"h":558,"o":14},"127":{"n":"Dimmit County","t":8507,"w":804,"b":60,"a":15,"h":7403,"o":225},"129":{"n":"Donley County","t":3276,"w":2572,"b":177,"a":82,"h":399,"o":46},"131":{"n":"Duval County","t":9824,"w":1636,"b":69,"a":0,"h":8038,"o":81},"133":{"n":"Eastland County","t":17846,"w":13818,"b":401,"a":62,"h":3013,"o":552},"135":{"n":"Ector County","t":163206,"w":48982,"b":7650,"a":1769,"h":101602,"o":3203},"137":{"n":"Edwards County","t":1392,"w":737,"b":22,"a":0,"h":610,"o":23},"139":{"n":"Ellis County","t":203927,"w":111619,"b":26896,"a":1583,"h":56354,"o":7475},"141":{"n":"El Paso County","t":866275,"w":97259,"b":25346,"a":9787,"h":716543,"o":17340},"143":{"n":"Erath County","t":43244,"w":31390,"b":595,"a":402,"h":9508,"o":1349},"145":{"n":"Falls County","t":17063,"w":8524,"b":3387,"a":201,"h":4166,"o":785},"147":{"n":"Fannin County","t":36525,"w":27808,"b":2299,"a":198,"h":4616,"o":1604},"149":{"n":"Fayette County","t":24783,"w":17308,"b":1431,"a":82,"h":5355,"o":607},"151":{"n":"Fisher County","t":3661,"w":2410,"b":140,"a":9,"h":965,"o":137},"153":{"n":"Floyd County","t":5294,"w":1973,"b":126,"a":9,"h":3051,"o":135},"155":{"n":"Foard County","t":1079,"w":755,"b":3,"a":3,"h":118,"o":200},"157":{"n":"Fort Bend County","t":859721,"w":256176,"b":174209,"a":186089,"h":210272,"o":32975},"159":{"n":"Franklin County","t":10522,"w":8173,"b":537,"a":20,"h":1500,"o":292},"161":{"n":"Freestone County","t":19813,"w":12582,"b":2903,"a":25,"h":3321,"o":982},"163":{"n":"Frio County","t":18019,"w":2731,"b":749,"a":340,"h":13977,"o":222},"165":{"n":"Gaines County","t":21904,"w":12465,"b":541,"a":6,"h":8723,"o":169},"167":{"n":"Galveston County","t":354721,"w":194511,"b":42681,"a":11677,"h":91727,"o":14125},"169":{"n":"Garza County","t":5435,"w":2023,"b":558,"a":14,"h":2717,"o":123},"171":{"n":"Gillespie County","t":27202,"w":20185,"b":51,"a":91,"h":6092,"o":783},"173":{"n":"Glasscock County","t":1070,"w":709,"b":0,"a":0,"h":290,"o":71},"175":{"n":"Goliad County","t":7096,"w":4287,"b":339,"a":1,"h":2288,"o":181},"177":{"n":"Gonzales County","t":19764,"w":8105,"b":1187,"a":99,"h":10035,"o":338},"179":{"n":"Gray County","t":21131,"w":12799,"b":930,"a":173,"h":6499,"o":730},"181":{"n":"Grayson County","t":139988,"w":100814,"b":7441,"a":1808,"h":22190,"o":7735},"183":{"n":"Gregg County","t":124860,"w":69011,"b":23969,"a":1651,"h":24748,"o":5481},"185":{"n":"Grimes County","t":30385,"w":17247,"b":3491,"a":124,"h":7691,"o":1832},"187":{"n":"Guadalupe County","t":178368,"w":85530,"b":13040,"a":2761,"h":68626,"o":8411},"189":{"n":"Hale County","t":32247,"w":10343,"b":1297,"a":193,"h":19597,"o":817},"191":{"n":"Hall County","t":2827,"w":1542,"b":140,"a":12,"h":975,"o":158},"193":{"n":"Hamilton County","t":8320,"w":6900,"b":158,"a":5,"h":1129,"o":128},"195":{"n":"Hansford County","t":5182,"w":2471,"b":11,"a":6,"h":2575,"o":119},"197":{"n":"Hardeman County","t":3529,"w":2313,"b":121,"a":44,"h":949,"o":102},"199":{"n":"Hardin County","t":57126,"w":47568,"b":3183,"a":277,"h":3723,"o":2375},"201":{"n":"Harris County","t":4758579,"w":1303071,"b":890273,"a":339625,"h":2065668,"o":159942},"203":{"n":"Harrison County","t":69584,"w":42240,"b":14210,"a":402,"h":10129,"o":2603},"205":{"n":"Hartley County","t":5307,"w":3017,"b":355,"a":16,"h":1629,"o":290},"207":{"n":"Haskell County","t":5390,"w":3565,"b":317,"a":9,"h":1402,"o":97},"209":{"n":"Hays County","t":256429,"w":131514,"b":9766,"a":4679,"h":100152,"o":10318},"211":{"n":"Hemphill County","t":3311,"w":2094,"b":11,"a":0,"h":1099,"o":107},"213":{"n":"Henderson County","t":83658,"w":62931,"b":4408,"a":589,"h":11964,"o":3766},"215":{"n":"Hidalgo County","t":880921,"w":53536,"b":4814,"a":8750,"h":809705,"o":4116},"217":{"n":"Hill County","t":36664,"w":24992,"b":2102,"a":197,"h":8284,"o":1089},"219":{"n":"Hockley County","t":21455,"w":9631,"b":611,"a":49,"h":10644,"o":520},"221":{"n":"Hood County","t":64198,"w":52062,"b":657,"a":421,"h":8569,"o":2489},"223":{"n":"Hopkins County","t":37351,"w":26594,"b":2641,"a":338,"h":6812,"o":966},"225":{"n":"Houston County","t":22042,"w":12907,"b":4750,"a":152,"h":3096,"o":1137},"227":{"n":"Howard County","t":33127,"w":14579,"b":1615,"a":336,"h":15547,"o":1050},"229":{"n":"Hudspeth County","t":3331,"w":997,"b":25,"a":0,"h":2181,"o":128},"231":{"n":"Hunt County","t":104917,"w":69771,"b":8053,"a":1066,"h":21575,"o":4452},"233":{"n":"Hutchinson County","t":20413,"w":13897,"b":486,"a":137,"h":5011,"o":882},"235":{"n":"Irion County","t":1432,"w":988,"b":0,"a":0,"h":428,"o":16},"237":{"n":"Jack County","t":8623,"w":6517,"b":293,"a":52,"h":1589,"o":172},"239":{"n":"Jackson County","t":15081,"w":8705,"b":894,"a":305,"h":4948,"o":229},"241":{"n":"Jasper County","t":32807,"w":24190,"b":5061,"a":158,"h":2248,"o":1150},"243":{"n":"Jeff Davis County","t":1740,"w":1160,"b":11,"a":0,"h":540,"o":29},"245":{"n":"Jefferson County","t":253939,"w":94924,"b":83512,"a":9503,"h":59759,"o":6241},"247":{"n":"Jim Hogg County","t":4797,"w":1024,"b":5,"a":11,"h":3757,"o":0},"249":{"n":"Jim Wells County","t":38863,"w":7206,"b":231,"a":190,"h":30860,"o":376},"251":{"n":"Johnson County","t":188820,"w":125257,"b":8914,"a":1847,"h":46403,"o":6399},"253":{"n":"Jones County","t":19968,"w":11250,"b":2055,"a":92,"h":5671,"o":900},"255":{"n":"Karnes County","t":14819,"w":5198,"b":1027,"a":243,"h":7863,"o":488},"257":{"n":"Kaufman County","t":160718,"w":83554,"b":26783,"a":2667,"h":42372,"o":5342},"259":{"n":"Kendall County","t":46971,"w":33365,"b":388,"a":484,"h":11114,"o":1620},"261":{"n":"Kenedy County","t":52,"w":2,"b":0,"a":1,"h":47,"o":2},"263":{"n":"Kent County","t":727,"w":606,"b":6,"a":0,"h":86,"o":29},"265":{"n":"Kerr County","t":53166,"w":36100,"b":813,"a":489,"h":14049,"o":1715},"267":{"n":"Kimble County","t":4355,"w":3092,"b":84,"a":0,"h":1114,"o":65},"269":{"n":"King County","t":189,"w":127,"b":0,"a":0,"h":49,"o":13},"271":{"n":"Kinney County","t":3140,"w":1401,"b":3,"a":0,"h":1678,"o":58},"273":{"n":"Kleberg County","t":30629,"w":6436,"b":995,"a":395,"h":21830,"o":973},"275":{"n":"Knox County","t":3322,"w":1897,"b":100,"a":58,"h":1124,"o":143},"277":{"n":"Lamar County","t":50421,"w":36181,"b":6239,"a":446,"h":4659,"o":2896},"279":{"n":"Lamb County","t":12919,"w":4752,"b":353,"a":105,"h":7445,"o":264},"281":{"n":"Lampasas County","t":22267,"w":15640,"b":822,"a":245,"h":4477,"o":1083},"283":{"n":"La Salle County","t":6946,"w":951,"b":240,"a":6,"h":5629,"o":120},"285":{"n":"Lavaca County","t":20479,"w":14688,"b":817,"a":104,"h":4046,"o":824},"287":{"n":"Lee County","t":17758,"w":10692,"b":1841,"a":5,"h":4649,"o":571},"289":{"n":"Leon County","t":16067,"w":11721,"b":1172,"a":32,"h":2594,"o":548},"291":{"n":"Liberty County","t":97993,"w":50752,"b":7806,"a":522,"h":36192,"o":2721},"293":{"n":"Limestone County","t":22185,"w":12308,"b":3770,"a":201,"h":5126,"o":780},"295":{"n":"Lipscomb County","t":2964,"w":1670,"b":12,"a":0,"h":1095,"o":187},"297":{"n":"Live Oak County","t":11444,"w":5545,"b":238,"a":57,"h":4815,"o":789},"299":{"n":"Llano County","t":22011,"w":18309,"b":231,"a":122,"h":2787,"o":562},"301":{"n":"Loving County","t":54,"w":49,"b":0,"a":5,"h":0,"o":0},"303":{"n":"Lubbock County","t":314633,"w":164080,"b":21230,"a":7365,"h":112607,"o":9351},"305":{"n":"Lynn County","t":5667,"w":3082,"b":88,"a":27,"h":2356,"o":114},"307":{"n":"McCulloch County","t":7565,"w":4813,"b":58,"a":35,"h":2325,"o":334},"309":{"n":"McLennan County","t":263608,"w":144220,"b":35935,"a":4123,"h":70219,"o":9111},"311":{"n":"McMullen County","t":623,"w":278,"b":0,"a":0,"h":339,"o":6},"313":{"n":"Madison County","t":13574,"w":7137,"b":2086,"a":113,"h":3509,"o":729},"315":{"n":"Marion County","t":9631,"w":6773,"b":2079,"a":37,"h":436,"o":306},"317":{"n":"Martin County","t":5230,"w":2510,"b":64,"a":0,"h":2383,"o":273},"319":{"n":"Mason County","t":3951,"w":3062,"b":3,"a":29,"h":826,"o":31},"321":{"n":"Matagorda County","t":36274,"w":15269,"b":3669,"a":602,"h":15678,"o":1056},"323":{"n":"Maverick County","t":57770,"w":1642,"b":133,"a":282,"h":54797,"o":916},"325":{"n":"Medina County","t":52419,"w":22155,"b":1471,"a":256,"h":26780,"o":1757},"327":{"n":"Menard County","t":1964,"w":1343,"b":8,"a":0,"h":549,"o":64},"329":{"n":"Midland County","t":171496,"w":75381,"b":10995,"a":3715,"h":76792,"o":4613},"331":{"n":"Milam County","t":25268,"w":15695,"b":2341,"a":45,"h":6466,"o":721},"333":{"n":"Mills County","t":4499,"w":3417,"b":27,"a":13,"h":851,"o":191},"335":{"n":"Mitchell County","t":8989,"w":4212,"b":509,"a":136,"h":3481,"o":651},"337":{"n":"Montague County","t":20599,"w":17324,"b":10,"a":47,"h":2463,"o":755},"339":{"n":"Montgomery County","t":654722,"w":395015,"b":37118,"a":20779,"h":177581,"o":24229},"341":{"n":"Moore County","t":21234,"w":6159,"b":971,"a":500,"h":12743,"o":861},"343":{"n":"Morris County","t":12014,"w":7533,"b":2207,"a":121,"h":1288,"o":865},"345":{"n":"Motley County","t":1267,"w":1056,"b":33,"a":0,"h":102,"o":76},"347":{"n":"Nacogdoches County","t":64897,"w":37520,"b":11063,"a":489,"h":13825,"o":2000},"349":{"n":"Navarro County","t":53735,"w":27289,"b":5704,"a":432,"h":16796,"o":3514},"351":{"n":"Newton County","t":12193,"w":9168,"b":2185,"a":84,"h":415,"o":341},"353":{"n":"Nolan County","t":14565,"w":7873,"b":573,"a":14,"h":5396,"o":709},"355":{"n":"Nueces County","t":352829,"w":105486,"b":13160,"a":8151,"h":219138,"o":6894},"357":{"n":"Ochiltree County","t":9852,"w":4131,"b":0,"a":27,"h":5484,"o":210},"359":{"n":"Oldham County","t":2097,"w":1407,"b":153,"a":3,"h":513,"o":21},"361":{"n":"Orange County","t":84993,"w":66245,"b":7153,"a":662,"h":7763,"o":3170},"363":{"n":"Palo Pinto County","t":28920,"w":21205,"b":737,"a":250,"h":5846,"o":882},"365":{"n":"Panola County","t":22624,"w":16231,"b":2577,"a":91,"h":2266,"o":1459},"367":{"n":"Parker County","t":158079,"w":126490,"b":2183,"a":1204,"h":22268,"o":5934},"369":{"n":"Parmer County","t":9752,"w":3027,"b":35,"a":0,"h":6446,"o":244},"371":{"n":"Pecos County","t":14983,"w":3379,"b":534,"a":331,"h":10666,"o":73},"373":{"n":"Polk County","t":51780,"w":36983,"b":4057,"a":317,"h":7799,"o":2624},"375":{"n":"Potter County","t":116634,"w":50076,"b":11919,"a":5827,"h":45218,"o":3594},"377":{"n":"Presidio County","t":6043,"w":1171,"b":0,"a":1,"h":4622,"o":249},"379":{"n":"Rains County","t":12505,"w":10383,"b":357,"a":96,"h":1228,"o":441},"381":{"n":"Randall County","t":143791,"w":97639,"b":4639,"a":2509,"h":34127,"o":4877},"383":{"n":"Reagan County","t":3259,"w":771,"b":159,"a":64,"h":2186,"o":79},"385":{"n":"Real County","t":2821,"w":2106,"b":39,"a":0,"h":664,"o":12},"387":{"n":"Red River County","t":11621,"w":8548,"b":1903,"a":48,"h":826,"o":296},"389":{"n":"Reeves County","t":13219,"w":1619,"b":188,"a":50,"h":11206,"o":156},"391":{"n":"Refugio County","t":6693,"w":2766,"b":411,"a":15,"h":3354,"o":147},"393":{"n":"Roberts County","t":785,"w":679,"b":2,"a":0,"h":83,"o":21},"395":{"n":"Robertson County","t":16973,"w":9351,"b":3385,"a":50,"h":3712,"o":475},"397":{"n":"Rockwall County","t":116931,"w":75874,"b":9679,"a":3917,"h":23581,"o":3880},"399":{"n":"Runnels County","t":9880,"w":5980,"b":296,"a":0,"h":3402,"o":202},"401":{"n":"Rusk County","t":52613,"w":32552,"b":6920,"a":187,"h":9839,"o":3115},"403":{"n":"Sabine County","t":9998,"w":8457,"b":459,"a":151,"h":417,"o":514},"405":{"n":"San Augustine County","t":7889,"w":5406,"b":1746,"a":0,"h":643,"o":94},"407":{"n":"San Jacinto County","t":27983,"w":19494,"b":2274,"a":54,"h":5129,"o":1032},"409":{"n":"San Patricio County","t":69519,"w":26720,"b":1000,"a":674,"h":39012,"o":2113},"411":{"n":"San Saba County","t":5802,"w":3639,"b":141,"a":12,"h":1753,"o":257},"413":{"n":"Schleicher County","t":2426,"w":1077,"b":18,"a":0,"h":1282,"o":49},"415":{"n":"Scurry County","t":16633,"w":8256,"b":445,"a":104,"h":7089,"o":739},"417":{"n":"Shackelford County","t":3169,"w":2614,"b":37,"a":6,"h":401,"o":111},"419":{"n":"Shelby County","t":24108,"w":14466,"b":3751,"a":35,"h":4736,"o":1120},"421":{"n":"Sherman County","t":2434,"w":1223,"b":4,"a":28,"h":1149,"o":30},"423":{"n":"Smith County","t":238014,"w":137969,"b":39597,"a":3855,"h":49012,"o":7581},"425":{"n":"Somervell County","t":9510,"w":7328,"b":183,"a":0,"h":1719,"o":280},"427":{"n":"Starr County","t":65809,"w":1417,"b":164,"a":17,"h":64036,"o":175},"429":{"n":"Stephens County","t":9278,"w":6379,"b":290,"a":91,"h":2308,"o":210},"431":{"n":"Sterling County","t":1389,"w":932,"b":2,"a":2,"h":447,"o":6},"433":{"n":"Stonewall County","t":1244,"w":938,"b":7,"a":0,"h":283,"o":16},"435":{"n":"Sutton County","t":3306,"w":1065,"b":4,"a":0,"h":2162,"o":75},"437":{"n":"Swisher County","t":6981,"w":2860,"b":544,"a":9,"h":3194,"o":374},"439":{"n":"Tarrant County","t":2135743,"w":921922,"b":366947,"a":124187,"h":637594,"o":85093},"441":{"n":"Taylor County","t":144259,"w":89142,"b":11066,"a":3143,"h":35709,"o":5199},"443":{"n":"Terrell County","t":851,"w":487,"b":0,"a":0,"h":364,"o":0},"445":{"n":"Terry County","t":11699,"w":4481,"b":461,"a":20,"h":6574,"o":163},"447":{"n":"Throckmorton County","t":1589,"w":1428,"b":0,"a":6,"h":124,"o":31},"449":{"n":"Titus County","t":31284,"w":13488,"b":2963,"a":380,"h":13887,"o":566},"451":{"n":"Tom Green County","t":119398,"w":62009,"b":4009,"a":1528,"h":47877,"o":3975},"453":{"n":"Travis County","t":1307625,"w":624387,"b":102188,"a":97051,"h":425105,"o":58894},"455":{"n":"Trinity County","t":13850,"w":10711,"b":1202,"a":12,"h":1480,"o":445},"457":{"n":"Tyler County","t":20084,"w":15478,"b":2130,"a":100,"h":1614,"o":762},"459":{"n":"Upshur County","t":41864,"w":32744,"b":2995,"a":181,"h":4219,"o":1725},"461":{"n":"Upton County","t":3227,"w":1344,"b":30,"a":11,"h":1812,"o":30},"463":{"n":"Uvalde County","t":24810,"w":6406,"b":154,"a":277,"h":17548,"o":425},"465":{"n":"Val Verde County","t":47647,"w":7465,"b":573,"a":287,"h":38580,"o":742},"467":{"n":"Van Zandt County","t":61323,"w":49913,"b":1667,"a":282,"h":7835,"o":1626},"469":{"n":"Victoria County","t":91281,"w":39294,"b":4999,"a":1108,"h":43432,"o":2448},"471":{"n":"Walker County","t":78292,"w":41681,"b":15506,"a":845,"h":16931,"o":3329},"473":{"n":"Waller County","t":59455,"w":23095,"b":13895,"a":996,"h":19593,"o":1876},"475":{"n":"Ward County","t":11255,"w":4222,"b":538,"a":178,"h":6238,"o":79},"477":{"n":"Washington County","t":36156,"w":22304,"b":5470,"a":493,"h":6557,"o":1332},"479":{"n":"Webb County","t":267731,"w":9554,"b":995,"a":1222,"h":254619,"o":1341},"481":{"n":"Wharton County","t":41651,"w":18297,"b":5167,"a":196,"h":17294,"o":697},"483":{"n":"Wheeler County","t":4902,"w":3383,"b":81,"a":70,"h":1224,"o":144},"485":{"n":"Wichita County","t":129842,"w":82146,"b":13037,"a":2896,"h":26409,"o":5354},"487":{"n":"Wilbarger County","t":12712,"w":7045,"b":770,"a":365,"h":3798,"o":734},"489":{"n":"Willacy County","t":20218,"w":2118,"b":293,"a":0,"h":17623,"o":184},"491":{"n":"Williamson County","t":643889,"w":354615,"b":42712,"a":57181,"h":157980,"o":31401},"493":{"n":"Wilson County","t":51501,"w":28649,"b":912,"a":267,"h":20354,"o":1319},"495":{"n":"Winkler County","t":7540,"w":2454,"b":275,"a":65,"h":4660,"o":86},"497":{"n":"Wise County","t":72359,"w":53380,"b":1009,"a":484,"h":14878,"o":2608},"499":{"n":"Wood County","t":46094,"w":37458,"b":1844,"a":255,"h":5153,"o":1384},"501":{"n":"Yoakum County","t":7589,"w":2392,"b":11,"a":66,"h":4950,"o":170},"503":{"n":"Young County","t":17963,"w":13584,"b":254,"a":35,"h":3621,"o":469},"505":{"n":"Zapata County","t":13855,"w":633,"b":37,"a":109,"h":13014,"o":62},"507":{"n":"Zavala County","t":9532,"w":582,"b":79,"a":40,"h":8831,"o":0}};
+
+const GROUPS = {
+  h:{key:'h', label:'Hispanic / Latino', color:'#1f78b4', breaks:[0,10,20,30,40,50,70,100]},
+  w:{key:'w', label:'White (non-Hispanic)', color:'#6a3d9a', breaks:[0,10,25,40,55,70,85,100]},
+  b:{key:'b', label:'Black', color:'#e6550d', breaks:[0,2,5,10,15,20,30,45]},
+  a:{key:'a', label:'Asian', color:'#238b45', breaks:[0,1,2,4,7,10,15,20]}
+};
+const ORDER=[
+  {k:'h',label:'Hispanic / Latino'},{k:'w',label:'White'},
+  {k:'b',label:'Black'},{k:'a',label:'Asian'},{k:'o',label:'Other'}
+];
+const COLORS={h:'#1f78b4',w:'#6a3d9a',b:'#e6550d',a:'#238b45',o:'#7a7a7a'};
+
+const CITIES=[
+  {n:'Houston',lon:-95.3698,lat:29.7604,big:1},{n:'San Antonio',lon:-98.4936,lat:29.4241,big:1},
+  {n:'Dallas',lon:-96.7970,lat:32.7767,big:1},{n:'Fort Worth',lon:-97.3308,lat:32.7555,big:1},
+  {n:'Austin',lon:-97.7431,lat:30.2672,big:1},{n:'El Paso',lon:-106.4850,lat:31.7619,big:1},
+  {n:'Corpus Christi',lon:-97.3964,lat:27.8006,big:0},{n:'Lubbock',lon:-101.8552,lat:33.5779,big:0},
+  {n:'Amarillo',lon:-101.8313,lat:35.2220,big:0},{n:'Laredo',lon:-99.5075,lat:27.5306,big:0},
+  {n:'Brownsville',lon:-97.4975,lat:25.9017,big:0},{n:'Midland',lon:-102.0779,lat:31.9974,big:0}
+];
+
+/* ---------- Regions (scheme + anchor counties from Texas Region Builder) ---------- */
+const REGIONS=[
+  {id:1,name:'Central Texas / Austin',color:'#3b82f6',anchors:['48453','48491','48209','48027','48309','48041','48021','48055','48185','48477','48099','48217','48053','48149','48293','48299','48051','48035','48331','48395','48161','48313','48145','48289','48287','48281','48031','48411','48193','48333']},
+  {id:2,name:'Dallas / Collin / NE Texas',color:'#4a0404',anchors:['48113','48085','48139','48349','48213','48183','48423','48037','48277']},
+  {id:3,name:'Houston / Gulf / East Texas',color:'#6287b5',anchors:['48201','48157','48167','48339','48039','48291','48225']},
+  {id:4,name:'Fort Worth / Denton / Panhandle',color:'#c8a96a',anchors:['48439','48121','48181','48303','48485','48375']},
+  {id:5,name:'El Paso / Border / RGV',color:'#caa92f',anchors:['48141','48215','48061','48479','48427','48247','48323']},
+  {id:6,name:'San Antonio / Corpus Christi',color:'#809351',anchors:['48029','48355','48091','48187','48265','48171']}
+];
+const REGION_BY_ID={};REGIONS.forEach(R=>REGION_BY_ID[R.id]=R);
+// Audited county->region assignment (nearest-anchor, verified against Census centroids;
+// Victoria moved to region 6 as it is a Coastal-Bend county surrounded by region 6).
+const REGION_STATIC={"001":2,"003":5,"005":3,"007":6,"009":4,"011":4,"013":6,"015":3,"017":4,"019":6,"021":1,"023":4,"025":6,"027":1,"029":6,"031":1,"033":5,"035":1,"037":2,"039":3,"041":1,"043":5,"045":4,"047":5,"049":4,"051":1,"053":1,"055":1,"057":6,"059":4,"061":5,"063":2,"065":4,"067":2,"069":4,"071":3,"073":2,"075":4,"077":4,"079":4,"081":5,"083":4,"085":2,"087":4,"089":3,"091":6,"093":4,"095":5,"097":4,"099":1,"101":4,"103":5,"105":5,"107":4,"109":5,"111":4,"113":2,"115":5,"117":4,"119":2,"121":4,"123":6,"125":4,"127":5,"129":4,"131":5,"133":4,"135":5,"137":5,"139":2,"141":5,"143":4,"145":1,"147":2,"149":1,"151":4,"153":4,"155":4,"157":3,"159":2,"161":1,"163":6,"165":5,"167":3,"169":4,"171":6,"173":5,"175":6,"177":6,"179":4,"181":4,"183":2,"185":1,"187":6,"189":4,"191":4,"193":1,"195":4,"197":4,"199":3,"201":3,"203":2,"205":4,"207":4,"209":1,"211":4,"213":2,"215":5,"217":1,"219":4,"221":4,"223":2,"225":3,"227":5,"229":5,"231":2,"233":4,"235":5,"237":4,"239":6,"241":3,"243":5,"245":3,"247":5,"249":5,"251":4,"253":4,"255":6,"257":2,"259":6,"261":5,"263":4,"265":6,"267":5,"269":4,"271":5,"273":5,"275":4,"277":2,"279":4,"281":1,"283":5,"285":6,"287":1,"289":1,"291":3,"293":1,"295":4,"297":5,"299":1,"301":5,"303":4,"305":4,"307":5,"309":1,"311":5,"313":1,"315":2,"317":5,"319":5,"321":3,"323":5,"325":6,"327":5,"329":5,"331":1,"333":1,"335":4,"337":4,"339":3,"341":4,"343":2,"345":4,"347":3,"349":2,"351":3,"353":4,"355":6,"357":4,"359":4,"361":3,"363":4,"365":2,"367":4,"369":4,"371":5,"373":3,"375":4,"377":5,"379":2,"381":4,"383":5,"385":5,"387":2,"389":5,"391":6,"393":4,"395":1,"397":2,"399":4,"401":2,"403":3,"405":3,"407":3,"409":6,"411":1,"413":5,"415":4,"417":4,"419":3,"421":4,"423":2,"425":4,"427":5,"429":4,"431":5,"433":4,"435":5,"437":4,"439":4,"441":4,"443":5,"445":4,"447":4,"449":2,"451":5,"453":1,"455":3,"457":3,"459":2,"461":5,"463":5,"465":5,"467":2,"469":6,"471":3,"473":3,"475":5,"477":1,"479":5,"481":3,"483":4,"485":4,"487":4,"489":5,"491":1,"493":6,"495":5,"497":4,"499":2,"501":4,"503":4,"505":5,"507":5};
+let REGION_OF={};            // fips -> region id (computed at load)
+let regionMode='out';        // 'off' | 'out' | 'fill'
+
+/* ---------- color helpers ---------- */
+function hexToRgb(h){h=h.replace('#','');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function rgbToHex(a){return '#'+a.map(x=>Math.round(Math.max(0,Math.min(255,x))).toString(16).padStart(2,'0')).join('');}
+function mix(c1,c2,t){const a=hexToRgb(c1),b=hexToRgb(c2);return rgbToHex([0,1,2].map(i=>a[i]+(b[i]-a[i])*t));}
+function ramp(color){const n=7,light=mix(color,'#ffffff',0.90),dark=mix(color,'#000000',0.10),out=[];for(let i=0;i<n;i++)out.push(mix(light,dark,i/(n-1)));return out;}
+const RAMPS={};Object.values(GROUPS).forEach(g=>RAMPS[g.key]=ramp(g.color));
+function classIndex(g,v){const b=g.breaks;for(let i=0;i<b.length-1;i++){if(v>=b[i]&&v<b[i+1])return i;}return b.length-2;}
+function pct(d,k){return d.t?100*d[k]/d.t:0;}
+const fmt=n=>n.toLocaleString('en-US');
+let mode='h';
+
+/* ---------- statewide totals + ranks ---------- */
+const STATE={t:0,w:0,b:0,a:0,h:0,o:0};
+Object.values(TXDATA).forEach(d=>['t','w','b','a','h','o'].forEach(k=>STATE[k]+=d[k]));
+const RANK={};['t','h','w','b','a'].forEach(k=>{
+  const s=Object.entries(TXDATA).sort((A,B)=>B[1][k]-A[1][k]);
+  s.forEach(([f],i)=>{(RANK[f]=RANK[f]||{})[k]=i+1;});
+});
+
+/* ---------- mode buttons ---------- */
+const modesEl=document.getElementById('modes');
+function makeBtn(id,label,bg){const b=document.createElement('button');b.dataset.mode=id;b.innerHTML=`<span class="dot" style="background:${bg}"></span>${label}`;b.onclick=()=>setMode(id);modesEl.appendChild(b);return b;}
+Object.values(GROUPS).forEach(g=>makeBtn(g.key,g.label,g.color));
+makeBtn('dom','Dominant group','linear-gradient(90deg,#1f78b4,#6a3d9a,#e6550d,#238b45)');
+
+/* ---------- search ---------- */
+const dl=document.getElementById('ctylist'),nameToFips={};
+Object.entries(TXDATA).forEach(([f,d])=>{const o=document.createElement('option');o.value=d.n;dl.appendChild(o);nameToFips[d.n.toLowerCase()]=f;});
+document.getElementById('search').addEventListener('change',e=>{const f=nameToFips[e.target.value.trim().toLowerCase()];if(f){select(f);zoomTo(f);}});
+
+/* ---------- map ---------- */
+const svg=d3.select('#map'),gMap=svg.append('g'),gCounty=gMap.append('g'),gRegion=gMap.append('g'),gCity=gMap.append('g');
+const tip=document.getElementById('tip');
+let path,features=[],selFips=null,zoom,projection,TOPO=null,OBJGEOMS=null,RTOPO=null;
+const W=980,H=770;
+function darken(c,t){return mix(c,'#000000',t==null?0.45:t);}
+function regionName(f){const id=REGION_OF[f];return id?REGION_BY_ID[id].name:'—';}
+
+function dominant(d){let best='h',bv=-1;['h','w','b','a'].forEach(k=>{if(d[k]>bv){bv=d[k];best=k;}});return best;}
+function fillFor(f){const d=TXDATA[f];if(!d)return '#dfe3ea';
+  if(regionMode==='fill'){const id=REGION_OF[f];return id?REGION_BY_ID[id].color:'#dfe3ea';}
+  if(mode==='dom')return COLORS[dominant(d)];return RAMPS[mode][classIndex(GROUPS[mode],pct(d,mode))];}
+function opacityFor(f){const d=TXDATA[f];if(!d)return 1;if(regionMode==='fill')return 1;if(mode==='dom'){const p=pct(d,dominant(d));return 0.32+0.63*Math.max(0,Math.min(1,(p-25)/75));}return 1;}
+
+function paint(){
+  gCounty.selectAll('path.county').attr('fill',d=>fillFor(d.fips)).attr('fill-opacity',d=>opacityFor(d.fips));
+  document.querySelectorAll('#modes button').forEach(b=>{const on=b.dataset.mode===mode;b.classList.toggle('active',on);b.style.background=on?(mode==='dom'?'#374151':GROUPS[mode].color):'#fff';});
+  gRegion.style('display', regionMode==='off'?'none':null);
+  document.querySelectorAll('#regionctl button').forEach(b=>{const on=b.dataset.rg===regionMode;b.classList.toggle('active',on);b.style.background=on?'#374151':'#fff';b.style.color=on?'#fff':'';b.style.borderColor=on?'transparent':'';b.style.fontWeight=on?'600':'';});
+  buildLegend();
+}
+function setMode(m){mode=m;paint();}
+function setRegionMode(m){regionMode=m;paint();}
+
+function buildLegend(){
+  const el=document.getElementById('legend');
+  if(regionMode==='fill'){
+    el.innerHTML='<h3>Texas regions <span style="text-transform:none;letter-spacing:0;font-weight:400">— click one</span></h3>'+REGIONS.map(R=>`<div class="lrow rgrow" data-rid="${R.id}" style="cursor:pointer;padding:3px 5px;border-radius:6px"><span class="lsw" style="background:${R.color}"></span>${R.name}</div>`).join('')+'<div class="hint" style="margin-top:8px">Counties colored by region. Click a region (here or on the map) for its biggest counties. Switch to “Bold boundaries” to see race colors with region outlines.</div>';
+    el.querySelectorAll('.rgrow').forEach(r=>r.onclick=()=>renderRegionDetail(+r.dataset.rid));
+    return;
+  }
+  if(mode==='dom'){
+    el.innerHTML='<h3>Largest group in county</h3>'+ORDER.filter(o=>o.k!=='o').map(o=>`<div class="lrow"><span class="lsw" style="background:${COLORS[o.k]}"></span>${o.label} is the plurality</div>`).join('')+'<div class="hint" style="margin-top:8px">Deeper color = larger majority · pale = narrow plurality.</div>';return;
+  }
+  const gr=GROUPS[mode],r=RAMPS[mode];let rows='';
+  for(let i=0;i<gr.breaks.length-1;i++)rows+=`<div class="lrow"><span class="lsw" style="background:${r[i]}"></span>${gr.breaks[i]}–${gr.breaks[i+1]}%</div>`;
+  el.innerHTML=`<h3>${gr.label} — % of county</h3>${rows}`;
+}
+
+function showTip(ev,f){
+  const d=TXDATA[f];if(!d){tip.style.opacity=0;return;}
+  let v;
+  if(mode==='dom'){const dm=dominant(d);v=`Largest: <b>${ORDER.find(o=>o.k===dm).label}</b> (${pct(d,dm).toFixed(1)}%)`;}
+  else v=`${GROUPS[mode].label}: <b>${pct(d,mode).toFixed(1)}%</b>`;
+  const rg=regionMode!=='off'?`<br><span style="opacity:.7">▰ ${regionName(f)}</span>`:'';
+  tip.innerHTML=`<b>${d.n}</b><br>${v}<br><span style="opacity:.7">pop. ${fmt(d.t)}</span>${rg}`;
+  const r=document.getElementById('mapwrap').getBoundingClientRect();
+  tip.style.left=(ev.clientX-r.left+15)+'px';tip.style.top=(ev.clientY-r.top+14)+'px';tip.style.opacity=1;
+}
+
+function select(f){selFips=f;gCounty.selectAll('path.county').classed('sel',d=>d.fips===f);renderDetail(f);}
+function renderDetail(f){
+  const d=TXDATA[f],el=document.getElementById('detail');
+  const rows=ORDER.map(o=>({...o,count:d[o.k],pc:pct(d,o.k)})).sort((a,b)=>b.count-a.count);
+  const max=Math.max(...rows.map(r=>r.count),1);
+  const rk=RANK[f]||{};
+  const R=REGION_BY_ID[REGION_OF[f]];
+  const regLine=R?`<div class="tot" style="margin-top:-8px;margin-bottom:13px"><span class="lsw" style="display:inline-block;width:11px;height:11px;border-radius:3px;background:${R.color};vertical-align:-1px;margin-right:5px"></span>${R.name}</div>`:'';
+  el.innerHTML=`<h3>County detail</h3>
+    <div class="cty">${d.n}<span class="rank">#${rk.t} by population</span></div>
+    <div class="tot">Total population: <b>${fmt(d.t)}</b></div>`+regLine+
+    rows.map(r=>`<div class="bar"><div class="top"><span class="nm"><i style="background:${COLORS[r.k]}"></i>${r.label}</span><span class="vals"><b>${fmt(r.count)}</b> · ${r.pc.toFixed(1)}%</span></div><div class="track"><div class="fill" style="width:${(100*r.count/max).toFixed(1)}%;background:${COLORS[r.k]}"></div></div></div>`).join('')+
+    `<div class="hint">Bars are scaled to this county's largest group, so the longest bar = the biggest population. Percentages are share of total. Ranks are out of 254 counties.</div>`;
+}
+
+function zoomTo(f){
+  const node=gCounty.selectAll('path.county').filter(d=>d.fips===f).node();if(!node||!zoom)return;
+  const b=node.getBBox();const k=Math.max(1,Math.min(9,0.55*Math.min(W/b.width,H/b.height)));
+  const tx=W/2-k*(b.x+b.width/2),ty=H/2-k*(b.y+b.height/2);
+  svg.transition().duration(650).call(zoom.transform,d3.zoomIdentity.translate(tx,ty).scale(k));
+}
+
+/* ---------- region detail panel (biggest counties + region breakdown) ---------- */
+function countiesInRegion(rid){
+  return Object.keys(TXDATA).filter(f=>(REGION_OF[f]||REGION_STATIC[f])===rid)
+    .map(f=>({f,...TXDATA[f]}));
+}
+function renderRegionDetail(rid){
+  const R=REGION_BY_ID[rid];const el=document.getElementById('detail');
+  const cos=countiesInRegion(rid).sort((a,b)=>b.t-a.t);
+  const T={t:0,w:0,b:0,a:0,h:0,o:0};cos.forEach(d=>['t','w','b','a','h','o'].forEach(k=>T[k]+=d[k]));
+  const rrows=ORDER.map(o=>({...o,count:T[o.k],pc:pct(T,o.k)})).sort((a,b)=>b.count-a.count);
+  const rmax=Math.max(...rrows.map(r=>r.count),1);
+  const top=cos.slice(0,12);const cmax=Math.max(...top.map(d=>d.t),1);
+  el.innerHTML=`<h3>Region detail</h3>
+    <div class="cty"><span class="lsw" style="display:inline-block;width:13px;height:13px;border-radius:3px;background:${R.color};vertical-align:-1px;margin-right:6px"></span>${R.name}</div>
+    <div class="tot">${cos.length} counties · total population <b>${fmt(T.t)}</b></div>
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:6px 0 4px">Region race &amp; ethnicity</div>`+
+    rrows.map(r=>`<div class="bar"><div class="top"><span class="nm"><i style="background:${COLORS[r.k]}"></i>${r.label}</span><span class="vals"><b>${fmt(r.count)}</b> · ${r.pc.toFixed(1)}%</span></div><div class="track"><div class="fill" style="width:${(100*r.count/rmax).toFixed(1)}%;background:${COLORS[r.k]}"></div></div></div>`).join('')+
+    `<div style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:14px 0 4px">Largest counties${cos.length>12?` (top 12 of ${cos.length})`:''}</div>
+     <div class="ctyrows">`+
+    top.map((d,i)=>`<div class="ctyrow" data-f="${d.f}"><span class="ci"><b>${i+1}.</b> ${d.n.replace(' County','')}<i style="background:${COLORS[dominant(d)]}" title="largest group"></i></span><span class="cp">${fmt(d.t)}</span><div class="cbar" style="width:${(100*d.t/cmax).toFixed(1)}%;background:${R.color}"></div></div>`).join('')+
+    `</div><div class="hint">Click any county above to see its full breakdown. Colored dot = that county's largest group.</div>`;
+  el.querySelectorAll('.ctyrow').forEach(row=>row.onclick=()=>{select(row.dataset.f);zoomTo(row.dataset.f);});
+}
+
+/* ---------- region outlines + labels ---------- */
+// Build a runtime topology from the loaded county features so we can dissolve
+// internal borders and draw ONLY the lines that separate two different regions.
+function buildRegionTopology(){
+  try{
+    features.forEach(ft=>{ft.properties=Object.assign({},ft.properties,{_r:REGION_OF[ft.fips],_f:ft.fips});});
+    RTOPO=topojson.topology({co:{type:'FeatureCollection',features}});
+  }catch(e){RTOPO=null;}
+}
+function regionMergedGeom(R){
+  if(RTOPO){
+    const geoms=RTOPO.objects.co.geometries.filter(g=>g.properties._r===R.id);
+    if(geoms.length) return topojson.merge(RTOPO,geoms);
+  }
+  return {type:'FeatureCollection',features:features.filter(f=>REGION_OF[f.fips]===R.id)};
+}
+function drawRegions(){
+  gRegion.selectAll('*').remove();
+  // ONE bold black mesh of shared region borders (+ outer state edge); county lines stay thin & white
+  if(RTOPO){
+    const mesh=topojson.mesh(RTOPO, RTOPO.objects.co, (a,b)=> a===b || a.properties._r!==b.properties._r);
+    gRegion.append('path').datum(mesh).attr('class','rgnOutline').attr('d',path)
+      .attr('fill','none').attr('stroke','#111111').attr('stroke-width',2.6)
+      .attr('stroke-linejoin','round').attr('stroke-linecap','round').attr('pointer-events','none');
+  }
+  // labels on top — clickable to show region breakdown
+  REGIONS.forEach(R=>{
+    const o=regionMergedGeom(R);let c;try{c=path.centroid(o);}catch(e){c=null;}
+    if(!c||isNaN(c[0]))return;
+    const lg=gRegion.append('g').datum({cx:c[0],cy:c[1]}).attr('class','rgnLbl').attr('transform',`translate(${c[0]},${c[1]})`)
+      .style('cursor','pointer').on('click',()=>renderRegionDetail(R.id));
+    lg.append('title').text(R.name+' — click for biggest counties');
+    const t=lg.append('text').attr('y',-1).attr('text-anchor','middle')
+      .style('font-size','13px').style('font-weight','700').style('fill','#15181f')
+      .attr('paint-order','stroke').attr('stroke','#fff').attr('stroke-width',3.5).attr('stroke-linejoin','round')
+      .text(R.name);
+    const bb=t.node().getBBox();
+    lg.insert('rect','text').attr('x',bb.x-6).attr('y',bb.y-3).attr('width',bb.width+12).attr('height',bb.height+6)
+      .attr('rx',4).attr('fill','transparent');
+    lg.insert('circle','rect').attr('cx',bb.x-9).attr('cy',-5).attr('r',4).attr('fill',R.color).attr('stroke','#fff').attr('stroke-width',1);
+  });
+}
+
+/* ---------- geometry loading (lon/lat sources + Texas conic projection) ---------- */
+// Return the full 5-digit county GEOID (state+county) so we can keep Texas (48) only
+function detectGeoid(props,id){
+  if(props){
+    if(props.GEOID) return String(props.GEOID).padStart(5,'0');
+    if(props.STATEFP&&props.COUNTYFP) return String(props.STATEFP).padStart(2,'0')+String(props.COUNTYFP).padStart(3,'0');
+    if(props.STATE&&props.COUNTY) return String(props.STATE).padStart(2,'0')+String(props.COUNTY).padStart(3,'0');
+    if(props.FIPS) return String(props.FIPS).padStart(5,'0');
+    if(props.fips) return String(props.fips).padStart(5,'0');
+  }
+  if(id!=null){const s=String(id).replace(/\D/g,'');return s.slice(-5).padStart(5,'0');}
+  return null;
+}
+
+async function loadGeometry(){
+  const sources=[
+    {url:'https://cdn.jsdelivr.net/gh/deldersveld/topojson@master/countries/us-states/TX-48-texas-counties.json',type:'topo'},
+    {url:'https://cdn.jsdelivr.net/gh/plotly/datasets@master/geojson-counties-fips.json',type:'geo'}
+  ];
+  for(const s of sources){
+    try{
+      const res=await fetch(s.url);if(!res.ok)throw new Error(res.status);const j=await res.json();
+      let feats;
+      if(s.type==='topo'){
+        const key=Object.keys(j.objects)[0],obj=j.objects[key];
+        obj.geometries.forEach(g=>{const gid=detectGeoid(g.properties,g.id);g._geoid=gid;g._fips=gid?gid.slice(-3):null;});
+        feats=topojson.feature(j,obj).features;
+      } else feats=j.features;
+      feats=feats.map(ft=>{const g=detectGeoid(ft.properties,ft.id);ft.geoid=g;ft.fips=g?g.slice(-3):null;return ft;})
+                 .filter(ft=>ft.geoid&&ft.geoid.slice(0,2)==='48'&&TXDATA[ft.fips]); // Texas counties only
+      if(feats.length>=200){
+        if(s.type==='topo'){const key=Object.keys(j.objects)[0];TOPO=j;OBJGEOMS=j.objects[key].geometries.filter(g=>g._geoid&&g._geoid.slice(0,2)==='48'&&TXDATA[g._fips]);}
+        return feats;
+      }
+    }catch(e){/* try next */}
+  }
+  throw new Error('No geometry source available');
+}
+
+loadGeometry().then(feats=>{
+  features=feats;
+  const fc={type:'FeatureCollection',features};
+  // Texas Centric Lambert Conformal Conic — correct, upright orientation
+  projection=d3.geoConicConformal().parallels([27.41666667,34.91666667]).rotate([100,0]).center([0,31.25])
+    .fitExtent([[24,24],[W-24,H-24]],fc);
+  path=d3.geoPath(projection);
+
+  gCounty.selectAll('path.county').data(features).enter().append('path')
+    .attr('class','county').attr('d',path)
+    .on('mousemove',(e,d)=>showTip(e,d.fips))
+    .on('mouseleave',()=>tip.style.opacity=0)
+    .on('click',(e,d)=>select(d.fips));
+
+  // optional county labels
+  gCounty.selectAll('text.ctyLbl').data(features).enter().append('text')
+    .attr('class','ctyLbl').attr('display','none')
+    .attr('x',d=>path.centroid(d)[0]).attr('y',d=>path.centroid(d)[1])
+    .attr('text-anchor','middle').attr('dy','.32em')
+    .style('font-size','11px').style('font-weight','600').style('fill','#1d2330').style('pointer-events','none')
+    .attr('paint-order','stroke').attr('stroke','#ffffff').attr('stroke-width',2.4).attr('stroke-linejoin','round')
+    .text(d=>TXDATA[d.fips]?TXDATA[d.fips].n.replace(' County',''):'');
+
+  // ---- region assignment: authoritative saved regions from Region Builder (0 = unassigned) ----
+  features.forEach(ft=>{REGION_OF[ft.fips]=REGION_STATIC[ft.fips]||0;});
+
+  buildRegionTopology();
+  drawRegions();
+
+  // city markers
+  const cityG=gCity.selectAll('g.city').data(CITIES).enter().append('g').attr('class','city')
+    .attr('transform',d=>{const p=projection([d.lon,d.lat]);return `translate(${p[0]},${p[1]})`;});
+  cityG.append('circle').attr('class','cityDot').attr('r',d=>d.big?3.4:2.4);
+  cityG.append('text').attr('class','cityLbl').attr('x',6).attr('y',4).attr('display',d=>d.big?null:'none').text(d=>d.n);
+
+  zoom=d3.zoom().scaleExtent([1,12]).on('zoom',e=>{
+    gMap.attr('transform',e.transform);const k=e.transform.k;
+    gCity.selectAll('.cityDot').attr('r',d=>(d.big?3.4:2.4)/k);
+    gCity.selectAll('.cityLbl').style('font-size',(12/k)+'px').attr('stroke-width',3/k);
+    gCounty.selectAll('.ctyLbl').style('font-size',(11/k)+'px').attr('stroke-width',2.4/k);
+    gRegion.selectAll('.rgnOutline').attr('stroke-width',2.6/k);
+    gRegion.selectAll('.rgnLbl').attr('transform',d=>`translate(${d.cx},${d.cy}) scale(${1/k})`);
+  });
+  svg.call(zoom);
+  document.getElementById('zin').onclick=()=>svg.transition().call(zoom.scaleBy,1.6);
+  document.getElementById('zout').onclick=()=>svg.transition().call(zoom.scaleBy,0.625);
+  document.getElementById('zreset').onclick=()=>svg.transition().duration(500).call(zoom.transform,d3.zoomIdentity);
+  document.getElementById('tCities').onchange=e=>gCity.attr('display',e.target.checked?null:'none');
+  document.getElementById('tLabels').onchange=e=>gCounty.selectAll('.ctyLbl').attr('display',e.target.checked?null:'none');
+  document.querySelectorAll('#regionctl button').forEach(b=>b.onclick=()=>setRegionMode(b.dataset.rg));
+
+  document.getElementById('loading').style.display='none';
+  paint();
+  document.getElementById('foot').textContent=`Statewide: Hispanic ${pct(STATE,'h').toFixed(1)}% · White ${pct(STATE,'w').toFixed(1)}% · Black ${pct(STATE,'b').toFixed(1)}% · Asian ${pct(STATE,'a').toFixed(1)}% · Other ${pct(STATE,'o').toFixed(1)}%  —  ${Object.keys(TXDATA).length} counties · ${fmt(STATE.t)} people · U.S. Census ACS 2023 5-year (B03002)`;
+  select('201');
+}).catch(err=>{
+  document.getElementById('loading').style.display='none';
+  document.getElementById('mapwrap').innerHTML='<div class="err"><b>Couldn\'t load county shapes.</b><br>The outlines load from a CDN (jsDelivr), so an internet connection is needed the first time you open this. The demographic data itself is embedded in the file.<br><br>'+err+'</div>';
+  document.getElementById('foot').textContent='Map shapes failed to load — check your connection and reopen.';
+});
+</script>
+</body>
+</html>
