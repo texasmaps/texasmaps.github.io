@@ -22,6 +22,14 @@
   iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
   .loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;pointer-events:none;opacity:0;transition:opacity .15s}
   .loading.on{opacity:1}
+
+@media (max-width:760px){
+  header.top{padding:8px 12px}
+  h1{font-size:15px}
+  .sub{display:none}
+  nav{flex-wrap:nowrap;overflow-x:auto;margin-top:8px;padding-bottom:3px;-webkit-overflow-scrolling:touch}
+  nav a{flex:0 0 auto}
+}
 </style>
 </head>
 <body>
