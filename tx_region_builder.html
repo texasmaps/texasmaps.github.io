@@ -197,6 +197,8 @@ header .sub{font-size:.7rem;color:#64748b}
 
 .dist-line{fill:none;pointer-events:none;stroke-linejoin:round;stroke-opacity:.9}
 .dist-label{text-anchor:middle;dominant-baseline:middle;pointer-events:none;font-weight:800;paint-order:stroke;stroke:#fff;stroke-width:2.6px;stroke-linejoin:round}
+.cityDot{fill:#0f172a;stroke:#fff;stroke-width:1.4px;pointer-events:none}
+.cityLbl{font-weight:700;fill:#0f172a;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round;pointer-events:none}
 #ov-ctrl{position:absolute;top:10px;left:10px;z-index:7;background:rgba(255,255,255,.95);border:1px solid #cbd5e1;border-radius:9px;padding:7px 8px;box-shadow:0 2px 8px rgba(0,0,0,.13)}
 #ov-ctrl .ov-t{font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.04em;font-size:.6rem;margin-bottom:5px}
 #ov-ctrl button{display:flex;align-items:center;gap:7px;width:148px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;padding:5px 8px;margin:3px 0;cursor:pointer;font-size:.72rem;color:#1e293b;transition:all .12s}
@@ -545,7 +547,10 @@ const OFF = {
     {n:'John Bucy',img:'https://house.texas.gov/images/members/3595.jpg',o:'State Rep HD 136',p:'D',s:'incumbent',type:'elected',w:'https://house.texas.gov/members/member-page/?district=136',b:'https://ballotpedia.org/John_Bucy_III'},
     {n:'Chari Kelly',o:'3rd Court of Appeals (Running for Supreme Court)',p:'D',s:'incumbent',type:'elected'},
     {n:'Gisela Triana',o:'3rd Court of Appeals (Running for Supreme Court)',p:'D',s:'incumbent',type:'elected'},
-    {n:'Terry Cook',o:'County Commissioner Precinct One',p:'D',s:'incumbent',type:'elected'},
+    {n:'Terry Cook',o:'County Commissioner Pct 1',p:'D',s:'incumbent',type:'elected'},
+    {n:'Cynthia Long',o:'County Commissioner Pct 2',p:'R',s:'incumbent',type:'elected'},
+    {n:'Valerie Covey',o:'County Commissioner Pct 3',p:'R',s:'incumbent',type:'elected'},
+    {n:'Russ Boles',o:'County Commissioner Pct 4',p:'R',s:'incumbent',type:'elected'},
     {n:'KT Musselman',o:'Justice of the Peace Precinct One',p:'D',s:'incumbent',type:'elected'},
     {n:'Mickey Chance',o:'Constable Precinct One',p:'D',s:'incumbent',type:'elected'},
     {n:'Gloria Gonzalez-Gholakia',o:'Leander ISD, Place 2',p:'D',s:'incumbent',type:'elected'},
@@ -557,7 +562,7 @@ const OFF = {
     {n:'Hilda Montgomery',o:'(Position unspecified)',p:'D',s:'incumbent',type:'elected'},
     {n:"Na'Cole Thompson",o:'(Position unspecified)',p:'D',s:'incumbent',type:'elected'},
     // ── State & county officials ──────────────────────────────
-    {n:'Bill Gravell',o:'County Judge',p:'R',s:'incumbent',type:'elected',w:'https://www.wilcotx.gov/188/Elected-Officials'},
+    {n:'Steven Snell',o:'County Judge',p:'R',s:'incumbent',type:'elected',note:'Assumed office 2025 (succeeded Bill Gravell)',w:'https://www.wilcotx.gov/188/Elected-Officials'},
     {n:'Stacey Soule',o:'District Attorney',p:'R',s:'incumbent',type:'elected',w:'https://www.wilcotx.gov/188/Elected-Officials'},
     {n:'Terry Wilson',img:'https://house.texas.gov/images/members/3525.jpg',o:'State Rep HD 20',p:'R',s:'incumbent',type:'elected',w:'https://house.texas.gov/members/member-page/?district=20'},
     {n:'Caroline Harris Davila',img:'https://house.texas.gov/images/members/4205.jpg',o:'State Rep HD 52',p:'R',s:'incumbent',type:'elected',w:'https://house.texas.gov/members/member-page/?district=52'},
@@ -727,6 +732,10 @@ const OFF = {
   // ══════════════════════════════════════════════════════════
   '48113':[ // Dallas County
     {n:'Clay Jenkins',o:'County Judge',p:'D',s:'incumbent',note:'Running for reelection Nov 2026',w:'https://www.dallascounty.org/government/elected-officials/',b:'https://ballotpedia.org/Clay_Jenkins'},
+    {n:'Theresa Daniel',o:'County Commissioner Pct 1',p:'D',s:'incumbent',type:'elected'},
+    {n:'Andrew Sommerman',o:'County Commissioner Pct 2',p:'D',s:'incumbent',type:'elected'},
+    {n:'John Wiley Price',o:'County Commissioner Pct 3',p:'D',s:'incumbent',type:'elected',note:'Longest-serving Dallas commissioner (since 1985)'},
+    {n:'Elba Garcia',o:'County Commissioner Pct 4',p:'D',s:'incumbent',type:'elected'},
     {n:'Marian Brown',o:'County Sheriff',p:'D',s:'incumbent',note:'1st Black female sheriff in Dallas County · term ends 2028',w:'https://www.dallascounty.org/departments/sheriff/',b:'https://ballotpedia.org/Marian_Brown'},
     {n:'John Creuzot',o:'District Attorney',p:'D',s:'incumbent',note:'Running for reelection Nov 2026',w:'https://www.dallascounty.org/departments/da/',b:'https://ballotpedia.org/John_Creuzot'},
     {n:'Nathan Johnson',o:'State Senator SD 16',p:'D',s:'incumbent',w:'https://senate.texas.gov/member.php?d=16',b:'https://ballotpedia.org/Nathan_Johnson_(Texas_politician)'},
@@ -742,7 +751,11 @@ const OFF = {
     {n:'Mihaela Plesa',o:'State Rep HD 70',p:'D',s:'incumbent',note:'D in a R-leaning Collin district — key flip seat',w:'https://house.texas.gov/members/member-page/?district=70',b:'https://ballotpedia.org/Lorenzo_Plesa'},
     {n:'Bob Hall',o:'State Senator SD 2',p:'R',s:'incumbent',w:'https://senate.texas.gov/member.php?d=2'},
     {n:'Angela Paxton',o:'State Senator SD 8',p:'R',s:'incumbent',note:'Verify — partial coverage',w:'https://senate.texas.gov/member.php?d=8'},
-    {n:'Chris Hill',o:'County Judge',p:'R',s:'incumbent',note:'Verify current status',w:'https://www.collincountytx.gov/county_judge'},
+    {n:'Chris Hill',o:'County Judge',p:'R',s:'incumbent',w:'https://www.collincountytx.gov/county_judge'},
+    {n:'Susan Fletcher',o:'County Commissioner Pct 1',p:'R',s:'incumbent',type:'elected'},
+    {n:'Cheryl Williams',o:'County Commissioner Pct 2',p:'R',s:'incumbent',type:'elected'},
+    {n:'Darrell Hale',o:'County Commissioner Pct 3',p:'R',s:'incumbent',type:'elected'},
+    {n:'Duncan Webb',o:'County Commissioner Pct 4',p:'R',s:'incumbent',type:'elected'},
   ],
   '48139':[ // Ellis County
     {n:'Brian Birdwell',o:'State Senator SD 22 (partial)',p:'R',s:'incumbent',w:'https://senate.texas.gov/member.php?d=22'},
@@ -782,6 +795,10 @@ const OFF = {
   '48201':[ // Harris County
     {n:'Lina Hidalgo',o:'County Judge (outgoing)',p:'D',s:'vacating',note:'Not seeking 3rd term · term ends Dec 2026',w:'https://cjo.harriscountytx.gov/',b:'https://ballotpedia.org/Lina_Hidalgo'},
     {n:'Letitia Plummer',o:'County Judge — Dem primary winner',p:'D',s:'incoming',note:'Won May 2026 Dem runoff over Annise Parker (51%) · faces R in Nov · Harris Co. is very competitive',w:null,b:'https://ballotpedia.org/Letitia_Plummer',r:'https://www.click2houston.com/news/local/2026/05/27/annise-parker-concedes-harris-county-judge-democratic-primary-congratulates-letitia-plummer/'},
+    {n:'Rodney Ellis',o:'County Commissioner Pct 1',p:'D',s:'incumbent',type:'elected'},
+    {n:'Adrian Garcia',o:'County Commissioner Pct 2',p:'D',s:'incumbent',type:'elected'},
+    {n:'Tom Ramsey',o:'County Commissioner Pct 3',p:'R',s:'incumbent',type:'elected'},
+    {n:'Lesley Briones',o:'County Commissioner Pct 4',p:'D',s:'incumbent',type:'elected'},
     {n:'Ed Gonzalez',o:'County Sheriff',p:'D',s:'incumbent',note:'3rd-term Dem · term ends 2028',w:'https://www.harriscountytx.gov/sheriff',b:'https://ballotpedia.org/Ed_Gonzalez_(Texas)'},
     {n:'Sean Teare',o:'District Attorney',p:'D',s:'incumbent',note:'Took office Jan 1, 2025',w:'https://dao.harriscountytx.gov/',b:'https://ballotpedia.org/Sean_Teare'},
     {n:'John Whitmire',o:'Mayor, City of Houston',p:'D',s:'incumbent',note:'⚠ Dem; censured by Harris Co. Dems Dec 2025 for attending R fundraiser',w:'https://www.houstontx.gov/mayor/',b:'https://ballotpedia.org/John_Whitmire'},
@@ -802,6 +819,10 @@ const OFF = {
   ],
   '48157':[ // Fort Bend County
     {n:'KP George',o:'County Judge (outgoing)',p:'R',s:'vacating',note:'⚠ Switched D→R Jun 2025 then lost GOP primary · faces money laundering charges',b:'https://ballotpedia.org/KP_George'},
+    {n:'Vincent Morales',o:'County Commissioner Pct 1',p:'R',s:'incumbent',type:'elected'},
+    {n:'Grady Prestage',o:'County Commissioner Pct 2',p:'D',s:'incumbent',type:'elected'},
+    {n:'Andy Meyers',o:'County Commissioner Pct 3',p:'R',s:'incumbent',type:'elected'},
+    {n:'Dexter McCoy',o:'County Commissioner Pct 4',p:'D',s:'incumbent',type:'elected'},
     {n:'Eric Fagan',o:'County Sheriff',p:'D',s:'incumbent',note:'Verify current status — Fort Bend is a key swing county',b:'https://ballotpedia.org/Eric_Fagan'},
     {n:'Lois Kolkhorst',o:'State Senator SD 18 (partial)',p:'R',s:'incumbent',w:'https://senate.texas.gov/member.php?d=18'},
     {n:'Joan Huffman',o:'State Senator SD 17 (partial)',p:'R',s:'incumbent',w:'https://senate.texas.gov/member.php?d=17'},
@@ -838,6 +859,10 @@ const OFF = {
     {n:'Salman Bhojani',o:'State Rep HD 92',p:'D',s:'incumbent',note:'Elected 2022, first Muslim American in TX Legislature',w:'https://house.texas.gov/members/member-page/?district=92',b:'https://ballotpedia.org/Salman_Bhojani'},
     {n:'Ramon Romero Jr.',o:'State Rep HD 90',p:'D',s:'incumbent',w:'https://house.texas.gov/members/member-page/?district=90',b:'https://ballotpedia.org/Ramon_Romero_Jr.'},
     {n:'Tim O\'Hare',o:'County Judge',p:'R',s:'incumbent',note:'Running for reelection 2026 · faces Dem challenger Alisa Simmons in Nov.',w:'https://www.tarrantcountytx.gov/en/county-judge.html',b:'https://ballotpedia.org/Tim_O\'Hare'},
+    {n:'Roderick Miles Jr.',o:'County Commissioner Pct 1',p:'D',s:'incumbent',type:'elected'},
+    {n:'Alisa Simmons',o:'County Commissioner Pct 2',p:'D',s:'incumbent',type:'elected',note:'Also 2026 Dem nominee for County Judge vs. O\'Hare'},
+    {n:'Matt Krause',o:'County Commissioner Pct 3',p:'R',s:'incumbent',type:'elected',note:'Former state representative'},
+    {n:'Manny Ramirez',o:'County Commissioner Pct 4',p:'R',s:'incumbent',type:'elected'},
     {n:'Bill Waybourn',o:'County Sheriff',p:'R',s:'incumbent',w:'https://www.tarrantcountytx.gov/en/sheriff.html'},
     {n:'Mattie Parker',o:'Mayor, City of Fort Worth',p:'NP',s:'incumbent',note:'Re-elected May 2025 (66%). Republican-aligned.',w:'https://www.fortworthtexas.gov/government/elected-officials/mattie-parker',b:'https://ballotpedia.org/Mattie_Parker'},
     {n:'Phil King',o:'State Senator SD 10 (partial)',p:'R',s:'incumbent',w:'https://senate.texas.gov/member.php?d=10'},
@@ -878,6 +903,10 @@ const OFF = {
   // ══════════════════════════════════════════════════════════
   '48141':[ // El Paso County
     {n:'Ricardo Samaniego',o:'County Judge',p:'D',s:'incumbent',note:'Running for 3rd term · unopposed in Dem primary 2026',w:'https://epcountyvotes.com/elected-officials-and-candidate-information/elected-officials/72',b:'https://ballotpedia.org/Ricardo_Samaniego'},
+    {n:'Jackie Arroyo Butler',o:'County Commissioner Pct 1',p:'D',s:'incumbent',type:'elected'},
+    {n:'David Stout',o:'County Commissioner Pct 2',p:'D',s:'incumbent',type:'elected'},
+    {n:'Iliana Holguin',o:'County Commissioner Pct 3',p:'D',s:'incumbent',type:'elected'},
+    {n:'Sergio Coronado',o:'County Commissioner Pct 4',p:'D',s:'incumbent',type:'elected'},
     {n:'Oscar Ugarte',o:'County Sheriff',p:'D',s:'incumbent',note:'Won 2024 with 59%',b:'https://ballotpedia.org/Oscar_Ugarte'},
     {n:'Renard Johnson',o:'Mayor, City of El Paso',p:'NP',s:'incumbent',note:'First Black mayor of El Paso · strong Dem voting record · took office Jan 6, 2025',w:'https://www.elpasotexas.gov/government/mayor/',b:'https://ballotpedia.org/Renard_Johnson'},
     {n:'Cesar Blanco',o:'State Senator SD 29',p:'D',s:'incumbent',w:'https://senate.texas.gov/member.php?d=29',b:'https://ballotpedia.org/Cesar_Blanco'},
@@ -897,6 +926,10 @@ const OFF = {
   ],
   '48061':[ // Cameron County (Brownsville)
     {n:'Eddie Treviño Jr.',o:'County Judge',p:'D',s:'incumbent',note:'Serving since 2016, won 2022 general',w:'https://www.cameroncountytx.gov/county-judge-eddie-trevino-jr/',b:'https://ballotpedia.org/Eddie_Trevino_Jr.'},
+    {n:'Sofia C. Benavides',o:'County Commissioner Pct 1',p:'D',s:'incumbent',type:'elected'},
+    {n:'Joey Lopez',o:'County Commissioner Pct 2',p:'D',s:'incumbent',type:'elected'},
+    {n:'David A. Garza',o:'County Commissioner Pct 3',p:'D',s:'incumbent',type:'elected'},
+    {n:'Gus Ruiz',o:'County Commissioner Pct 4',p:'D',s:'incumbent',type:'elected'},
     {n:'Adam Hinojosa',o:'State Senator SD 27 (partial)',p:'R',s:'incumbent'},
     {n:'Denise Villalobos',o:'State Rep HD 34',p:'R',s:'incumbent',note:'Verify — listed as "Villalobos" per 89th Leg. for Nueces, check Cameron reps'},
     {n:'Oscar Longoria',o:'State Rep HD 35',p:'D',s:'incumbent',w:'https://house.texas.gov/members/member-page/?district=35'},
@@ -928,6 +961,10 @@ const OFF = {
     {n:'Gina Ortiz Jones',o:'Mayor, City of San Antonio',p:'D',s:'incumbent',note:'1st out LGBTQ+ mayor of SA · elected June 7, 2025',w:'https://www.sa.gov/Directory/Departments/mayors-office',b:'https://ballotpedia.org/Gina_Ortiz_Jones'},
     {n:'Ron Nirenberg',o:'Bexar County Judge — Dem primary winner',p:'D',s:'incoming',note:'Won Dem primary 62% over incumbent Sakai (Mar 2026) · Bexar is safe Dem',b:'https://ballotpedia.org/Ron_Nirenberg',r:'https://www.ksat.com/vote-2026/2026/03/03/bexar-county-judge-peter-sakai-ron-nirenberg-face-off-for-democratic-nomination-in-march-2026-primary/'},
     {n:'Peter Sakai',o:'Bexar County Judge (incumbent)',p:'D',s:'vacating',note:'Lost Dem primary to Nirenberg (37.8%) · in office until Jan 2027',w:'https://www.bexar.org/1665/County-Judge-and-Commissioners',b:'https://ballotpedia.org/Peter_Sakai'},
+    {n:'Rebeca Clay-Flores',o:'County Commissioner Pct 1',p:'D',s:'incumbent',type:'elected'},
+    {n:'Justin Rodriguez',o:'County Commissioner Pct 2',p:'D',s:'incumbent',type:'elected'},
+    {n:'Grant Moody',o:'County Commissioner Pct 3',p:'R',s:'incumbent',type:'elected'},
+    {n:'Tommy Calvert',o:'County Commissioner Pct 4',p:'D',s:'incumbent',type:'elected'},
     {n:'Javier Salazar',o:'County Sheriff',p:'D',s:'incumbent',note:'Term ends 2028',b:'https://ballotpedia.org/Javier_Salazar'},
     {n:'Luz Elena Chapa',o:'District Attorney — Dem primary winner',p:'D',s:'incoming',note:'Won May 2026 runoff over Jane Davis (50.8%) · replaces retiring Joe Gonzales · Bexar is safe Dem',b:'https://ballotpedia.org/Luz_Elena_Chapa',r:'https://www.ksat.com/vote-2026/2026/05/26/election-results-democratic-bexar-county-district-attorney-primary-runoff-race-between-jane-davis-and-luz-elena-chapa/'},
     {n:'Joe Gonzales',o:'District Attorney (outgoing)',p:'D',s:'vacating',note:'Did not seek reelection 2026',b:'https://ballotpedia.org/Joe_Gonzales_(Bexar_County)'},
@@ -939,6 +976,10 @@ const OFF = {
   '48355':[ // Nueces County (Corpus Christi)
     {n:'Paulette Guajardo',o:'Mayor, Corpus Christi',p:'NP',s:'incumbent',note:'Nonpartisan election · verify current status',b:'https://ballotpedia.org/Paulette_Guajardo'},
     {n:'Connie Scott',o:'County Judge',p:'R',s:'incumbent',note:'Defeated D Barbara Canales by 11 pts in 2022',b:'https://ballotpedia.org/Connie_Scott_(Texas)'},
+    {n:'Mike Pusley',o:'County Commissioner Pct 1',p:'R',s:'incumbent',type:'elected'},
+    {n:'Joe Gonzalez',o:'County Commissioner Pct 2',p:'D',s:'incumbent',type:'elected'},
+    {n:'John Marez',o:'County Commissioner Pct 3',p:'D',s:'incumbent',type:'elected'},
+    {n:'Brent Chesney',o:'County Commissioner Pct 4',p:'R',s:'incumbent',type:'elected'},
     {n:'Juan "Chuy" Hinojosa',o:'State Senator SD 20 (partial)',p:'D',s:'incumbent',w:'https://senate.texas.gov/member.php?d=20'},
     {n:'Denise Villalobos',o:'State Rep HD 34 (partial)',p:'R',s:'incumbent',note:'Verify',w:'https://house.texas.gov/members/member-page/?district=34'},
   ],
@@ -1075,6 +1116,7 @@ function showOfficials(fips){
   const pOrd={D:0,NP:1,R:2};
   const sOrd={incumbent:0,incoming:1,vacating:2};
   Object.values(groups).forEach(arr=>arr.sort((a,b)=>(pOrd[a.p]??2)-(pOrd[b.p]??2)||(sOrd[a.s]??0)-(sOrd[b.s]??0)));
+  if(groups.county) groups.county.sort((a,b)=>cRank(a.o)-cRank(b.o));   // County Judge first, then commissioners
 
   function renderCard(o){
     const isInf=o.type==='influential';
@@ -1128,14 +1170,16 @@ function showOfficials(fips){
 
 // ── Official grouping by level of government ──
 const TIERS=[
+  {k:'county',     label:'County Judge & Commissioners', icon:'📋', open:true },
   {k:'state',      label:'State Legislature',            icon:'🏛️', open:true },
-  {k:'city',       label:'City — Mayor & Council',       icon:'🏙️', open:true },
-  {k:'county',     label:'County Commissioners Court',   icon:'📋', open:true },
-  {k:'school',     label:'School Boards (ISD / College)',icon:'🎓', open:true },
+  {k:'city',       label:'City — Mayor & Council',       icon:'🏙️', open:false},
+  {k:'school',     label:'School Boards (ISD / College)',icon:'🎓', open:false},
   {k:'judicial',   label:'Judicial',                     icon:'⚖️', open:false},
   {k:'other',      label:'Other Local & County Offices', icon:'🏢', open:false},
   {k:'influential',label:'Influential & Community Leaders',icon:'⭐', open:false},
 ];
+// Within the county tier, County Judge first, then commissioners by precinct
+function cRank(o){o=o||'';if(/County Judge/.test(o))return 0;const m=o.match(/Commissioner[^\d]*(\d)/);if(m)return +m[1];if(/Commissioner/.test(o))return 5;return 9;}
 function officeTier(o){
   if(o.type==='influential')return 'influential';
   const s=o.o||'';
@@ -1302,6 +1346,8 @@ const zoom=d3.zoom()
     g.selectAll('.c-path').style('stroke-width',`${0.5/k}`);
     g.selectAll('.dist-line').style('stroke-width',`${1.7/k}`);
     g.selectAll('.dist-label').style('font-size',`${10/k}px`).style('opacity',k>=2.2?1:0);
+    g.selectAll('.cityDot').attr('r',`${3/k}`);
+    g.selectAll('.cityLbl').attr('x',`${5/k}`).attr('y',`${4/k}`).style('font-size',`${11/k}px`);
   });
 svg.call(zoom);
 document.getElementById('zi').onclick=()=>svg.transition().duration(250).call(zoom.scaleBy,1.6);
@@ -1401,6 +1447,37 @@ function ptInRing(r,x,y){let ins=false;for(let i=0,j=r.length-1;i<r.length;j=i++
 function ptInPoly(c,x,y){let s=false;for(const ring of c){if(ptInRing(ring,x,y))s=!s;}return s;}
 function ptInFeature(f,lon,lat){const gm=f.geometry;if(!gm)return false;if(gm.type==='Polygon')return ptInPoly(gm.coordinates,lon,lat);if(gm.type==='MultiPolygon')return gm.coordinates.some(p=>ptInPoly(p,lon,lat));return false;}
 
+const CITIES=[
+  {n:'Houston',lon:-95.3698,lat:29.7604},{n:'San Antonio',lon:-98.4936,lat:29.4241},
+  {n:'Dallas',lon:-96.7970,lat:32.7767},{n:'Austin',lon:-97.7431,lat:30.2672},
+  {n:'Fort Worth',lon:-97.3308,lat:32.7555},{n:'El Paso',lon:-106.4850,lat:31.7619},
+  {n:'Arlington',lon:-97.1081,lat:32.7357},{n:'Corpus Christi',lon:-97.3964,lat:27.8006},
+  {n:'Plano',lon:-96.6989,lat:33.0198},{n:'Lubbock',lon:-101.8552,lat:33.5779},
+  {n:'Laredo',lon:-99.5075,lat:27.5306},{n:'Irving',lon:-96.9489,lat:32.8140},
+  {n:'Garland',lon:-96.6389,lat:32.9126},{n:'Frisco',lon:-96.8236,lat:33.1507},
+  {n:'McKinney',lon:-96.6398,lat:33.1972},{n:'Amarillo',lon:-101.8313,lat:35.2220},
+  {n:'Brownsville',lon:-97.4975,lat:25.9017},{n:'Killeen',lon:-97.7278,lat:31.1171},
+  {n:'McAllen',lon:-98.2300,lat:26.2034},{n:'Midland',lon:-102.0779,lat:31.9974},
+  {n:'Denton',lon:-97.1331,lat:33.2148},{n:'Waco',lon:-97.1467,lat:31.5493},
+  {n:'Abilene',lon:-99.7331,lat:32.4487},{n:'Beaumont',lon:-94.1266,lat:30.0802},
+  {n:'Round Rock',lon:-97.6789,lat:30.5083},{n:'College Station',lon:-96.3344,lat:30.6280},
+  {n:'Tyler',lon:-95.3011,lat:32.3513},{n:'Wichita Falls',lon:-98.4934,lat:33.9137},
+  {n:'San Angelo',lon:-100.4370,lat:31.4638}
+];
+let gCities=null, citiesOn=false;
+function toggleCities(){
+  citiesOn=!citiesOn;
+  if(!gCities && projection){
+    gCities=g.append('g').attr('class','cities-grp');
+    const cg=gCities.selectAll('g.city').data(CITIES).join('g').attr('class','city')
+      .attr('transform',d=>{const p=projection([d.lon,d.lat]);return `translate(${p[0]},${p[1]})`;});
+    cg.append('circle').attr('class','cityDot').attr('r',3/curK);
+    cg.append('text').attr('class','cityLbl').attr('x',5/curK).attr('y',4/curK)
+      .style('font-size',`${11/curK}px`).text(d=>d.n);
+  }
+  if(gCities) gCities.style('display',citiesOn?null:'none');
+}
+
 function buildOverlayControl(){
   const wrap=document.getElementById('map-wrap');
   const box=document.createElement('div'); box.id='ov-ctrl';
@@ -1414,6 +1491,12 @@ function buildOverlayControl(){
   });
   const sep=document.createElement('div'); sep.style.cssText='border-top:1px solid #e2e8f0;margin:6px 0 3px';
   box.appendChild(sep);
+  const cyb=document.createElement('button'); cyb.id='city-toggle';
+  cyb.innerHTML='<span class="sw" style="background:#0f172a"></span>Biggest cities<span class="ov-load"></span>';
+  cyb.onclick=()=>{ toggleCities(); cyb.classList.toggle('on',citiesOn);
+    cyb.style.background=citiesOn?'#0f172a':'#fff'; cyb.style.color=citiesOn?'#fff':'#1e293b';
+    cyb.querySelector('.ov-load').textContent=citiesOn?'on':''; };
+  box.appendChild(cyb);
   const cb=document.createElement('button'); cb.id='cn-toggle'; cb.className='on'; cb.style.background='#64748b'; cb.style.color='#fff';
   cb.innerHTML='<span class="sw" style="background:#cbd5e1"></span>County names<span class="ov-load">on</span>';
   cb.onclick=()=>{ countyLabelsOn=!countyLabelsOn; cb.classList.toggle('on',countyLabelsOn);
