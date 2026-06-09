@@ -974,7 +974,7 @@ const PALETTE=['#3b82f6','#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97
 let regions=[], nextId=1, mode='idle', editId=null, pending=null, panMode=false;
 // Major counties whose names stay visible for orientation; all others appear when zoomed in (≥2.5×). Hover always shows a county's name.
 const MAJOR_LABELS=new Set(['48201','48113','48439','48029','48453','48141','48085','48121','48215','48491','48157','48339']);
-let g=null, pathGen=null, _color=PALETTE[0], curK=1;
+let g=null, pathGen=null, _color=PALETTE[0], curK=1, projection=null;
 
 function rgba(h,a){const r=parseInt(h.slice(1,3),16),gr=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${gr},${b},${a})`}
 function isHex(h){return/^[0-9a-fA-F]{6}$/.test(h)}
@@ -1215,6 +1215,7 @@ document.getElementById('fn').addEventListener('input',e=>{if(pending)pending.na
 function onCountyClick(event,d){
   if(panMode)return;
   event.stopPropagation();
+  if(typeof anyOverlayOn==='function' && anyOverlayOn()){ showDistrictInfo(event); return; }
   const f=d.id.toString().padStart(5,'0');
 
   if(mode==='creating'){
@@ -1337,7 +1338,7 @@ async function initMap(){
   const txS=allS.features.find(f=>f.id==='48');
 
   const proj=d3.geoMercator().fitExtent([[16,16],[W-16,H-16]],{...allC,features:txC});
-  pathGen=d3.geoPath().projection(proj);
+  pathGen=d3.geoPath().projection(proj); projection=proj;
 
   // viewBox lets the whole map scale cleanly when the panel is resized
   svg.attr('viewBox',`0 0 ${W} ${H}`).attr('preserveAspectRatio','xMidYMid meet');
@@ -1382,16 +1383,24 @@ initMap();
 //  DISTRICT OVERLAYS  (U.S. Census TIGERweb — current TX plans:
 //  St. House PLAN H2316 · St. Senate PLAN S2168 · 119th Congress PLAN C2193)
 // ══════════════════════════════════════════
+const REPS={"house":{"30":"A.J. Louderback|R","109":"Aicha Davis|D","44":"Alan Schoolcraft|R","131":"Alma Allen|D","143":"Ana Hernandez|D","102":"Ana-Maria Rodriguez Ramos|D","64":"Andy Hopper|R","13":"Angelia Orr|R","112":"Angie Button|R","134":"Ann Johnson|D","39":"Mando Martinez|D","140":"Armando Walle|D","120":"Barbara Gervin-Hawkins|D","63":"Ben Bumgarner|R","41":"Bobby Guerra|D","54":"Brad Buckley|R","2":"Brent Money|R","10":"Brian Harrison|R","128":"Briscoe Cain|R","81":"Brooks Landgraf|R","89":"Candy Noble|R","84":"Carl Tepper|R","87":"Caroline Fairly|R","52":"Caroline Harris Davila|R","73":"Carrie Isaac|R","115":"Cas Garcia Hernandez|D","3":"Cecil Bell|R","139":"Charlene Ward Johnson|D","127":"Charles Cunningham|R","99":"Charlie Geren|R","101":"Chris Turner|D","22":"Christian Manuel|D","145":"Christina Morales|D","79":"Claudia Ordaz|D","8":"Cody Harris|R","25":"Cody Vasut|R","5":"Cole Hefner|R","21":"Dade Phelan|R","6":"Daniel Alders|R","96":"David Cook|R","91":"David Lowe|R","68":"David Spiller|R","34":"Denise Villalobos|R","129":"Dennis Paul|R","123":"Diego Bernal|D","80":"Don McLaughlin|R","48":"Donna Howard|D","72":"Drew Darby|R","83":"Dustin Burrows|R","74":"Eddie Morales|D","119":"Liz Campos|D","19":"Ellen Troxclair|R","38":"Erin Gámez|D","45":"Erin Zwiener|D","28":"Gary Gates|R","1":"Gary VanDeaver|R","137":"Gene Wu|D","49":"Gina Hinojosa|D","98":"Giovanni Capriglione|R","24":"Greg Bonnen|R","142":"Harold Dutton|D","58":"Helen Kerwin|R","55":"Hillary Hickland|R","149":"Hubert Vo|D","43":"J.M. Lozano|R","69":"James Frank|R","50":"James Talarico|D","37":"Janie Lopez|R","18":"Janis Holt|R","106":"Jared Patterson|R","7":"Jay Dean|R","29":"Jeff Barry|R","67":"Jeff Leach|R","104":"Jessica González|D","11":"Joanne Shofner|R","78":"Joe Moody|D","114":"John Bryant|D","136":"John Bucy|D","118":"John Lujan|R","97":"John McQueeney|R","86":"John Smithee|R","147":"Jo Jones|D","135":"Jon Rosenthal|D","124":"Josey Garcia|D","33":"Katrina Pierson|R","4":"Keith Bell|R","88":"Ken King|R","61":"Keresa Richardson|R","138":"Lacey Hull|R","146":"Lauren Simmons|D","107":"Linda Garcia|D","51":"Lulu Flores|D","133":"Mano DeAyala|R","121":"Marc LaHood|R","122":"Mark Dorazio|R","144":"Mary Ann Perez|D","75":"Mary González|D","26":"Matt Morgan|R","66":"Matt Shaheen|R","70":"Mihaela Plesa|D","60":"Mike Olcott|R","132":"Mike Schofield|R","65":"Mitch Little|R","108":"Morgan Meyer|R","93":"Nate Schatzline|R","95":"Nicole Collier|D","35":"Oscar Longoria|D","56":"Pat Curry|R","14":"Paul Dyson|R","148":"Penny Morales Shaw|D","117":"Philip Cortez|D","103":"Rafael Anchía|D","90":"Ramon Romero|D","125":"Ray Lopez|D","113":"Rhetta Bowers|D","57":"Richard Hayes|R","42":"Richard Raymond|D","27":"Ron Reynolds|D","31":"Ryan Guillen|R","92":"Salman Bhojani|D","126":"Sam Harless|R","141":"Senfronia Thompson|D","36":"Sergio Muñoz|D","59":"Shelby Slawson|R","62":"Shelley Luther|R","46":"Sheryl Cole|D","17":"Stan Gerdes|R","85":"Stan Kitzman|R","71":"Stan Lambert|R","15":"Steve Toth|R","76":"Suleman Lalani|D","23":"Terri Leo-Wilson|R","40":"Terry Canales|D","20":"Terry Wilson|R","105":"Terry Meza|D","32":"Todd Hunter|R","82":"Tom Craddick|R","130":"Tom Oliverson|R","110":"Toni Rose|D","94":"Tony Tinderholt|R","9":"Trent Ashby|R","116":"Trey Martinez Fischer|D","12":"Trey Wharton|R","150":"Valoree Swanson|R","100":"Venton Jones|D","47":"Vikki Goodwin|D","77":"Vince Perez|D","53":"Wes Virdell|R","16":"Will Metcalf|R","111":"Yvonne Davis|D"},"senate":{"27":"Adam Hinojosa|R","8":"Angela Paxton|R","2":"Bob Hall|R","13":"Borris Miles|D","30":"Brent Hagenbuch|R","4":"Brett Ligon|R","22":"Brian Birdwell|R","1":"Bryan Hughes|R","6":"Carol Alvarado|D","28":"Charles Perry|R","5":"Charles Schwertner|R","29":"César Blanco|D","25":"Donna Campbell|R","17":"Joan Huffman|R","26":"José Menéndez|D","20":"Chuy Hinojosa|D","21":"Judith Zaffirini|D","31":"Kevin Sparks|R","18":"Lois Kolkhorst|R","11":"Mayes Middleton|R","15":"Molly Cook|D","16":"Nathan Johnson|D","7":"Paul Bettencourt|R","24":"Pete Flores|R","10":"Phil King|R","3":"Robert Nichols|R","19":"Roland Gutierrez|D","23":"Royce West|D","14":"Sarah Eckhardt|D","12":"Tan Parker|R","9":"Taylor Rehmet|D"},"congress":{"1":"Nathaniel Moran|R","2":"Dan Crenshaw|R","3":"Keith Self|R","4":"Pat Fallon|R","5":"Lance Gooden|R","6":"Jake Ellzey|R","7":"Lizzie Fletcher|D","8":"Morgan Luttrell|R","9":"Al Green|D","10":"Michael McCaul|R","11":"August Pfluger|R","12":"Craig Goldman|R","13":"Ronny Jackson|R","14":"Randy Weber|R","15":"Monica De La Cruz|R","16":"Veronica Escobar|D","17":"Pete Sessions|R","18":"Christian Menefee|D","19":"Jodey Arrington|R","20":"Joaquin Castro|D","21":"Chip Roy|R","22":"Troy Nehls|R","23":"Tony Gonzales|R","24":"Beth Van Duyne|R","25":"Roger Williams|R","26":"Brandon Gill|R","27":"Michael Cloud|R","28":"Henry Cuellar|D","29":"Sylvia Garcia|D","30":"Jasmine Crockett|D","31":"John Carter|R","32":"Julie Johnson|D","33":"Marc Veasey|D","34":"Vicente Gonzalez|D","35":"Greg Casar|D","36":"Brian Babin|R","37":"Lloyd Doggett|D","38":"Wesley Hunt|R"}};
 const TIGER='https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer';
 const TQ='/query?where=STATE%3D%2748%27&outFields=BASENAME&returnGeometry=true&outSR=4326&maxAllowableOffset=0.0035&f=geojson';
-// 2026 congressional lines = PLAN C2333 (REDAPPL_PLAN_ID 5481), from the Texas Legislative Council GIS service
-const C2333='https://giswebe.tlc.texas.gov/ArcGIS/rest/services/plan_shaded/MapServer/0/query?where=REDAPPL_PLAN_ID%3D5481%20AND%20DISTRICT%3E0&outFields=DISTRICT&returnGeometry=true&outSR=4326&maxAllowableOffset=0.0035&f=geojson';
 const DLAYERS={
-  house:{color:'#7c3aed',label:'St. House (150)',  url:TIGER+'/2'+TQ, num:'BASENAME'},
-  senate:{color:'#0e9488',label:'St. Senate (31)', url:TIGER+'/1'+TQ, num:'BASENAME'},
-  congress:{color:'#ea580c',label:'Congress ’ 26 (38)', url:C2333, num:'District'}
+  house:{color:'#7c3aed',label:'St. House (150)', short:'State House', url:TIGER+'/2'+TQ, num:'BASENAME', reps:REPS.house},
+  senate:{color:'#0e9488',label:'St. Senate (31)', short:'State Senate', url:TIGER+'/1'+TQ, num:'BASENAME', reps:REPS.senate},
+  congress:{color:'#ea580c',label:'U.S. Congress (38)', short:'U.S. House', url:TIGER+'/0'+TQ, num:'BASENAME', reps:REPS.congress}
 };
 const distState={};
+let countyLabelsOn=true;
+function anyOverlayOn(){ return Object.values(distState).some(s=>s.on); }
+function lastName(full){ return (full||'').replace(/ \(.*/,'').trim().split(' ').slice(-1)[0]; }
+function applyCountyLabels(){ if(g) g.selectAll('.county-label').style('display',countyLabelsOn?null:'none'); }
+// winding-independent point-in-polygon (ArcGIS rings reverse d3.geoContains, so ray-cast on lon/lat)
+function ptInRing(r,x,y){let ins=false;for(let i=0,j=r.length-1;i<r.length;j=i++){const xi=r[i][0],yi=r[i][1],xj=r[j][0],yj=r[j][1];if(((yi>y)!=(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi))ins=!ins;}return ins;}
+function ptInPoly(c,x,y){let s=false;for(const ring of c){if(ptInRing(ring,x,y))s=!s;}return s;}
+function ptInFeature(f,lon,lat){const gm=f.geometry;if(!gm)return false;if(gm.type==='Polygon')return ptInPoly(gm.coordinates,lon,lat);if(gm.type==='MultiPolygon')return gm.coordinates.some(p=>ptInPoly(p,lon,lat));return false;}
+
 function buildOverlayControl(){
   const wrap=document.getElementById('map-wrap');
   const box=document.createElement('div'); box.id='ov-ctrl';
@@ -1401,25 +1410,35 @@ function buildOverlayControl(){
     b.innerHTML=`<span class="sw" style="background:${L.color}"></span>${L.label}<span class="ov-load" id="ovl-${k}"></span>`;
     b.onclick=()=>toggleDist(k);
     box.appendChild(b);
-    distState[k]={on:false,grp:null,btn:b};
+    distState[k]={on:false,grp:null,geo:null,btn:b};
   });
+  const sep=document.createElement('div'); sep.style.cssText='border-top:1px solid #e2e8f0;margin:6px 0 3px';
+  box.appendChild(sep);
+  const cb=document.createElement('button'); cb.id='cn-toggle'; cb.className='on'; cb.style.background='#64748b'; cb.style.color='#fff';
+  cb.innerHTML='<span class="sw" style="background:#cbd5e1"></span>County names<span class="ov-load">on</span>';
+  cb.onclick=()=>{ countyLabelsOn=!countyLabelsOn; cb.classList.toggle('on',countyLabelsOn);
+    cb.style.background=countyLabelsOn?'#64748b':'#fff'; cb.style.color=countyLabelsOn?'#fff':'#1e293b';
+    cb.querySelector('.ov-load').textContent=countyLabelsOn?'on':'off'; applyCountyLabels(); };
+  box.appendChild(cb);
   wrap.appendChild(box);
   const note=document.createElement('div'); note.id='ov-note';
-  note.textContent='Sources: State House/Senate — U.S. Census TIGERweb (plans H2316/S2168); Congress — Texas Legislative Council, 2026 plan C2333.';
+  note.textContent='Districts: U.S. Census TIGERweb (House H2316, Senate S2168, 119th Congress C2193). Click inside a district for its member.';
   wrap.appendChild(note);
 }
+
 async function toggleDist(k){
   const st=distState[k], L=DLAYERS[k];
-  if(!pathGen){ return; }                 // map not ready yet
+  if(!pathGen){ return; }
   st.on=!st.on;
   st.btn.classList.toggle('on',st.on);
   st.btn.style.background=st.on?L.color:'#fff';
-  document.getElementById('ov-note').style.display=Object.values(distState).some(s=>s.on)?'block':'none';
+  document.getElementById('ov-note').style.display=anyOverlayOn()?'block':'none';
   if(!st.on){ if(st.grp)st.grp.style('display','none'); return; }
   if(st.grp){ st.grp.style('display',null); return; }
   const ld=document.getElementById('ovl-'+k); ld.textContent='…';
   try{
     const geo=await fetch(L.url).then(r=>r.json());
+    st.geo=geo;
     const grp=g.append('g').attr('class','dist-grp'); st.grp=grp;
     grp.selectAll('path.dist-line').data(geo.features).join('path')
       .attr('class','dist-line').attr('d',pathGen)
@@ -1429,12 +1448,41 @@ async function toggleDist(k){
       .attr('x',d=>pathGen.centroid(d)[0]).attr('y',d=>pathGen.centroid(d)[1])
       .style('font-size',`${10/curK}px`).style('fill',L.color)
       .style('opacity',curK>=2.2?1:0)
-      .text(d=>d.properties[L.num]);
+      .text(d=>{const num=d.properties[L.num]; const rep=L.reps[+num]; return rep? num+' '+lastName(rep.split('|')[0]) : num;});
     ld.textContent='';
   }catch(e){
     ld.textContent='✕'; st.on=false; st.btn.classList.remove('on'); st.btn.style.background='#fff';
     console.warn('overlay load failed',k,e);
   }
+}
+
+// Click inside the active district overlay(s) -> show only that district's member
+function showDistrictInfo(event){
+  if(!projection) return;
+  const pt=d3.pointer(event, svg.node());
+  const ll=projection.invert(d3.zoomTransform(svg.node()).invert(pt));
+  let cards='';
+  ['house','senate','congress'].forEach(k=>{
+    const st=distState[k], L=DLAYERS[k];
+    if(!st||!st.on||!st.geo) return;
+    let feat=null; try{ feat=st.geo.features.find(f=>ptInFeature(f,ll[0],ll[1])); }catch(e){}
+    if(!feat) return;
+    const num=feat.properties[L.num], rep=L.reps[+num];
+    const nm=rep?rep.split('|')[0]:null, pa=rep?rep.split('|')[1]:null;
+    const pc=pa==='D'?'#1d4ed8':pa==='R'?'#dc2626':'#64748b';
+    const pl=pa==='D'?'Democrat':pa==='R'?'Republican':(pa||'');
+    cards+=`<div style="border:1px solid #e2e8f0;border-left:4px solid ${L.color};border-radius:8px;padding:9px 11px;margin:7px 0">
+      <div style="font-size:.6rem;text-transform:uppercase;letter-spacing:.04em;color:#64748b;font-weight:700">${L.short} · District ${num}</div>
+      ${nm?`<div style="font-size:.95rem;font-weight:700;color:#0f172a;margin-top:2px">${nm}</div>
+      <span style="display:inline-block;font-size:.6rem;font-weight:700;color:#fff;background:${pc};padding:1px 8px;border-radius:8px;margin-top:4px">${pl}</span>`
+      :'<div style="font-size:.78rem;color:#94a3b8;margin-top:2px">No member on file</div>'}
+    </div>`;
+  });
+  const el=document.getElementById('off-list');
+  document.getElementById('op-county').style.display='';
+  document.getElementById('op-name').textContent='District representatives';
+  const reg=document.getElementById('op-reg'); reg.textContent=''; reg.style.cssText='display:none';
+  el.innerHTML=cards||'<div class="no-sel" style="padding:14px 10px">No active district under this point.</div>';
 }
 buildOverlayControl();
 
