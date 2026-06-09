@@ -195,6 +195,17 @@ header .sub{font-size:.7rem;color:#64748b}
 .mbtns{display:flex;gap:7px;margin-top:9px;justify-content:flex-end}
 #ierr{font-size:.7rem;color:#dc2626;margin-top:4px;display:none}
 
+.dist-line{fill:none;pointer-events:none;stroke-linejoin:round;stroke-opacity:.9}
+.dist-label{text-anchor:middle;dominant-baseline:middle;pointer-events:none;font-weight:800;paint-order:stroke;stroke:#fff;stroke-width:2.6px;stroke-linejoin:round}
+#ov-ctrl{position:absolute;top:10px;left:10px;z-index:7;background:rgba(255,255,255,.95);border:1px solid #cbd5e1;border-radius:9px;padding:7px 8px;box-shadow:0 2px 8px rgba(0,0,0,.13)}
+#ov-ctrl .ov-t{font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.04em;font-size:.6rem;margin-bottom:5px}
+#ov-ctrl button{display:flex;align-items:center;gap:7px;width:148px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;padding:5px 8px;margin:3px 0;cursor:pointer;font-size:.72rem;color:#1e293b;transition:all .12s}
+#ov-ctrl button:hover{border-color:#94a3b8}
+#ov-ctrl button.on{color:#fff;border-color:transparent;font-weight:600}
+#ov-ctrl .sw{width:11px;height:11px;border-radius:3px;flex:none}
+#ov-ctrl .ov-load{margin-left:auto;font-size:.62rem;opacity:.8}
+#ov-note{position:absolute;bottom:12px;left:12px;z-index:7;font-size:.6rem;color:#64748b;background:rgba(255,255,255,.85);padding:2px 7px;border-radius:5px;max-width:230px;display:none}
+
 @media (max-width:760px){
   body{height:auto;min-height:100vh;overflow-y:auto}
   .body{flex-direction:column;overflow:visible}
@@ -963,7 +974,7 @@ const PALETTE=['#3b82f6','#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97
 let regions=[], nextId=1, mode='idle', editId=null, pending=null, panMode=false;
 // Major counties whose names stay visible for orientation; all others appear when zoomed in (≥2.5×). Hover always shows a county's name.
 const MAJOR_LABELS=new Set(['48201','48113','48439','48029','48453','48141','48085','48121','48215','48491','48157','48339']);
-let g=null, pathGen=null, _color=PALETTE[0];
+let g=null, pathGen=null, _color=PALETTE[0], curK=1;
 
 function rgba(h,a){const r=parseInt(h.slice(1,3),16),gr=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${gr},${b},${a})`}
 function isHex(h){return/^[0-9a-fA-F]{6}$/.test(h)}
@@ -1285,9 +1296,11 @@ const zoom=d3.zoom()
   .scaleExtent([1,20])
   .on('zoom',ev=>{
     g.attr('transform',ev.transform);
-    const k=ev.transform.k;
+    const k=ev.transform.k; curK=k;
     g.selectAll('.county-label').style('font-size',`${9/k}px`).style('opacity',d=>(MAJOR_LABELS.has(d.id.toString().padStart(5,'0'))||k>=2.5)?1:0);
     g.selectAll('.c-path').style('stroke-width',`${0.5/k}`);
+    g.selectAll('.dist-line').style('stroke-width',`${1.7/k}`);
+    g.selectAll('.dist-label').style('font-size',`${10/k}px`).style('opacity',k>=2.2?1:0);
   });
 svg.call(zoom);
 document.getElementById('zi').onclick=()=>svg.transition().duration(250).call(zoom.scaleBy,1.6);
@@ -1364,6 +1377,66 @@ async function initMap(){
   showIdle();
 }
 initMap();
+
+// ══════════════════════════════════════════
+//  DISTRICT OVERLAYS  (U.S. Census TIGERweb — current TX plans:
+//  St. House PLAN H2316 · St. Senate PLAN S2168 · 119th Congress PLAN C2193)
+// ══════════════════════════════════════════
+const TIGER='https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer';
+const TQ='/query?where=STATE%3D%2748%27&outFields=BASENAME&returnGeometry=true&outSR=4326&maxAllowableOffset=0.0035&f=geojson';
+// 2026 congressional lines = PLAN C2333 (REDAPPL_PLAN_ID 5481), from the Texas Legislative Council GIS service
+const C2333='https://giswebe.tlc.texas.gov/ArcGIS/rest/services/plan_shaded/MapServer/0/query?where=REDAPPL_PLAN_ID%3D5481%20AND%20DISTRICT%3E0&outFields=DISTRICT&returnGeometry=true&outSR=4326&maxAllowableOffset=0.0035&f=geojson';
+const DLAYERS={
+  house:{color:'#7c3aed',label:'St. House (150)',  url:TIGER+'/2'+TQ, num:'BASENAME'},
+  senate:{color:'#0e9488',label:'St. Senate (31)', url:TIGER+'/1'+TQ, num:'BASENAME'},
+  congress:{color:'#ea580c',label:'Congress ’ 26 (38)', url:C2333, num:'District'}
+};
+const distState={};
+function buildOverlayControl(){
+  const wrap=document.getElementById('map-wrap');
+  const box=document.createElement('div'); box.id='ov-ctrl';
+  box.innerHTML='<div class="ov-t">District overlays</div>';
+  Object.entries(DLAYERS).forEach(([k,L])=>{
+    const b=document.createElement('button');
+    b.innerHTML=`<span class="sw" style="background:${L.color}"></span>${L.label}<span class="ov-load" id="ovl-${k}"></span>`;
+    b.onclick=()=>toggleDist(k);
+    box.appendChild(b);
+    distState[k]={on:false,grp:null,btn:b};
+  });
+  wrap.appendChild(box);
+  const note=document.createElement('div'); note.id='ov-note';
+  note.textContent='Sources: State House/Senate — U.S. Census TIGERweb (plans H2316/S2168); Congress — Texas Legislative Council, 2026 plan C2333.';
+  wrap.appendChild(note);
+}
+async function toggleDist(k){
+  const st=distState[k], L=DLAYERS[k];
+  if(!pathGen){ return; }                 // map not ready yet
+  st.on=!st.on;
+  st.btn.classList.toggle('on',st.on);
+  st.btn.style.background=st.on?L.color:'#fff';
+  document.getElementById('ov-note').style.display=Object.values(distState).some(s=>s.on)?'block':'none';
+  if(!st.on){ if(st.grp)st.grp.style('display','none'); return; }
+  if(st.grp){ st.grp.style('display',null); return; }
+  const ld=document.getElementById('ovl-'+k); ld.textContent='…';
+  try{
+    const geo=await fetch(L.url).then(r=>r.json());
+    const grp=g.append('g').attr('class','dist-grp'); st.grp=grp;
+    grp.selectAll('path.dist-line').data(geo.features).join('path')
+      .attr('class','dist-line').attr('d',pathGen)
+      .style('stroke',L.color).style('stroke-width',`${1.7/curK}`);
+    grp.selectAll('text.dist-label').data(geo.features).join('text')
+      .attr('class','dist-label')
+      .attr('x',d=>pathGen.centroid(d)[0]).attr('y',d=>pathGen.centroid(d)[1])
+      .style('font-size',`${10/curK}px`).style('fill',L.color)
+      .style('opacity',curK>=2.2?1:0)
+      .text(d=>d.properties[L.num]);
+    ld.textContent='';
+  }catch(e){
+    ld.textContent='✕'; st.on=false; st.btn.classList.remove('on'); st.btn.style.background='#fff';
+    console.warn('overlay load failed',k,e);
+  }
+}
+buildOverlayControl();
 
 /* ─── Click an official card to open a full-detail pop-up ─── */
 function openOfficialDetail(o){
