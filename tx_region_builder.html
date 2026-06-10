@@ -1248,8 +1248,27 @@ function countyFeature(fips){ if(!COUNTY_FEATURES)return null; const n=+fips; re
 function _polys(f){const gm=f&&f.geometry;if(!gm)return[];return gm.type==='Polygon'?[gm.coordinates]:gm.type==='MultiPolygon'?gm.coordinates:[];}
 function featBBox(f){let x0=1/0,y0=1/0,x1=-1/0,y1=-1/0;_polys(f).forEach(poly=>poly.forEach(ring=>ring.forEach(p=>{const x=p[0],y=p[1];if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;})));return[x0,y0,x1,y1];}
 function _bbOverlap(a,b){return a[0]<=b[2]&&a[2]>=b[0]&&a[1]<=b[3]&&a[3]>=b[1];}
-function _anyVertexInside(src,target){const ps=_polys(src);for(const poly of ps)for(const ring of poly)for(const p of ring){if(ptInFeature(target,p[0],p[1]))return true;}return false;}
-function countyDistrictOverlap(cf,cbb,df){const dbb=featBBox(df);if(!_bbOverlap(cbb,dbb))return false;return _anyVertexInside(cf,df)||_anyVertexInside(df,cf);}
+function sampleCountyInterior(cf,cbb){
+  const W=cbb[2]-cbb[0], H=cbb[3]-cbb[1], N=34, pts=[];
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++){
+    const x=cbb[0]+W*(i+0.5)/N, y=cbb[1]+H*(j+0.5)/N;
+    if(ptInFeature(cf,x,y)) pts.push([x,y]);
+  }
+  return pts;
+}
+// Districts that actually COVER part of the county interior (area-based). Neighbouring districts
+// that merely share a border — where the county dataset and district dataset misalign — are excluded.
+function districtsForLayer(k,pts,cbb){
+  const st=distState[k], L=DLAYERS[k];
+  if(!st||!st.geo||!pts.length) return [];
+  const cand=st.geo.features.filter(df=>_bbOverlap(cbb,featBBox(df)));
+  const tally={};
+  for(const p of pts){
+    for(const df of cand){ if(ptInFeature(df,p[0],p[1])){ const num=+df.properties[L.num]; tally[num]=(tally[num]||0)+1; break; } }
+  }
+  const minC=Math.max(3, pts.length*0.01);   // ≥1% of county area (and ≥3 pts) → genuine coverage
+  return Object.keys(tally).filter(n=>tally[n]>=minC).map(Number).sort((a,b)=>a-b);
+}
 function distLoadingHTML(){return '<div class="tier"><div class="tier-hdr open"><span class="tier-ic">🏛️</span><span class="tier-lbl">State &amp; federal representation</span><span class="tier-cnt">…</span><span class="tier-chev">▾</span></div><div class="tier-body"><div style="padding:10px;color:#94a3b8;font-size:.78rem">Matching districts to this county…</div></div></div>';}
 function loadDistrictReps(fips){
   ensureDistrictGeo().then(()=>{
@@ -1258,17 +1277,15 @@ function loadDistrictReps(fips){
     let html='';
     if(cf){
       const cbb=featBBox(cf);
+      const pts=sampleCountyInterior(cf,cbb);
       const secs=[
         {k:'congress',label:'U.S. House of Representatives',pre:'TX-',off:'U.S. Representative'},
         {k:'senate',  label:'State Senate',                 pre:'SD ',off:'State Senator'},
         {k:'house',   label:'State House',                  pre:'HD ',off:'State Representative'},
       ];
       secs.forEach(sec=>{
-        const st=distState[sec.k], L=DLAYERS[sec.k];
-        if(!st||!st.geo) return;
-        const nums=[];
-        st.geo.features.forEach(df=>{ if(countyDistrictOverlap(cf,cbb,df)) nums.push(+df.properties[L.num]); });
-        const uniq=[...new Set(nums)].sort((a,b)=>a-b);
+        const L=DLAYERS[sec.k];
+        const uniq=districtsForLayer(sec.k,pts,cbb);
         if(!uniq.length) return;
         const open=uniq.length<=8;
         const cards=uniq.map(num=>{
