@@ -553,14 +553,7 @@ const OFF = {
     {n:'Russ Boles',o:'County Commissioner Pct 4',p:'R',s:'incumbent',type:'elected'},
     {n:'KT Musselman',o:'Justice of the Peace Precinct One',p:'D',s:'incumbent',type:'elected'},
     {n:'Mickey Chance',o:'Constable Precinct One',p:'D',s:'incumbent',type:'elected'},
-    {n:'Gloria Gonzalez-Gholakia',o:'Leander ISD, Place 2',p:'D',s:'incumbent',type:'elected'},
-    {n:'Christine Mauer',o:'Leander ISD, Place 1',p:'D',s:'incumbent',type:'elected'},
-    {n:'Anna Smith',o:'Leander ISD, Place 4',p:'D',s:'incumbent',type:'elected'},
-    {n:'Anne Duffy',o:'Cedar Park City Council, Place 3',p:'D',s:'incumbent',type:'elected'},
-    {n:'Heather Jefts',o:'(Position unspecified)',p:'D',s:'incumbent',type:'elected'},
-    {n:'Frank Ortega',o:'(Position unspecified)',p:'D',s:'incumbent',type:'elected'},
-    {n:'Hilda Montgomery',o:'(Position unspecified)',p:'D',s:'incumbent',type:'elected'},
-    {n:"Na'Cole Thompson",o:'(Position unspecified)',p:'D',s:'incumbent',type:'elected'},
+    {n:'Heather Jefts',o:'Williamson County Judge candidate (G4TX contact)',p:'D',s:'incumbent',type:'elected'},
     // ── State & county officials ──────────────────────────────
     {n:'Steven Snell',o:'County Judge',p:'R',s:'incumbent',type:'elected',note:'Assumed office 2025 (succeeded Bill Gravell)',w:'https://www.wilcotx.gov/188/Elected-Officials'},
     {n:'Stacey Soule',o:'District Attorney',p:'R',s:'incumbent',type:'elected',w:'https://www.wilcotx.gov/188/Elected-Officials'},
@@ -1163,6 +1156,10 @@ function renderList(){
 //  SHOW OFFICIALS
 // ══════════════════════════════════════════
 let ODATA=[];          // flat list of officials currently rendered, indexed by card data-idx
+// Merge curated OFF data with LOCAL2026 city/school officials, dropping LOCAL duplicates of people already in OFF.
+function _nameTokens(s){return (s||'').toLowerCase().replace(/\(.*?\)/g,' ').replace(/["'`]/g,'').replace(/\b(dr|hon|judge|mr|mrs|ms|jr|sr|ii|iii)\b\.?/g,' ').replace(/[^a-z\s-]/g,' ').replace(/-/g,' ').split(/\s+/).filter(t=>t.length>1);}
+function _samePerson(a,b){const A=_nameTokens(a),B=_nameTokens(b);if(A.length<2||B.length<2)return false;const small=A.length<=B.length?A:B,big=new Set(A.length<=B.length?B:A);let inter=0;small.forEach(t=>{if(big.has(t))inter++;});return inter===small.length&&inter>=2;}
+function mergeLocal(fips){const base=OFF[fips]||[];const local=(typeof LOCAL2026!=='undefined'&&LOCAL2026[fips])||[];const dd=local.filter(l=>!base.some(o=>_samePerson(o.n,l.n)));return [...base,...dd];}
 function showOfficials(fips, opts={}){
   ODATA=[]; _curFips=fips;
   const name=TX[fips]||fips;
@@ -1178,7 +1175,7 @@ function showOfficials(fips, opts={}){
   else{regEl.textContent='Unassigned';regEl.style.background='#f1f5f9';regEl.style.color='#64748b';regEl.style.border='1px solid #e2e8f0';}
 
   // Local officials (county/city/school/judicial/other). State & federal are computed from districts below.
-  const offs=[...(OFF[fips]||[]), ...((typeof LOCAL2026!=='undefined'&&LOCAL2026[fips])||[])].filter(o=>officeTier(o)!=='state');
+  const offs=mergeLocal(fips).filter(o=>officeTier(o)!=='state');
 
   // Group officials by level of government
   const groups={}; TIERS.forEach(t=>groups[t.k]=[]);
