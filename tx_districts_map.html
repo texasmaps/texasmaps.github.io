@@ -63,7 +63,7 @@
         <button data-ch="S" class="cS"><span class="dot" style="background:#b45309"></span>State Senate</button>
       </div>
       <div class="searchwrap">
-        <input id="search" autocomplete="off" placeholder="Search a name (Hinojosa), a district (HD 49, SD 14, CD 37), or a city (Round Rock)…">
+        <input id="search" autocomplete="off" placeholder="Search a name (Hinojosa), a district (HD 49, SD 14, CD 37), a county (Travis), or a city (Round Rock)…">
         <div id="drop"></div>
       </div>
     </div>
@@ -96,6 +96,7 @@ var EP = {
   S: "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer/5/query?where="+encodeURIComponent("STATE='48'")+"&outFields=BASENAME&returnGeometry=true&f=geojson&geometryPrecision=5&maxAllowableOffset=0.0015&outSR=4326"
 };
 var CITY_EP = function(layer){return "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/"+layer+"/query?where="+encodeURIComponent("STATE='48'")+"&outFields=BASENAME,CENTLAT,CENTLON&returnGeometry=false&f=json&resultRecordCount=6000";};
+var COUNTY_EP = "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/1/query?where="+encodeURIComponent("STATE='48'")+"&outFields=BASENAME&returnGeometry=true&f=geojson&geometryPrecision=4&maxAllowableOffset=0.005&outSR=4326";
 var CHNAME = {C:"U.S. Congress", H:"Texas House", S:"Texas Senate"};
 var CHPREFIX = {C:"CD", H:"HD", S:"SD"};
 var CHCOLOR = {C:"#6d28d9", H:"#0891b2", S:"#b45309"};
@@ -277,6 +278,48 @@ function renderCityInfo(city, res){
   document.getElementById('info').innerHTML = html;
 }
 
+// ---- counties ----
+var counties = []; var countiesReady=null; var countyLayer=null;
+function geomBounds(g){ var minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9; function scan(co){ for(var i=0;i<co.length;i++){ var c=co[i]; if(typeof c[0]==='number'){ if(c[0]<minx)minx=c[0]; if(c[0]>maxx)maxx=c[0]; if(c[1]<miny)miny=c[1]; if(c[1]>maxy)maxy=c[1]; } else scan(c);} } scan(g.coordinates); return {minx:minx,miny:miny,maxx:maxx,maxy:maxy}; }
+function loadCounties(){
+  if(countiesReady) return countiesReady;
+  countiesReady = fetch(COUNTY_EP).then(function(r){return r.json();}).then(function(gj){
+    (gj.features||[]).forEach(function(f){ var nm=(f.properties&&f.properties.BASENAME)||''; if(!nm) return; counties.push({name:nm, geom:f.geometry, bb:geomBounds(f.geometry)}); });
+    counties.sort(function(a,b){return a.name.localeCompare(b.name);});
+    return counties;
+  }).catch(function(e){ return counties; });
+  return countiesReady;
+}
+function countyMatches(q){ q=q.toLowerCase(); if(!counties.length) return []; var pre=[],inc=[]; for(var i=0;i<counties.length;i++){ var n=counties[i].name.toLowerCase(); if(n.indexOf(q)===0) pre.push(counties[i]); else if(n.indexOf(q)>=0) inc.push(counties[i]); } return pre.concat(inc).slice(0,10); }
+function districtsInCounty(ch, county){
+  var bb=county.bb, set={}, N=26;
+  for(var i=1;i<N;i++) for(var j=1;j<N;j++){ var x=bb.minx+(bb.maxx-bb.minx)*i/N, y=bb.miny+(bb.maxy-bb.miny)*j/N; if(pipGeom(x,y,county.geom)){ var d=districtAt(ch,x,y); if(d!=null) set[d]=1; } }
+  return Object.keys(set).map(Number).sort(function(a,b){return a-b;});
+}
+function countyLookup(county){
+  loading(true,'Finding districts in '+county.name+' County…');
+  return Promise.all([fetchLayer('C'),fetchLayer('H'),fetchLayer('S')]).then(function(){
+    var res={C:districtsInCounty('C',county), H:districtsInCounty('H',county), S:districtsInCounty('S',county)};
+    if(countyLayer) map.removeLayer(countyLayer);
+    countyLayer = L.geoJSON({type:'Feature',geometry:county.geom}, {style:{color:'#111827',weight:2.5,fill:false,dashArray:'5,4'}}).addTo(map);
+    try{ map.fitBounds(countyLayer.getBounds(), {padding:[30,30]}); }catch(e){}
+    renderCountyInfo(county,res);
+    loading(false);
+  });
+}
+function dlist(ch, arr){ if(!arr||!arr.length) return '<span style="color:var(--muted)">—</span>'; return arr.map(function(d){ return '<a href="#" class="dlink" data-ch="'+ch+'" data-d="'+d+'">'+CHPREFIX[ch]+'-'+d+'</a>'; }).join(', '); }
+function renderCountyInfo(county,res){
+  var html='<h2>County → Districts</h2><p class="dnum" style="font-size:18px">'+county.name+' County</p>'+
+    '<div style="margin-top:8px">'+
+      '<div class="cityrow"><span>U.S. Congress</span><span style="text-align:right;max-width:62%">'+dlist('C',res.C)+'</span></div>'+
+      '<div class="cityrow"><span>State House</span><span style="text-align:right;max-width:62%">'+dlist('H',res.H)+'</span></div>'+
+      '<div class="cityrow"><span>State Senate</span><span style="text-align:right;max-width:62%">'+dlist('S',res.S)+'</span></div>'+
+    '</div>'+
+    '<p class="hint" style="margin-top:10px">All districts that overlap the county. Click a district number for its member, or click anywhere on the map for that exact spot.</p>';
+  var el=document.getElementById('info'); el.innerHTML=html;
+  Array.prototype.forEach.call(el.querySelectorAll('.dlink'), function(a){ a.addEventListener('click', function(ev){ ev.preventDefault(); selectDistrict(a.dataset.ch, a.dataset.d, true); }); });
+}
+
 // map click anywhere -> district in active chamber + (if loaded) others
 map.on('click', function(e){
   var lon=e.latlng.lng, lat=e.latlng.lat;
@@ -312,6 +355,8 @@ function renderDrop(q){
   if(pd){ var m=memberOf(pd.ch,pd.d); html+='<div class="grp">District</div><div class="opt" data-act="dist" data-ch="'+pd.ch+'" data-d="'+pd.d+'">'+badge(pd.ch)+'<span>'+CHPREFIX[pd.ch]+'-'+pd.d+' — '+(m?fullName(m):'(no member)')+'</span></div>'; }
   var nm=nameMatches(q);
   if(nm.length){ html+='<div class="grp">Legislators</div>'; nm.forEach(function(o){ var pp=(o.ch==='C'&&o.m[2])?' ('+o.m[2]+')':''; html+='<div class="opt" data-act="dist" data-ch="'+o.ch+'" data-d="'+o.d+'">'+badge(o.ch)+'<span>'+o.m[0]+' '+o.m[1]+pp+' · '+CHPREFIX[o.ch]+'-'+o.d+'</span></div>'; }); }
+  var ct=countyMatches(q);
+  if(ct.length){ html+='<div class="grp">Counties</div>'; ct.forEach(function(c){ html+='<div class="opt" data-act="county" data-name="'+c.name.replace(/"/g,'&quot;')+'"><span style="color:var(--muted)">▦</span><span>'+c.name+' County</span></div>'; }); }
   var cm=cityMatches(q);
   if(cm.length){ html+='<div class="grp">Cities</div>'; cm.forEach(function(c){ html+='<div class="opt" data-act="city" data-name="'+c.name.replace(/"/g,'&quot;')+'"><span style="color:var(--muted)">📍</span><span>'+c.name+', TX</span></div>'; }); }
   if(!html){ html='<div class="opt" style="color:var(--muted)">No matches</div>'; }
@@ -321,11 +366,12 @@ dropEl.addEventListener('click', function(e){
   var opt=e.target.closest('.opt'); if(!opt) return;
   if(opt.dataset.act==='dist'){ selectDistrict(opt.dataset.ch, opt.dataset.d, true); }
   else if(opt.dataset.act==='city'){ var nm=opt.dataset.name; var c=cities.filter(function(x){return x.name===nm;})[0]; if(c) cityLookup(c); }
+  else if(opt.dataset.act==='county'){ var cn=opt.dataset.name; var co=counties.filter(function(x){return x.name===cn;})[0]; if(co) countyLookup(co); }
   dropEl.style.display='none'; searchEl.value='';
 });
 var debTimer=null;
 searchEl.addEventListener('input', function(){ var q=searchEl.value.trim(); clearTimeout(debTimer); debTimer=setTimeout(function(){ renderDrop(q); },110); });
-searchEl.addEventListener('focus', loadCities);
+searchEl.addEventListener('focus', function(){ loadCities(); loadCounties(); });
 document.addEventListener('click', function(e){ if(!e.target.closest('.searchwrap')) dropEl.style.display='none'; });
 
 // chamber buttons
@@ -337,6 +383,7 @@ document.getElementById('foot').innerHTML = 'Boundaries & members: Texas Legisla
 // init
 showChamber('C');
 loadCities();
+loadCounties();
 })();
 </script>
 </body>
