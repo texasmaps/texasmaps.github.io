@@ -118,16 +118,19 @@ header .sub{font-size:.7rem;color:#64748b}
 .off-card:active{transform:scale(.995)}
 .oc-chev{display:inline-block;color:#94a3b8;font-size:.7rem;margin-top:2px;margin-left:4px}
 
-/* People search */
-#off-search-wrap{display:flex;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid #f1f5f9;background:#fff;flex-shrink:0;position:relative}
-.off-search-ic{position:absolute;left:21px;font-size:.8rem;color:#94a3b8;pointer-events:none}
-#off-search{flex:1;border:1px solid #e2e8f0;border-radius:8px;padding:7px 28px 7px 30px;font-size:.8rem;color:#0f172a;outline:none;transition:border-color .12s,box-shadow .12s;width:100%}
-#off-search:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.12)}
-#off-search::placeholder{color:#94a3b8}
-#off-search-x{position:absolute;right:18px;width:20px;height:20px;border:none;background:#e2e8f0;color:#475569;border-radius:50%;cursor:pointer;font-size:.7rem;line-height:1;display:flex;align-items:center;justify-content:center;padding:0}
-#off-search-x:hover{background:#cbd5e1}
-.search-count{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;padding:2px 2px 8px}
-.oc-county{font-size:.68rem;color:#64748b;margin-top:3px;font-weight:600}
+/* People search (header dropdown, matches Legislative Districts) */
+.hdr-search{position:relative;flex:1;min-width:180px;max-width:440px;margin-left:14px}
+#ppl-search{width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:.8rem;color:#0f172a;outline:none;transition:border-color .12s,box-shadow .12s}
+#ppl-search:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+#ppl-search::placeholder{color:#94a3b8}
+#ppl-drop{position:absolute;top:40px;left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:9px;box-shadow:0 8px 24px rgba(20,27,38,.16);max-height:360px;overflow-y:auto;display:none;z-index:1200}
+#ppl-drop .grp{font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;padding:8px 12px 3px;background:#fafbfd;font-weight:700}
+#ppl-drop .opt{padding:8px 12px;font-size:.8rem;cursor:pointer;border-top:1px solid #f1f3f7;display:flex;align-items:flex-start;gap:9px}
+#ppl-drop .opt:first-of-type{border-top:0}
+#ppl-drop .opt:hover{background:#eff6ff}
+#ppl-drop .opt .oc-name{font-weight:600}
+#ppl-drop .opt .meta{font-size:.68rem;color:#64748b;margin-top:1px}
+#ppl-drop .pbdot{width:9px;height:9px;border-radius:3px;flex:none;margin-top:4px}
 
 /* Official detail pop-up */
 #odetail{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:120;align-items:center;justify-content:center;padding:20px}
@@ -235,6 +238,10 @@ header .sub{font-size:.7rem;color:#64748b}
 
 <header>
   <div><h1>🗺 G4T Texas Regional Campaigns</h1><div class="sub">254 counties · click to assign · scroll/pinch to zoom</div></div>
+  <div class="hdr-search">
+    <input id="ppl-search" type="text" autocomplete="off" placeholder="🔍 Search people by name, office, or county…">
+    <div id="ppl-drop"></div>
+  </div>
   <div class="hdr-r">
     <button class="btn btn-o" id="btn-iopen">📂 Load</button>
     <button class="btn btn-g" id="btn-exp">⬇ Export</button>
@@ -319,11 +326,6 @@ header .sub{font-size:.7rem;color:#64748b}
           <span class="op-county" id="op-name"></span>
           <span class="op-reg" id="op-reg"></span>
         </div>
-      </div>
-      <div id="off-search-wrap">
-        <span class="off-search-ic">🔍</span>
-        <input id="off-search" type="text" autocomplete="off" placeholder="Search all people by name, office, or county…">
-        <button id="off-search-x" title="Clear search" style="display:none">✕</button>
       </div>
       <div id="off-list">
         <div class="no-sel">Click a county on the map to view its elected officials.</div>
@@ -1178,9 +1180,6 @@ function _samePerson(a,b){const A=_nameTokens(a),B=_nameTokens(b);if(A.length<2|
 function mergeLocal(fips){const base=OFF[fips]||[];const local=(typeof LOCAL2026!=='undefined'&&LOCAL2026[fips])||[];const dd=local.filter(l=>!base.some(o=>_samePerson(o.n,l.n)));return [...base,...dd];}
 function showOfficials(fips, opts={}){
   ODATA=[]; _curFips=fips;
-  // selecting a county cancels any active people-search
-  const _si=document.getElementById('off-search');
-  if(_si&&_si.value){_si.value='';const _x=document.getElementById('off-search-x');if(_x)_x.style.display='none';}
   const name=TX[fips]||fips;
   const own=ownerOf(fips);
   const el=document.getElementById('off-list');
@@ -1870,57 +1869,42 @@ function buildPeopleIndex(){
   });
   return PEOPLE_INDEX;
 }
-function restoreOfficials(){
-  if(_curFips && (OFF[_curFips] || (typeof LOCAL2026!=='undefined' && LOCAL2026[_curFips]))){ showOfficials(_curFips); return; }
-  document.getElementById('op-county').style.display='none';
-  document.getElementById('off-list').innerHTML='<div class="no-sel">Click a county on the map to view its elected officials.</div>';
-}
-function renderPeopleSearch(raw){
-  const el=document.getElementById('off-list');
-  const clr=document.getElementById('off-search-x');
+var PSEARCH=[];  // current dropdown matches, indexed by data-idx
+const _pInput=document.getElementById('ppl-search');
+const _pDrop=document.getElementById('ppl-drop');
+const _pColors={D:'#2563eb',R:'#dc2626',NP:'#64748b',influential:'#7c3aed'};
+function renderPplDrop(raw){
+  if(!_pInput||!_pDrop) return;
   const q=(raw||'').trim().toLowerCase();
-  if(!q){clr.style.display='none';restoreOfficials();return;}
-  clr.style.display='';
-  document.getElementById('op-county').style.display='none';
+  if(!q){ _pDrop.style.display='none'; _pDrop.innerHTML=''; return; }
   const terms=q.split(/\s+/).filter(Boolean);
   const matches=buildPeopleIndex().filter(e=>{
     const hay=((e.o.n||'')+' '+(e.o.o||'')+' '+e.county+' county '+(e.o.note||'')).toLowerCase();
     return terms.every(t=>hay.includes(t));
   });
-  ODATA=[];
-  if(!matches.length){
-    el.innerHTML=`<div class="no-sel" style="padding:16px 10px">No people match <strong>"${esc(q)}"</strong>.<br><span style="font-size:.7rem;color:#94a3b8">Try a name, office, or county.</span></div>`;
-    return;
-  }
   const pOrd={D:0,NP:1,R:2};
   matches.sort((a,b)=>(pOrd[a.o.p]??3)-(pOrd[b.o.p]??3)||(a.o.n||'').localeCompare(b.o.n||''));
-  let html=`<div class="search-count">${matches.length} ${matches.length===1?'person':'people'} found</div>`;
-  html+=matches.map(e=>{
+  PSEARCH=matches.slice(0,40);
+  if(!PSEARCH.length){ _pDrop.innerHTML='<div class="opt" style="color:#94a3b8">No people match “'+esc(q)+'”</div>'; _pDrop.style.display='block'; return; }
+  let html='<div class="grp">'+matches.length+(matches.length===1?' person':' people')+' found</div>';
+  html+=PSEARCH.map(function(e,i){
     const o=e.o, isInf=o.type==='influential';
-    const partyLabel={D:'Democrat',R:'Republican',NP:'Nonpartisan'}[o.p]||o.p||'';
-    const rightBadge=isInf?`<span class="pbadge inf">⭐ Influential</span>`:(partyLabel?`<span class="pbadge ${o.p}">${partyLabel}</span>`:'');
-    const cls=isInf?'influential':(o.p||'NP');
-    const i=ODATA.push(o)-1;
-    return `<div class="off-card ${cls}" data-idx="${i}">
-      <div class="oc-top">
-        <div style="flex:1;min-width:0">
-          <span class="oc-name">${esc(o.n)}</span>
-          ${o.o?`<div class="oc-off">${esc(o.o)}</div>`:''}
-          <div class="oc-county">📍 ${esc(e.county)} County</div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;margin-left:6px">${rightBadge}</div>
-        <span class="oc-chev">›</span>
-      </div>
-    </div>`;
+    const col=isInf?_pColors.influential:(_pColors[o.p]||'#64748b');
+    const partyLabel=isInf?'Influential':({D:'Democrat',R:'Republican',NP:'Nonpartisan'}[o.p]||o.p||'');
+    const meta=[o.o?esc(o.o):'', esc(e.county)+' County', partyLabel].filter(Boolean).join(' · ');
+    return '<div class="opt" data-idx="'+i+'"><span class="pbdot" style="background:'+col+'"></span><div style="flex:1;min-width:0"><div class="oc-name">'+esc(o.n)+'</div><div class="meta">'+meta+'</div></div></div>';
   }).join('');
-  el.innerHTML=html;
+  _pDrop.innerHTML=html; _pDrop.style.display='block';
 }
-(function(){
-  const si=document.getElementById('off-search');
-  if(!si) return;
-  si.addEventListener('input',()=>renderPeopleSearch(si.value));
-  document.getElementById('off-search-x').addEventListener('click',()=>{si.value='';si.focus();renderPeopleSearch('');});
-})();
+if(_pDrop) _pDrop.addEventListener('click',function(ev){
+  const opt=ev.target.closest('.opt'); if(!opt||opt.dataset.idx===undefined)return;
+  const e=PSEARCH[+opt.dataset.idx]; if(!e)return;
+  _pDrop.style.display='none'; _pInput.value='';
+  if(e.fips) showOfficials(e.fips);   // load that county's officials into the panel for context
+  openOfficialDetail(e.o);            // open the selected person's detail card
+});
+if(_pInput){ let _pDeb=null; _pInput.addEventListener('input',function(){ clearTimeout(_pDeb); _pDeb=setTimeout(function(){renderPplDrop(_pInput.value);},110); }); }
+document.addEventListener('click',function(ev){ if(_pDrop && !ev.target.closest('.hdr-search')) _pDrop.style.display='none'; });
 
 // click backdrop or Esc to close
 document.getElementById('odetail').addEventListener('click',ev=>{if(ev.target.id==='odetail')closeOfficialDetail();});
