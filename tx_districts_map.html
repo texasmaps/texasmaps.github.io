@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Texas Districts Explorer — House · Senate · Congress</title>
+<title>Texas Districts Explorer — House · Senate · Congress · SBOE</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 <style>
@@ -19,7 +19,7 @@
   .chambers button{border:1px solid var(--line);background:#fff;color:var(--ink);padding:6px 13px;border-radius:999px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .12s}
   .chambers button .dot{width:10px;height:10px;border-radius:3px}
   .chambers button.active{color:#fff;border-color:transparent;font-weight:600;box-shadow:0 2px 6px rgba(20,27,38,.18)}
-  .chambers button.active.cC{background:#6d28d9}.chambers button.active.cH{background:#0891b2}.chambers button.active.cS{background:#b45309}
+  .chambers button.active.cC{background:#6d28d9}.chambers button.active.cH{background:#0891b2}.chambers button.active.cS{background:#b45309}.chambers button.active.cE{background:#0f766e}
   .searchwrap{position:relative;flex:1;min-width:240px;max-width:520px}
   #search{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:9px;font-size:13.5px}
   #drop{position:absolute;top:42px;left:0;right:0;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 8px 24px rgba(20,27,38,.16);max-height:340px;overflow-y:auto;display:none;z-index:1200}
@@ -37,6 +37,24 @@
   .mname{font-size:16px;font-weight:600;margin:3px 0 2px}
   .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;color:#fff;margin-top:4px}
   .pill.R{background:var(--rep)}.pill.D{background:var(--dem)}.pill.X{background:#94a3b8}
+  .pill.L{background:#c99700}.pill.G{background:#2e8b57}.pill.I{background:#6b7280}
+  /* 2026 candidate list */
+  .racehdr{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:14px 0 7px;font-weight:700}
+  .cand{display:flex;align-items:center;gap:9px;padding:8px 0;border-top:1px solid #f1f3f7}
+  .cand:first-of-type{border-top:0}
+  .cand .swatch{width:4px;align-self:stretch;border-radius:3px;flex:none}
+  .cand .cbody{flex:1;min-width:0}
+  .cand .cname{font-size:14px;font-weight:600;line-height:1.2}
+  .cand .cmeta{font-size:11.5px;color:var(--muted);margin-top:1px}
+  .tag{display:inline-block;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:1px 6px;border-radius:5px;margin-left:6px;vertical-align:middle}
+  .tag.inc{background:#eef2ff;color:#4338ca}
+  .tag.elected{background:#ecfdf5;color:#047857}
+  .tag.candidate{background:#fff7ed;color:#c2410c}
+  .ppill{display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;color:#fff}
+  .ppill.R{background:var(--rep)}.ppill.D{background:var(--dem)}.ppill.L{background:#c99700}.ppill.G{background:#2e8b57}.ppill.I{background:#6b7280}
+  .uncontested{font-size:11.5px;color:var(--muted);margin-top:8px;font-style:italic}
+  .notup{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
+  #drop .opt .badge.p{border-radius:999px;padding:1px 7px;margin-left:4px}
   .contact a{color:var(--accent);text-decoration:none;font-size:13px}
   .contact a:hover{text-decoration:underline}
   .legend{font-size:12px;color:var(--muted);line-height:1.5}
@@ -61,9 +79,10 @@
         <button data-ch="C" class="cC active"><span class="dot" style="background:#6d28d9"></span>U.S. Congress</button>
         <button data-ch="H" class="cH"><span class="dot" style="background:#0891b2"></span>State House</button>
         <button data-ch="S" class="cS"><span class="dot" style="background:#b45309"></span>State Senate</button>
+        <button data-ch="E" class="cE"><span class="dot" style="background:#0f766e"></span>Board of Education</button>
       </div>
       <div class="searchwrap">
-        <input id="search" autocomplete="off" placeholder="Search a name (Hinojosa), a district (HD 49, SD 14, CD 37), a county (Travis), or a city (Round Rock)…">
+        <input id="search" autocomplete="off" placeholder="Search a 2026 candidate or member, a district (HD 49, SD 14, CD 37, SBOE 5), a county (Travis), or a city…">
         <div id="drop"></div>
       </div>
     </div>
@@ -73,7 +92,7 @@
     <aside id="aside">
       <div class="card" id="info">
         <h2>District info</h2>
-        <p class="hint">Click any district on the map, or use the search box. You can search by a legislator’s name, a district number, or a Texas city to see which districts it falls in.</p>
+        <p class="hint">Click any district on the map, or use the search box. Search by a 2026 candidate or current member’s name, a district number, a county, or a Texas city. Selecting a district shows the 2026 general-election candidates from both parties.</p>
       </div>
       <div class="card legend" id="legend"></div>
       <div class="foot" id="foot"></div>
@@ -84,6 +103,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="tx_roster.js"></script>
+<script src="tx_candidates_2026.js"></script>
 <script>
 (function(){
 "use strict";
@@ -93,13 +113,15 @@ var ROSTER = window.TX_ROSTER || {H:{},S:{},C:{}};
 var EP = {
   C: "https://giswebe.tlc.texas.gov/ArcGIS/rest/services/plan_shaded/MapServer/0/query?where="+encodeURIComponent("REDAPPL_PLAN_ID=5481 AND DISTRICT>0")+"&outFields=DISTRICT&returnGeometry=true&f=geojson&geometryPrecision=5&maxAllowableOffset=0.0015&outSR=4326",
   H: "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer/6/query?where="+encodeURIComponent("STATE='48'")+"&outFields=BASENAME&returnGeometry=true&f=geojson&geometryPrecision=5&maxAllowableOffset=0.0015&outSR=4326",
-  S: "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer/5/query?where="+encodeURIComponent("STATE='48'")+"&outFields=BASENAME&returnGeometry=true&f=geojson&geometryPrecision=5&maxAllowableOffset=0.0015&outSR=4326"
+  S: "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer/5/query?where="+encodeURIComponent("STATE='48'")+"&outFields=BASENAME&returnGeometry=true&f=geojson&geometryPrecision=5&maxAllowableOffset=0.0015&outSR=4326",
+  // State Board of Education — enacted Plan E2106 (REDAPPL_PLAN_ID 3688), TX Legislative Council
+  E: "https://giswebe.tlc.texas.gov/ArcGIS/rest/services/plan_shaded/MapServer/0/query?where="+encodeURIComponent("REDAPPL_PLAN_ID=3688 AND DISTRICT>0")+"&outFields=District&returnGeometry=true&f=geojson&geometryPrecision=5&maxAllowableOffset=0.0015&outSR=4326"
 };
 var CITY_EP = function(layer){return "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/"+layer+"/query?where="+encodeURIComponent("STATE='48'")+"&outFields=BASENAME,CENTLAT,CENTLON&returnGeometry=false&f=json&resultRecordCount=6000";};
 var COUNTY_EP = "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/1/query?where="+encodeURIComponent("STATE='48'")+"&outFields=BASENAME&returnGeometry=true&f=geojson&geometryPrecision=4&maxAllowableOffset=0.005&outSR=4326";
-var CHNAME = {C:"U.S. Congress", H:"Texas House", S:"Texas Senate"};
-var CHPREFIX = {C:"CD", H:"HD", S:"SD"};
-var CHCOLOR = {C:"#6d28d9", H:"#0891b2", S:"#b45309"};
+var CHNAME = {C:"U.S. Congress", H:"Texas House", S:"Texas Senate", E:"State Board of Education"};
+var CHPREFIX = {C:"CD", H:"HD", S:"SD", E:"SBOE"};
+var CHCOLOR = {C:"#6d28d9", H:"#0891b2", S:"#b45309", E:"#0f766e"};
 
 // ---- map ----
 var map = L.map('map', {zoomControl:true, minZoom:5, maxZoom:16}).setView([31.3, -99.2], 6);
@@ -114,7 +136,7 @@ function loading(on,msg){ if(msg)loadingEl.textContent=msg; loadingEl.classList.
 // distNum -> distId helpers
 function distOf(feat, ch){
   var p = feat.properties || {};
-  if(ch==='C') return String(p.District);
+  if(ch==='C' || ch==='E') return String(p.District);
   return String(parseInt(p.BASENAME,10));
 }
 function memberOf(ch, d){
@@ -124,15 +146,44 @@ function memberOf(ch, d){
 }
 function fullName(m){ return m ? ((m.first?m.first+' ':'')+m.last) : ''; }
 
+// ---- 2026 candidates ----
+var CAND = window.TX_CAND_2026 || {C:{},H:{},S:{races:{},up2026:[]},E:{races:{},up2026:[],current:{}}};
+var PARTYNAME = {D:'Democrat',R:'Republican',L:'Libertarian',G:'Green',I:'Independent'};
+var PCOLOR = {D:'#2171b5',R:'#cb181d',L:'#c99700',G:'#2e8b57',I:'#6b7280'};
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function senateUp(d){ return ((CAND.S&&CAND.S.up2026)||[]).indexOf(+d) >= 0; }
+function sboeUp(d){ return ((CAND.E&&CAND.E.up2026)||[]).indexOf(+d) >= 0; }
+function sboeCurrent(d){ return ((CAND.E&&CAND.E.current)||{})[String(d)] || null; }
+// current officeholder for any chamber -> {name, party} (or null)
+function currentInfo(ch, d){
+  if(ch==='E'){ var c=sboeCurrent(d); return c ? {name:c.n, party:c.p} : null; }
+  var m=memberOf(ch,d); return m ? {name:fullName(m), party:m.party} : null;
+}
+// returns array of candidates, or null if this staggered seat (Senate/SBOE) is NOT up in 2026
+function candidatesFor(ch, d){
+  d = String(d);
+  if(ch==='S'){ if(!senateUp(d)) return null; var r=(CAND.S.races||{})[d]; return r?r.cands:[]; }
+  if(ch==='E'){ if(!sboeUp(d)) return null; var re=((CAND.E&&CAND.E.races)||{})[d]; return re?re.cands:[]; }
+  var o = (CAND[ch]||{})[d];
+  return o ? o.cands : [];
+}
+function candRow(c){
+  var pc = c.p || 'I';
+  var tag = c.inc ? '<span class="tag inc">Incumbent</span>' : '<span class="tag candidate">Candidate</span>';
+  return '<div class="cand"><span class="swatch" style="background:'+(PCOLOR[pc]||'#6b7280')+'"></span>'+
+    '<div class="cbody"><div class="cname">'+esc(c.n)+tag+'</div>'+
+    '<div class="cmeta"><span class="ppill '+pc+'">'+(PARTYNAME[pc]||pc)+'</span></div></div></div>';
+}
+
 // ---- layer cache & rendering ----
 var layers = {};   // ch -> {geojson, leaflet}
 var active = 'C';
 var selected = null; // {ch, d, layer}
 
 function styleFor(ch, d){
-  if(ch==='C'){
-    var m = memberOf('C', d);
-    var c = m && m.party==='R' ? 'var(--rep)' : (m && m.party==='D' ? 'var(--dem)' : '#94a3b8');
+  if(ch==='C' || ch==='E'){
+    var ci = currentInfo(ch, d);
+    var c = ci && ci.party==='R' ? 'var(--rep)' : (ci && ci.party==='D' ? 'var(--dem)' : '#94a3b8');
     return {color:'#ffffff', weight:1, fillColor:c, fillOpacity:.45};
   }
   return {color:'#ffffff', weight:1, fillColor:CHCOLOR[ch], fillOpacity:.30};
@@ -195,25 +246,40 @@ function selectDistrict(ch, d, fly){
 
 function renderInfo(ch, d){
   var m = memberOf(ch, d);
-  var pcls = m && m.party ? m.party : 'X';
-  var pill = (ch==='C' && m && m.party) ? '<span class="pill '+pcls+'">'+(m.party==='R'?'Republican':(m.party==='D'?'Democrat':m.party))+'</span>' : '';
   var html = '<h2>'+CHNAME[ch]+'</h2>'+
-    '<p class="dnum">'+CHPREFIX[ch]+'-'+d+'</p>'+
-    (m ? '<p class="mname">'+fullName(m)+'</p>'+pill
-       : '<p class="mname" style="color:var(--muted)">No current member on file</p>')+
-    '<p class="contact" style="margin-top:12px">'+
-      '<a href="https://wrm.capitol.texas.gov/home" target="_blank" rel="noopener">Official contact & details ↗</a></p>';
+    '<p class="dnum">'+CHPREFIX[ch]+'-'+d+'</p>';
+  var cands = candidatesFor(ch, d);
+  if((ch==='S' || ch==='E') && cands===null){
+    // Staggered seat not up in 2026 — show the sitting member only
+    var ci = currentInfo(ch, d);
+    html += (ci ? '<p class="mname">'+esc(ci.name)+'</p>'+(ci.party?'<span class="pill '+ci.party+'">'+(PARTYNAME[ci.party]||ci.party)+'</span>':'') : '<p class="mname" style="color:var(--muted)">No current member on file</p>');
+    var body = (ch==='S'?'Texas Senate':'State Board of Education');
+    html += '<p class="notup"><span class="tag elected">Elected</span> This seat is <b>not on the 2026 ballot</b> — '+body+' terms are staggered, so its next election is in 2028.</p>';
+  } else {
+    html += '<div class="racehdr">2026 General Election &middot; November 3</div>';
+    if(cands && cands.length){
+      html += cands.map(candRow).join('');
+      var majors = cands.filter(function(c){ return c.p==='D'||c.p==='R'; });
+      if(majors.length <= 1){ html += '<p class="uncontested">Uncontested by the other major party.</p>'; }
+    } else {
+      html += '<p class="uncontested">No 2026 candidate data on file for this district.</p>';
+    }
+  }
+  html += '<p class="contact" style="margin-top:12px">'+
+    '<a href="https://wrm.capitol.texas.gov/home" target="_blank" rel="noopener">Official contact & details &#8599;</a></p>';
   document.getElementById('info').innerHTML = html;
 }
 
 function renderLegend(){
   var el = document.getElementById('legend');
-  if(active==='C'){
+  if(active==='C' || active==='E'){
     el.innerHTML = '<h2>Legend — '+CHNAME[active]+'</h2>'+
       '<div class="lrow"><span class="sw" style="background:var(--dem)"></span>Democratic-held seat</div>'+
       '<div class="lrow"><span class="sw" style="background:var(--rep)"></span>Republican-held seat</div>'+
       '<div class="lrow"><span class="sw" style="background:#94a3b8"></span>No incumbent / vacant</div>'+
-      '<p class="hint" style="margin:8px 0 0">Congressional boundaries: <b>Plan C2333</b>, in effect for the 2026 elections.</p>';
+      '<p class="hint" style="margin:8px 0 0">'+(active==='C'
+        ? 'Congressional boundaries: <b>Plan C2333</b>, in effect for the 2026 elections.'
+        : 'SBOE boundaries: <b>Plan E2106</b> (effective 2022). Seats have staggered 4-year terms — 8 of 15 are on the 2026 ballot.')+'</p>';
   } else {
     el.innerHTML = '<h2>Legend — '+CHNAME[active]+'</h2>'+
       '<div class="lrow"><span class="sw" style="background:'+CHCOLOR[active]+'"></span>'+CHNAME[active]+' district</div>'+
@@ -255,9 +321,9 @@ function districtAt(ch, lon, lat){
 }
 
 function cityLookup(city){
-  // ensure all three layers loaded
-  return Promise.all([fetchLayer('C'),fetchLayer('H'),fetchLayer('S')]).then(function(){
-    var res = {C:districtAt('C',city.lon,city.lat), H:districtAt('H',city.lon,city.lat), S:districtAt('S',city.lon,city.lat)};
+  // ensure all layers loaded
+  return Promise.all([fetchLayer('C'),fetchLayer('H'),fetchLayer('S'),fetchLayer('E')]).then(function(){
+    var res = {C:districtAt('C',city.lon,city.lat), H:districtAt('H',city.lon,city.lat), S:districtAt('S',city.lon,city.lat), E:districtAt('E',city.lon,city.lat)};
     // marker
     if(window.__cityMarker) map.removeLayer(window.__cityMarker);
     window.__cityMarker = L.marker([city.lat,city.lon]).addTo(map).bindPopup('<b>'+city.name+'</b>').openPopup();
@@ -266,13 +332,14 @@ function cityLookup(city){
   });
 }
 
-function memLine(ch,d){ if(d==null) return '<span style="color:var(--muted)">—</span>'; var m=memberOf(ch,d); var pp = (ch==='C'&&m&&m.party)?' ('+m.party+')':''; return '<b>'+CHPREFIX[ch]+'-'+d+'</b> · '+(m?fullName(m)+pp:'(no member)'); }
+function memLine(ch,d){ if(d==null) return '<span style="color:var(--muted)">—</span>'; var ci=currentInfo(ch,d); var pp = ((ch==='C'||ch==='E')&&ci&&ci.party)?' ('+ci.party+')':''; return '<b>'+CHPREFIX[ch]+'-'+d+'</b> · '+(ci?esc(ci.name)+pp:'(no member)'); }
 function renderCityInfo(city, res){
   var html = '<h2>City → Districts</h2><p class="dnum" style="font-size:18px">'+city.name+', TX</p>'+
     '<div style="margin-top:8px">'+
       '<div class="cityrow"><span>U.S. Congress</span><span>'+memLine('C',res.C)+'</span></div>'+
       '<div class="cityrow"><span>State House</span><span>'+memLine('H',res.H)+'</span></div>'+
       '<div class="cityrow"><span>State Senate</span><span>'+memLine('S',res.S)+'</span></div>'+
+      '<div class="cityrow"><span>Board of Education</span><span>'+memLine('E',res.E)+'</span></div>'+
     '</div>'+
     '<p class="hint" style="margin-top:10px">Based on the city center point. Large cities span multiple districts — click the map at a specific spot for that location’s district.</p>';
   document.getElementById('info').innerHTML = html;
@@ -298,8 +365,8 @@ function districtsInCounty(ch, county){
 }
 function countyLookup(county){
   loading(true,'Finding districts in '+county.name+' County…');
-  return Promise.all([fetchLayer('C'),fetchLayer('H'),fetchLayer('S')]).then(function(){
-    var res={C:districtsInCounty('C',county), H:districtsInCounty('H',county), S:districtsInCounty('S',county)};
+  return Promise.all([fetchLayer('C'),fetchLayer('H'),fetchLayer('S'),fetchLayer('E')]).then(function(){
+    var res={C:districtsInCounty('C',county), H:districtsInCounty('H',county), S:districtsInCounty('S',county), E:districtsInCounty('E',county)};
     if(countyLayer) map.removeLayer(countyLayer);
     countyLayer = L.geoJSON({type:'Feature',geometry:county.geom}, {style:{color:'#111827',weight:2.5,fill:false,dashArray:'5,4'}}).addTo(map);
     try{ map.fitBounds(countyLayer.getBounds(), {padding:[30,30]}); }catch(e){}
@@ -314,6 +381,7 @@ function renderCountyInfo(county,res){
       '<div class="cityrow"><span>U.S. Congress</span><span style="text-align:right;max-width:62%">'+dlist('C',res.C)+'</span></div>'+
       '<div class="cityrow"><span>State House</span><span style="text-align:right;max-width:62%">'+dlist('H',res.H)+'</span></div>'+
       '<div class="cityrow"><span>State Senate</span><span style="text-align:right;max-width:62%">'+dlist('S',res.S)+'</span></div>'+
+      '<div class="cityrow"><span>Board of Education</span><span style="text-align:right;max-width:62%">'+dlist('E',res.E)+'</span></div>'+
     '</div>'+
     '<p class="hint" style="margin-top:10px">All districts that overlap the county. Click a district number for its member, or click anywhere on the map for that exact spot.</p>';
   var el=document.getElementById('info'); el.innerHTML=html;
@@ -334,12 +402,22 @@ function parseDistrict(q){
   if((m=q.match(/^\s*(?:hd|house)\s*#?\s*(\d{1,3})\s*$/i))) return {ch:'H', d:String(+m[1])};
   if((m=q.match(/^\s*(?:sd|senate)\s*#?\s*(\d{1,2})\s*$/i))) return {ch:'S', d:String(+m[1])};
   if((m=q.match(/^\s*(?:cd|congress(?:ional)?|us\s*house)\s*#?\s*(\d{1,2})\s*$/i))) return {ch:'C', d:String(+m[1])};
+  if((m=q.match(/^\s*(?:sboe|board(?:\s*of\s*ed(?:ucation)?)?)\s*#?\s*(\d{1,2})\s*$/i))) return {ch:'E', d:String(+m[1])};
   return null;
 }
-function nameMatches(q){
-  q=q.toLowerCase(); var out=[];
-  ['C','H','S'].forEach(function(ch){ var R=ROSTER[ch]||{}; Object.keys(R).forEach(function(d){ var m=R[d]; var f=(m[0]||'').toLowerCase(), l=(m[1]||'').toLowerCase(); if((f+' '+l).indexOf(q)>=0 || l.indexOf(q)>=0){ out.push({ch:ch,d:d,m:m}); } }); });
-  return out.slice(0,30);
+// Search 2026 candidates first, then current officeholders (incl. Senate/SBOE seats not up this cycle)
+function peopleMatches(q){
+  q=q.toLowerCase(); var out=[]; var seen={};
+  function add(ch,d,name,p,kind){ var key=ch+'-'+d+'-'+name.toLowerCase(); if(seen[key])return; seen[key]=1; out.push({ch:ch,d:d,name:name,p:p,kind:kind}); }
+  ['C','H','S','E'].forEach(function(ch){
+    var dl = (ch==='S'||ch==='E') ? Object.keys(((ch==='S'?CAND.S:CAND.E)||{}).races||{}) : Object.keys(CAND[ch]||{});
+    dl.forEach(function(d){ (candidatesFor(ch,d)||[]).forEach(function(c){ if((c.n||'').toLowerCase().indexOf(q)>=0) add(ch,d,c.n,c.p,c.inc?'Incumbent':'Candidate'); }); });
+  });
+  // Roster fallback: Senate seats NOT up in 2026 (House/Congress fully covered by candidate data)
+  var RS=ROSTER.S||{}; Object.keys(RS).forEach(function(d){ if(senateUp(d))return; var m=RS[d]; var nm=fullName({first:m[0],last:m[1]}); if(nm.toLowerCase().indexOf(q)>=0){ add('S',d,nm,'','Elected'); } });
+  // SBOE seats NOT up in 2026 — sitting members
+  var EC=(CAND.E&&CAND.E.current)||{}; Object.keys(EC).forEach(function(d){ if(sboeUp(d))return; var c=EC[d]; if((c.n||'').toLowerCase().indexOf(q)>=0){ add('E',d,c.n,c.p,'Elected'); } });
+  return out.slice(0,40);
 }
 function cityMatches(q){
   q=q.toLowerCase(); if(!cities.length) return [];
@@ -352,9 +430,9 @@ function badge(ch){ return '<span class="badge" style="background:'+CHCOLOR[ch]+
 function renderDrop(q){
   if(!q || q.length<1){ dropEl.style.display='none'; return; }
   var html=''; var pd=parseDistrict(q);
-  if(pd){ var m=memberOf(pd.ch,pd.d); html+='<div class="grp">District</div><div class="opt" data-act="dist" data-ch="'+pd.ch+'" data-d="'+pd.d+'">'+badge(pd.ch)+'<span>'+CHPREFIX[pd.ch]+'-'+pd.d+' — '+(m?fullName(m):'(no member)')+'</span></div>'; }
-  var nm=nameMatches(q);
-  if(nm.length){ html+='<div class="grp">Legislators</div>'; nm.forEach(function(o){ var pp=(o.ch==='C'&&o.m[2])?' ('+o.m[2]+')':''; html+='<div class="opt" data-act="dist" data-ch="'+o.ch+'" data-d="'+o.d+'">'+badge(o.ch)+'<span>'+o.m[0]+' '+o.m[1]+pp+' · '+CHPREFIX[o.ch]+'-'+o.d+'</span></div>'; }); }
+  if(pd){ var ci=currentInfo(pd.ch,pd.d); html+='<div class="grp">District</div><div class="opt" data-act="dist" data-ch="'+pd.ch+'" data-d="'+pd.d+'">'+badge(pd.ch)+'<span>'+CHPREFIX[pd.ch]+'-'+pd.d+' — '+(ci?esc(ci.name):'(no member)')+'</span></div>'; }
+  var nm=peopleMatches(q);
+  if(nm.length){ html+='<div class="grp">People — 2026 candidates &amp; current members</div>'; nm.forEach(function(o){ var pp=o.p?' <span class="badge p" style="background:'+(PCOLOR[o.p]||'#6b7280')+'">'+o.p+'</span>':''; html+='<div class="opt" data-act="dist" data-ch="'+o.ch+'" data-d="'+o.d+'">'+badge(o.ch)+'<span>'+esc(o.name)+pp+' &middot; '+CHPREFIX[o.ch]+'-'+o.d+' &middot; '+o.kind+'</span></div>'; }); }
   var ct=countyMatches(q);
   if(ct.length){ html+='<div class="grp">Counties</div>'; ct.forEach(function(c){ html+='<div class="opt" data-act="county" data-name="'+c.name.replace(/"/g,'&quot;')+'"><span style="color:var(--muted)">▦</span><span>'+c.name+' County</span></div>'; }); }
   var cm=cityMatches(q);
@@ -378,7 +456,7 @@ document.addEventListener('click', function(e){ if(!e.target.closest('.searchwra
 document.getElementById('chambers').addEventListener('click', function(e){ var b=e.target.closest('button'); if(b) showChamber(b.dataset.ch); });
 
 // foot
-document.getElementById('foot').innerHTML = 'Boundaries & members: Texas Legislative Council (giswebe.tlc.texas.gov, wrm.capitol.texas.gov) and U.S. Census TIGERweb. Congressional map = Plan C2333 (2026). Loads live data — needs an internet connection.';
+document.getElementById('foot').innerHTML = 'Boundaries & members: Texas Legislative Council (giswebe.tlc.texas.gov, wrm.capitol.texas.gov) and U.S. Census TIGERweb. Congressional map = Plan C2333 (2026); SBOE map = Plan E2106. 2026 general-election candidates compiled from Wikipedia & Ballotpedia (post March-3 primary / May-26 runoff) — verify close races against official filings. Loads live data — needs an internet connection.';
 
 // init
 showChamber('C');
