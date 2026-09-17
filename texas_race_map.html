@@ -34,7 +34,7 @@
   .cityLbl{font-size:12px;font-weight:600;fill:#11151d;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round;pointer-events:none}
   aside{width:360px;border-left:1px solid var(--line);background:var(--panel);overflow-y:auto;padding:18px}
   .search{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:13px;margin-bottom:15px}
-  .legend h3,.detail h3{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 9px}
+  .legend h3,.detail h3,#rank h3{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 9px}
   .legend{margin-bottom:18px;padding-bottom:17px;border-bottom:1px solid var(--line)}
   .lrow{display:flex;align-items:center;gap:9px;font-size:12px;margin:4px 0}
   .lsw{width:28px;height:14px;border-radius:3px;flex:none;border:1px solid rgba(0,0,0,.08)}
@@ -52,6 +52,10 @@
   .hint{font-size:12px;color:var(--muted);line-height:1.55;margin-top:8px}
   .rgrow:hover{background:#f1f5f9}
   .ctyrows{margin-top:2px}
+  .rankwrap{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+  .rankhd{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:12px 0 4px}
+  .rankhd a{text-transform:none;letter-spacing:0;font-size:11px;color:var(--accent);text-decoration:none;cursor:pointer}
+  .ctyrow .cp small{color:var(--muted);margin-left:6px;font-weight:400}
   .ctyrow{position:relative;display:flex;justify-content:space-between;align-items:center;font-size:12.5px;padding:5px 7px;border-radius:6px;cursor:pointer;overflow:hidden}
   .ctyrow:hover{background:#eef2f7}
   .ctyrow .ci{position:relative;z-index:1;display:flex;align-items:center;gap:6px}
@@ -112,9 +116,13 @@
       <div class="tooltip" id="tip"></div>
     </div>
     <aside>
-      <input class="search" id="search" list="ctylist" placeholder="🔍  Search a county…">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:15px">
+        <input class="search" id="search" list="ctylist" placeholder="🔍  Search a county…" style="margin-bottom:0;flex:1">
+        <button id="stateBtn" title="Clear the selected county / region and show Texas statewide numbers (Esc does the same)" style="flex:none;border:1px solid var(--line);background:#fff;padding:9px 12px;border-radius:9px;font-size:12.5px;cursor:pointer;font-weight:600">Texas ⟲</button>
+      </div>
       <datalist id="ctylist"></datalist>
       <div class="legend" id="legend"></div>
+      <div id="rank"></div>
       <div class="detail" id="detail">
         <h3>County detail</h3>
         <div class="hint">Hover any county to preview; click to pin its full breakdown here. Bars show the <b>actual number of people</b> in each group, largest to smallest — so you can directly compare the size of the Latino, White, Black and Asian populations.</div>
@@ -301,14 +309,38 @@ function paint(){
   document.querySelectorAll('#regionctl button').forEach(b=>{const on=b.dataset.rg===regionMode;b.classList.toggle('active',on);b.style.background=on?'#374151':'#fff';b.style.color=on?'#fff':'';b.style.borderColor=on?'transparent':'';b.style.fontWeight=on?'600':'';});
   buildLegend();
 }
-function setMode(m){mode=m;paint();}
+function setMode(m){mode=m;paint();if(currentRegion!==null)renderRegionDetail(currentRegion);}
 function setRegionMode(m){regionMode=m;paint();}
 
+
+/* ---------- rankings (by % and by count) — statewide or per region ---------- */
+let rankShowAll={pct:false,cnt:false}, currentRegion=null;
+function rankingsHtml(fipsList, scopeLabel, g){
+  const grp=GROUPS[g]; const N=fipsList.length;
+  const byPct=fipsList.map(f=>({f,d:TXDATA[f],v:pct(TXDATA[f],g)})).sort((a,b)=>b.v-a.v);
+  const byCnt=fipsList.map(f=>({f,d:TXDATA[f],v:TXDATA[f][g]})).sort((a,b)=>b.v-a.v);
+  const row=(r,i,isPct,max)=>`<div class="ctyrow" data-f="${r.f}"><span class="ci"><b>${i+1}.</b> ${r.d.n.replace(' County','')}</span><span class="cp"><b>${isPct?r.v.toFixed(1)+'%':fmt(r.v)}</b><small>${isPct?fmt(r.d[g])+' people':pct(r.d,g).toFixed(1)+'%'}</small></span><div class="cbar" style="width:${(100*r.v/max).toFixed(1)}%;background:${grp.color}"></div></div>`;
+  const list=(arr,key,isPct)=>{const lim=rankShowAll[key]?N:Math.min(15,N);const max=Math.max(arr[0].v,1e-9);return `<div class="ctyrows">${arr.slice(0,lim).map((r,i)=>row(r,i,isPct,max)).join('')}</div>`+(N>15?`<div style="text-align:right"><a class="rk-toggle" data-key="${key}" style="font-size:11px;color:var(--accent);cursor:pointer">${rankShowAll[key]?'Show top 15':'Show all '+N}</a></div>`:'');};
+  return `<div class="rankwrap"><h3 style="margin-bottom:2px">${grp.label} — county rankings</h3><div class="hint" style="margin:0 0 4px">${scopeLabel} · ${N} counties · click a county to open it</div>
+    <div class="rankhd"><span>Highest share of population</span></div>${list(byPct,'pct',true)}
+    <div class="rankhd"><span>Largest ${grp.label.split(' (')[0]} population</span></div>${list(byCnt,'cnt',false)}</div>`;
+}
+function wireRank(el, rerender){
+  el.querySelectorAll('.ctyrow').forEach(r=>r.onclick=()=>{select(r.dataset.f);zoomTo(r.dataset.f);});
+  el.querySelectorAll('.rk-toggle').forEach(a=>a.onclick=()=>{rankShowAll[a.dataset.key]=!rankShowAll[a.dataset.key];rerender();});
+}
+function renderRank(){
+  const el=document.getElementById('rank'); if(!el) return;
+  if(mode==='dom'||currentRegion!==null){el.innerHTML='';return;}
+  el.innerHTML=rankingsHtml(Object.keys(TXDATA),'Statewide',mode);
+  wireRank(el, renderRank);
+}
 function buildLegend(){
   const el=document.getElementById('legend');
   if(regionMode==='fill'){
     el.innerHTML='<h3>Texas regions <span style="text-transform:none;letter-spacing:0;font-weight:400">— click one</span></h3>'+REGIONS.map(R=>`<div class="lrow rgrow" data-rid="${R.id}" style="cursor:pointer;padding:3px 5px;border-radius:6px"><span class="lsw" style="background:${R.color}"></span>${R.name}</div>`).join('')+'<div class="hint" style="margin-top:8px">Counties colored by region. Click a region (here or on the map) for its biggest counties. Switch to “Bold boundaries” to see race colors with region outlines.</div>';
     el.querySelectorAll('.rgrow').forEach(r=>r.onclick=()=>renderRegionDetail(+r.dataset.rid));
+    renderRank();
     return;
   }
   if(mode==='dom'){
@@ -317,6 +349,7 @@ function buildLegend(){
   const gr=GROUPS[mode],r=RAMPS[mode];let rows='';
   for(let i=0;i<gr.breaks.length-1;i++)rows+=`<div class="lrow"><span class="lsw" style="background:${r[i]}"></span>${gr.breaks[i]}–${gr.breaks[i+1]}%</div>`;
   el.innerHTML=`<h3>${gr.label} — % of county</h3>${rows}`;
+  renderRank();
 }
 
 function showTip(ev,f){
@@ -331,12 +364,23 @@ function showTip(ev,f){
   tip.style.left=(ev.clientX-r.left+15)+'px';tip.style.top=(ev.clientY-r.top+14)+'px';tip.style.opacity=1;
 }
 
-function select(f){selFips=f;gCounty.selectAll('path.county').classed('sel',d=>d.fips===f);renderDetail(f);}
+function select(f){selFips=f;currentRegion=null;gCounty.selectAll('path.county').classed('sel',d=>d.fips===f);renderDetail(f);renderRank();}
 function top3Block(f){
   const L=TOP3[f];if(!L)return '';
   return `<div style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:4px 0 4px">Largest cities &amp; towns</div>
     <div class="ctyrows" style="margin-bottom:8px">${L.map((c,i)=>`<div class="ctyrow" style="cursor:default"><span class="ci"><b>${i+1}.</b> ${c.n}</span><span class="cp">${fmt(c.t)}</span><div class="cbar" style="width:${(100*c.t/L[0].t).toFixed(1)}%;background:#94a3b8"></div></div>`).join('')}</div>`;
 }
+
+function renderStatewide(){
+  const el=document.getElementById('detail');const d=STATE;
+  const rows=ORDER.map(o=>({...o,count:d[o.k],pc:pct(d,o.k)})).sort((a,b)=>b.count-a.count);const max=Math.max(...rows.map(r=>r.count),1);
+  el.innerHTML=`<h3>Texas statewide</h3>
+    <div class="cty">All 254 counties</div>
+    <div class="tot">Total population: <b>${fmt(d.t)}</b></div>`+
+    rows.map(r=>`<div class="bar"><div class="top"><span class="nm"><i style="background:${COLORS[r.k]}"></i>${r.label}</span><span class="vals"><b>${fmt(r.count)}</b> · ${r.pc.toFixed(1)}%</span></div><div class="track"><div class="fill" style="width:${(100*r.count/max).toFixed(1)}%;background:${COLORS[r.k]}"></div></div></div>`).join('')+
+    `<div class="hint">Hover any county to preview; click to pin its breakdown here. Press <b>Esc</b>, click the <b>Texas ⟲</b> button, or click the empty map background to come back to these statewide numbers. The county rankings above follow the group you have selected.</div>`;
+}
+function clearSelection(){selFips=null;currentRegion=null;gCounty.selectAll('path.county').classed('sel',false);renderStatewide();renderRank();}
 function renderDetail(f){
   const d=TXDATA[f],el=document.getElementById('detail');
   const rows=ORDER.map(o=>({...o,count:d[o.k],pc:pct(d,o.k)})).sort((a,b)=>b.count-a.count);
@@ -344,11 +388,12 @@ function renderDetail(f){
   const rk=RANK[f]||{};
   const R=REGION_BY_ID[REGION_OF[f]];
   const regLine=R?`<div class="tot" style="margin-top:-8px;margin-bottom:13px"><span class="lsw" style="display:inline-block;width:11px;height:11px;border-radius:3px;background:${R.color};vertical-align:-1px;margin-right:5px"></span>${R.name}</div>`:'';
-  el.innerHTML=`<h3>County detail</h3>
+  el.innerHTML=`<span class="back" id="backState" style="font-size:12px;color:var(--accent);cursor:pointer;display:inline-block;margin-bottom:6px">← Texas statewide</span><h3>County detail</h3>
     <div class="cty">${d.n}<span class="rank">#${rk.t} by population</span></div>
     <div class="tot">Total population: <b>${fmt(d.t)}</b>${CITY_OF[f]?` · Largest city: <b>${CITY_OF[f].n}</b>`:''}</div>`+regLine+top3Block(f)+
     rows.map(r=>`<div class="bar"><div class="top"><span class="nm"><i style="background:${COLORS[r.k]}"></i>${r.label}</span><span class="vals"><b>${fmt(r.count)}</b> · ${r.pc.toFixed(1)}%</span></div><div class="track"><div class="fill" style="width:${(100*r.count/max).toFixed(1)}%;background:${COLORS[r.k]}"></div></div></div>`).join('')+
     `<div class="hint">Bars are scaled to this county's largest group, so the longest bar = the biggest population. Percentages are share of total. Ranks are out of 254 counties.</div>`;
+  const bk=document.getElementById('backState');if(bk)bk.onclick=clearSelection;
 }
 
 function zoomTo(f){
@@ -371,13 +416,14 @@ function regionCities(rid){
     <div class="hint">Each county's three largest places (ACS 2020–24); a city that crosses county lines is listed once, under its primary county. Click a city to open its county. Full demographics for these cities are on the <b>Central Texas Deep Dive</b> tab.</div>`;
 }
 function renderRegionDetail(rid){
+  currentRegion=rid; renderRank();
   const R=REGION_BY_ID[rid];const el=document.getElementById('detail');
   const cos=countiesInRegion(rid).sort((a,b)=>b.t-a.t);
   const T={t:0,w:0,b:0,a:0,h:0,o:0};cos.forEach(d=>['t','w','b','a','h','o'].forEach(k=>T[k]+=d[k]));
   const rrows=ORDER.map(o=>({...o,count:T[o.k],pc:pct(T,o.k)})).sort((a,b)=>b.count-a.count);
   const rmax=Math.max(...rrows.map(r=>r.count),1);
   const top=cos.slice(0,12);const cmax=Math.max(...top.map(d=>d.t),1);
-  el.innerHTML=`<h3>Region detail</h3>
+  el.innerHTML=`<span class="back" id="backState2" style="font-size:12px;color:var(--accent);cursor:pointer;display:inline-block;margin-bottom:6px">← Texas statewide</span><h3>Region detail</h3>
     <div class="cty"><span class="lsw" style="display:inline-block;width:13px;height:13px;border-radius:3px;background:${R.color};vertical-align:-1px;margin-right:6px"></span>${R.name}</div>
     <div class="tot">${cos.length} counties · total population <b>${fmt(T.t)}</b></div>
     <div style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:6px 0 4px">Region race &amp; ethnicity</div>`+
@@ -385,8 +431,11 @@ function renderRegionDetail(rid){
     `<div style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:14px 0 4px">Largest counties${cos.length>12?` (top 12 of ${cos.length})`:''}</div>
      <div class="ctyrows">`+
     top.map((d,i)=>`<div class="ctyrow" data-f="${d.f}"><span class="ci"><b>${i+1}.</b> ${d.n.replace(' County','')}<i style="background:${COLORS[dominant(d)]}" title="largest group"></i></span><span class="cp">${fmt(d.t)}</span><div class="cbar" style="width:${(100*d.t/cmax).toFixed(1)}%;background:${R.color}"></div></div>`).join('')+
-    `</div><div class="hint">Click any county above to see its full breakdown. Colored dot = that county's largest group.</div>`+regionCities(rid);
+    `</div><div class="hint">Click any county above to see its full breakdown. Colored dot = that county's largest group.</div>`+
+    (mode==='dom'?`<div class="hint" style="margin-top:12px">Pick a group above (Hispanic, White, Black or Asian) to rank this region's counties by share and by population.</div>`:`<div style="margin-top:14px">${rankingsHtml(cos.map(d=>d.f),R.name,mode)}</div>`)+regionCities(rid);
   el.querySelectorAll('.ctyrow').forEach(row=>row.onclick=()=>{select(row.dataset.f);zoomTo(row.dataset.f);});
+  el.querySelectorAll('.rk-toggle').forEach(a=>a.onclick=()=>{rankShowAll[a.dataset.key]=!rankShowAll[a.dataset.key];renderRegionDetail(rid);});
+  const bk2=document.getElementById('backState2');if(bk2)bk2.onclick=clearSelection;
 }
 
 /* ---------- region outlines + labels ---------- */
@@ -517,6 +566,10 @@ loadGeometry().then(feats=>{
     gRegion.selectAll('.rgnLbl').attr('transform',d=>`translate(${d.cx},${d.cy}) scale(${1/k})`);
   });
   svg.call(zoom);
+  svg.on('click',ev=>{ if(ev.target===svg.node()) clearSelection(); }); // click on empty background = back to statewide
+  document.addEventListener('keydown',ev=>{ if(ev.key==='Escape') clearSelection(); });
+  document.getElementById('stateBtn').onclick=clearSelection;
+  renderStatewide();
   document.getElementById('zin').onclick=()=>svg.transition().call(zoom.scaleBy,1.6);
   document.getElementById('zout').onclick=()=>svg.transition().call(zoom.scaleBy,0.625);
   document.getElementById('zreset').onclick=()=>svg.transition().duration(500).call(zoom.transform,d3.zoomIdentity);
@@ -527,7 +580,7 @@ loadGeometry().then(feats=>{
   document.getElementById('loading').style.display='none';
   paint();
   document.getElementById('foot').textContent=`Statewide: Hispanic ${pct(STATE,'h').toFixed(1)}% · White ${pct(STATE,'w').toFixed(1)}% · Black ${pct(STATE,'b').toFixed(1)}% · Asian ${pct(STATE,'a').toFixed(1)}% · Other ${pct(STATE,'o').toFixed(1)}%  —  ${Object.keys(TXDATA).length} counties · ${fmt(STATE.t)} people · U.S. Census ACS 2023 5-year (B03002)`;
-  select('201');
+  renderStatewide(); // start on the statewide numbers instead of a pre-selected county
 }).catch(err=>{
   document.getElementById('loading').style.display='none';
   document.getElementById('mapwrap').innerHTML='<div class="err"><b>Couldn\'t load county shapes.</b><br>The outlines load from a CDN (jsDelivr), so an internet connection is needed the first time you open this. The demographic data itself is embedded in the file.<br><br>'+err+'</div>';
