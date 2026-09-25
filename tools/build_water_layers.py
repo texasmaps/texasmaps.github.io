@@ -373,8 +373,8 @@ def build_precip(root, workdir, mask, res, cols, rows):
     p=os.path.join(workdir,'prism_normal_800m.zip'); fetch(PRISM_NORMAL_800,p); t=open_zip_tif(p)
     acc=[[0.0]*cols for _ in range(rows)]; cnt=[[0]*cols for _ in range(rows)]
     for lon,lat,v in t.block(LON0,LAT1,LON1,LAT0):
-        c=int((lon-LON0)/res); r=int((LAT1-lat)/res)
-        if 0<=c<cols and 0<=r<rows: acc[r][c]+=v; cnt[r][c]+=1
+        k=cell(lon,lat,res,cols,rows)
+        if k: acc[k[0]][k[1]]+=v; cnt[k[0]][k[1]]+=1
     grid=[[0]*cols for _ in range(rows)]; miss=0
     for r in range(rows):
         for c in range(cols):
@@ -443,8 +443,8 @@ def build_wells(workdir, res, cols, rows):
     grid=[[0]*cols for _ in range(rows)]; n=0
     for pt in w['shapes']:
         if not pt: continue
-        c=int((pt[0]-LON0)/res); r=int((LAT1-pt[1])/res)
-        if 0<=c<cols and 0<=r<rows: grid[r][c]+=1; n+=1
+        k=cell(pt[0],pt[1],res,cols,rows)
+        if k: grid[k[0]][k[1]]+=1; n+=1
     print('wells:',n,'in grid')
     return grid,n
 
@@ -461,15 +461,25 @@ def sdr_rows(workdir):
         if not use: continue
         try: lat=float(r[idx['CoordDDLat']]); lon=float(r[idx['CoordDDLong']])
         except ValueError: continue
+        if not in_box(lon,lat): continue   # keep the county table and the grid on the same set of wells
         yield d,use,lon,lat,r[idx['County']].strip()
 
 def build_newwells(workdir, res, cols, rows):
     grid=[[0]*cols for _ in range(rows)]; n=0; uses=collections.Counter(); through=''
     for d,use,lon,lat,_ in sdr_rows(workdir):
-        c=int((lon-LON0)/res); r=int((LAT1-lat)/res)
-        if 0<=c<cols and 0<=r<rows: grid[r][c]+=1; n+=1; uses[use]+=1; through=max(through,d[:10])
+        k=cell(lon,lat,res,cols,rows)
+        if k: grid[k[0]][k[1]]+=1; n+=1; uses[use]+=1; through=max(through,d[:10])
     print('new wells since',NEWWELL_SINCE,':',n,'| through',through,'| by use',uses.most_common())
     return grid,n,dict(uses),through
+
+EDGE=0.01   # degrees: points this close outside the box (coordinate noise on the state line) are clamped into the edge cell
+def in_box(lon,lat): return LON0-EDGE<=lon<LON1+EDGE and LAT0-EDGE<lat<=LAT1+EDGE
+def cell(lon,lat,res,cols,rows):
+    """grid cell for a point, or None when it is outside the box (int() truncates toward zero, so never rely on it for bounds)"""
+    if not in_box(lon,lat): return None
+    lon=min(max(lon,LON0),LON1-1e-9); lat=min(max(lat,LAT0+1e-9),LAT1)
+    c=int((lon-LON0)/res); r=int((LAT1-lat)/res)
+    return (r,c) if 0<=c<cols and 0<=r<rows else None
 
 def grid_obj(grid,res,cols,rows,**extra):
     o={'res':res,'cols':cols,'rows':rows,'west':LON0,'north':LAT1}; o.update(extra); o['d']=rle([v for row in grid for v in row]); return o
