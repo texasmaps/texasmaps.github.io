@@ -510,7 +510,7 @@ function waterLegend(){const L=$('wlegend');let h='';
   if(wstate.minor)h+='<b class="wb">Minor aquifers (TWDB)</b><div class="r"><i class="misw"></i>22 minor aquifers — hover or zoom in for names</div>';
   if(wstate.base&&WATER){const ramp=RAMP[wstate.base][isDark()?'dark':'light'];h+=`<b class="wb">${BINTITLE[wstate.base]}</b>`+BINLBL[wstate.base].map((l,i)=>`<div class="r"><i class="ramp" style="background:${ramp[i]}"></i>${l}</div>`).join('');}
   L.innerHTML=h;}
-function waterHash(){const t=[];if(wstate.major)t.push('aquifers');if(wstate.minor)t.push('minor');if(wstate.base)t.push(wstate.base);try{history.replaceState(null,'',location.pathname+location.search+(t.length?'#water='+t.join(','):''));}catch(e){}}
+function waterHash(){const t=[];if(wstate.major)t.push('aquifers');if(wstate.minor)t.push('minor');if(wstate.base)t.push(wstate.base);const keep=(location.hash||'').replace(/^#/,'').split('&').filter(x=>x&&!/^water=/.test(x));if(t.length)keep.push('water='+t.join(','));try{history.replaceState(null,'',location.pathname+location.search+(keep.length?'#'+keep.join('&'):''));}catch(e){}}
 function waterFromHash(){const m=/water=([^&]+)/.exec(decodeURIComponent(location.hash||''));if(!m)return false;const t=m[1].split(',');wstate.major=t.includes('aquifers')||t.includes('aq')||t.includes('major');wstate.minor=t.includes('minor');wstate.base=(t.includes('precip')||t.includes('rain'))?'precip':t.includes('wells')?'wells':'';return true;}
 function waterSync(){$('lyr-aqmajor').checked=wstate.major;$('lyr-aqminor').checked=wstate.minor;$('base-sel').value=WATER?wstate.base:'';}
 function waterUpdate(){
@@ -524,6 +524,7 @@ function waterTipAt(e){if(!wstate.major&&!wstate.minor&&!wstate.base)return '';c
   if(wstate.major)p.push(w.ma.length?w.ma.map(a=>esc(a.n)).join(' + ')+' aquifer':'no major aquifer here');if(wstate.minor&&w.mi.length)p.push(w.mi.map(a=>esc(a.n)).join(', ')+' (minor)');if(wstate.base==='precip'&&w.rain)p.push(w.rain+' in/yr rain');if(wstate.base==='wells')p.push(w.wells+' well'+(w.wells===1?'':'s')+' in this cell');return p.length?`<small>${p.join(' · ')}</small>`:'';}
 function waterSection(s){if(!AQ.major.length)return '';const prec=s.precision==='site'?'the reported site':s.precision==='city'?'the city-center pin (exact parcel not published)':'the county-center pin (only the county is known)';
   return `<div class="sec">Water context (TWDB)</div><dl class="kv"><dt>Major aquifer${s.aqMs.length>1?'s':''}</dt><dd>${s.aqMs.length?esc(s.aqMs.join(' + '))+(s.aqMs.length>1?' <span class="empty">(stacked)</span>':''):'<span class="empty">none mapped at this point</span>'}</dd><dt>Minor aquifer</dt><dd>${s.aqm.length?esc(s.aqm.join(', ')):'<span class="empty">none</span>'}</dd>${WATER?`<dt>Rainfall</dt><dd>${s.rain?s.rain+' in/yr average (1981–2010)':'—'}</dd><dt>Wells nearby</dt><dd>${s.wells10.toLocaleString()} TWDB-recorded wells within ~6 mi</dd>`:''}</dl><div class="precision">Read at ${prec}. Aquifer outlines, NRCS rainfall and well records from Texas Water Development Board GIS data; a well count says nothing about volumes pumped.</div><div class="actions"><a href="#" id="wshow">Show aquifers on map</a></div>`;}
+function siteFromHash(){const m=/(?:^|[#&])site=([^&]+)/.exec(location.hash||'');if(!m)return;const id=decodeURIComponent(m[1]);if(byId[id]&&selId!==id)select(id,true);}
 function waterInit(){
   if(!AQ.major.length){$('water-layers').style.display='none';return;}
   if(!WATER)$('base-sel').style.display='none';
@@ -533,7 +534,7 @@ function waterInit(){
   $('base-sel').onchange=e=>{wstate.base=e.target.value;waterUpdate();};
   const af=$('aq-filter');af.innerHTML='<option value="">All sites (any aquifer)</option>'+AQ.major.map(a=>`<option value="${esc(a.n)}">On ${esc(a.n)} · ${SITES.filter(s=>s.kind!=='facility'&&s.aqMs.includes(a.n)).length} projects</option>`).join('')+`<option value="_none">Not over a major aquifer · ${SITES.filter(s=>s.kind!=='facility'&&!s.aqMs.length).length} projects</option>`;
   af.onchange=e=>{state.aq=e.target.value;if(state.aq&&!wstate.major){wstate.major=true;waterSync();}waterUpdate();render();};
-  window.addEventListener('hashchange',()=>{if(waterFromHash()){waterSync();waterUpdate();}});
+  window.addEventListener('hashchange',()=>{if(waterFromHash()){waterSync();waterUpdate();}siteFromHash();});
   try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{for(const k in rasterCache)delete rasterCache[k];waterUpdate();});}catch(e){}
   waterUpdate();
 }
@@ -548,7 +549,7 @@ function closeAside(){if(window.innerWidth<=800)aside.classList.remove('open');}
 const proj=SITES.filter(s=>s.kind!=='facility');
 $('s-total').textContent=SITES.length;$('s-op').textContent=SITES.filter(s=>s.status==='operating').length;$('s-uc').textContent=SITES.filter(s=>s.status==='under_construction').length;$('s-pr').textContent=SITES.filter(s=>s.status==='proposed').length;$('s-hot').textContent=SITES.filter(s=>s.hot).length;
 $('s-gw').textContent=(proj.filter(s=>s.status!=='withdrawn').reduce((a,s)=>a+(s.mw||0),0)/1000).toFixed(0);
-waterInit();fit();render();
+waterInit();fit();render();siteFromHash();
 </script>
 
 </body>
