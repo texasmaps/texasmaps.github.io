@@ -64,9 +64,10 @@ const RAMP={precip:{light:['#cde2fb','#9ec5f4','#6da7ec','#3987e5','#256abf','#1
 const BINS={precip:[12,20,28,36,48],wells:[3,6,11,21,41],newwells:[3,6,11,21,41],recent:[50,70,90,110,130,150]};
 const BINLBL={precip:['under 12','12–20','20–28','28–36','36–48','48 and up'],wells:['1–2','3–5','6–10','11–20','21–40','41 and up'],newwells:['1–2','3–5','6–10','11–20','21–40','41 and up'],
               recent:['under half the usual rain (below 50%)','much drier: 50–70% of usual','drier: 70–90%','about usual: 90–110%','wetter: 110–130%','much wetter: 130–150%','over 1.5× the usual rain']};
-const BASEOPT={precip:'Average yearly rainfall',recent:'Last 12 months vs. average',wells:'All recorded wells',newwells:'Water wells drilled since 2020'};
-const BASEGROUP={precip:'Rainfall',recent:'Rainfall',wells:'Groundwater wells',newwells:'Groundwater wells'};
-function baseCaption(k){const g=(WATER&&WATER[k])||{};return k==='precip'?`Average rain per year, ${g.label?g.label.replace('PRISM ',''):'1991–2020'} (PRISM)`:k==='recent'?`Rain in ${g.label||'the last 12 months'} as a share of the ${g.normal||'1991–2020'} average. Orange = drier than usual, blue = wetter.`:k==='wells'?'TWDB-recorded wells per ~10 square miles':k==='newwells'?`Water-supply wells drilled since ${(g.since||'2020').slice(0,4)} per ~10 square miles (driller's reports)`:'';}
+const BASEOPT={aquifers:'Major aquifers',precip:'Average yearly rainfall',recent:'Last 12 months vs. average',wells:'All recorded wells',newwells:'Water wells drilled since 2020'};
+const BASEGROUP={aquifers:'Aquifers',precip:'Rainfall',recent:'Rainfall',wells:'Groundwater wells',newwells:'Groundwater wells'};
+const hasBase=k=>k==='aquifers'?AQ.major.length>0:!!(WATER&&WATER[k]);
+function baseCaption(k){const g=(WATER&&WATER[k])||{};return k==='aquifers'?'The nine major aquifers mapped by TWDB, one color each. Where two stack, a site lists both.':k==='precip'?`Average rain per year, ${g.label?g.label.replace('PRISM ',''):'1991–2020'} (PRISM)`:k==='recent'?`Rain in ${g.label||'the last 12 months'} as a share of the ${g.normal||'1991–2020'} average. Orange = drier than usual, blue = wetter.`:k==='wells'?'TWDB-recorded wells per ~10 square miles':k==='newwells'?`Water-supply wells drilled since ${(g.since||'2020').slice(0,4)} per ~10 square miles (driller's reports)`:'';}
 function binTitle(k){const g=(WATER&&WATER[k])||{};return k==='precip'?`Average yearly rainfall, inches (${g.label||'normal'})`:k==='recent'?`Rain, ${g.label||'last 12 months'}, compared with the ${g.normal||'1991–2020'} average`:k==='wells'?'Recorded wells per ~10 sq mi':`Water wells drilled since ${(g.since||'2020').slice(0,4)}, per ~10 sq mi`;}
 const BINTITLE={get precip(){return binTitle('precip');},get recent(){return binTitle('recent');},get wells(){return binTitle('wells');},get newwells(){return binTitle('newwells');}};
 function binOf(v,b){let i=0;while(i<b.length&&v>=b[i])i++;return i;}
@@ -97,7 +98,7 @@ function apply(){view.setAttribute('transform',`translate(${tx} ${ty}) scale(${s
   gP.querySelectorAll('.pin').forEach(p=>p.setAttribute('r',rad(byId[p.dataset.id])*Math.sqrt(k)));
   gL.style.display=sc>2.2?'':'none';gL.querySelectorAll('text').forEach(t=>t.setAttribute('font-size',9*k*1.3));
   gAqL.querySelectorAll('text').forEach(t=>{t.setAttribute('font-size',(t.dataset.k==='major'?11:8.5)*k*1.25);t.setAttribute('stroke-width',3*k);if(t.dataset.k==='minor')t.style.opacity=sc>1.6?1:0;});
-  gSWL.querySelectorAll('text').forEach(t=>{const kind=t.dataset.k;t.setAttribute('font-size',(kind==='basin'?10.5:kind==='river'?9.5:8.5)*k*1.25);t.setAttribute('stroke-width',(kind==='basin'?3:2.5)*k);t.style.opacity=kind==='basin'?((t.dataset.coastal==='1'&&sc<=1.5)?0:1):kind==='river'?(sc>1.3?1:0):(sc>1.8?1:0);});
+  gSWL.querySelectorAll('text').forEach(t=>{const kind=t.dataset.k;t.setAttribute('font-size',(kind==='basin'?10.5:kind==='river'?9.5:8.5)*k*1.25);t.setAttribute('stroke-width',(kind==='basin'?3:2.5)*k);t.style.opacity=kind==='basin'?((t.dataset.coastal==='1'&&sc<=1.5)||(state.base==='aquifers'&&sc<=1.3)?0:1):kind==='river'?(sc>1.3?1:0):(sc>1.8?1:0);});
   ['hatch-mi','hatch-aq'].forEach(id=>$(id).setAttribute('patternTransform','rotate(45) scale('+k+')'));}
 function fit(){const r=svg.getBoundingClientRect();sc=Math.min(r.width/W,r.height/H)*.96;tx=(r.width-W*sc)/2;ty=(r.height-H*sc)/2;apply();}
 function zoomTo(bx,by,bw,bh){const r=svg.getBoundingClientRect();sc=Math.min(r.width/(bw*1.6),r.height/(bh*1.6),40);tx=r.width/2-(bx+bw/2)*sc;ty=r.height/2-(by+bh/2)*sc;apply();}
@@ -111,12 +112,13 @@ Object.assign(WM,{fit,zoomTo,zoomAt,
 
 WM.init=function(c){
   cfg=Object.assign({major:false,minor:false,base:'',pins:true,colo:false,rivers:false,basins:false,controls:['pins','colo','major','rivers','basins','base'],baseChoices:null,onSite:null,onCounty:null,onAquifer:null,onBackground:null,legendNote:''},c);
-  if(!cfg.baseChoices)cfg.baseChoices=Object.keys(BASEOPT).filter(k=>WATER&&WATER[k]);
-  Object.assign(state,{major:cfg.major,minor:cfg.minor,base:WATER?cfg.base:'',pins:cfg.pins,colo:cfg.colo,rivers:!!SW&&cfg.rivers,basins:!!SW&&cfg.basins});
+  if(!cfg.baseChoices)cfg.baseChoices=Object.keys(BASEOPT).filter(hasBase);
+  Object.assign(state,{major:false,minor:cfg.minor,base:hasBase(cfg.base)?cfg.base:'',pins:cfg.pins,colo:cfg.colo,rivers:!!SW&&cfg.rivers,basins:!!SW&&cfg.basins});
+  if(cfg.major&&!state.base)state.base='aquifers';   // legacy config: 'major aquifers on' means shade by aquifers
   // shareable links work the same on every page: #shade=precip|recent|wells|newwells|none and #layers=major,minor
   const hh=decodeURIComponent(location.hash||'').replace(/^#/,'');let hm;
-  if((hm=/(?:^|&)shade=([a-z]+)/.exec(hh))){const k={rain:'precip',precip:'precip',normal:'precip',recent:'recent',wells:'wells',new:'newwells',newwells:'newwells',none:''}[hm[1]];if(k!==undefined&&(k===''||(WATER&&WATER[k])))state.base=k;}
-  if((hm=/(?:^|&)layers=([a-z,]*)/.exec(hh))){const L=hm[1].split(',');state.major=L.includes('major')||L.includes('aquifers');state.minor=L.includes('minor');state.rivers=!!SW&&L.includes('rivers');state.basins=!!SW&&L.includes('basins');}
+  if((hm=/(?:^|&)shade=([a-z]+)/.exec(hh))){const k={aquifers:'aquifers',aq:'aquifers',rain:'precip',precip:'precip',normal:'precip',recent:'recent',wells:'wells',new:'newwells',newwells:'newwells',none:''}[hm[1]];if(k!==undefined&&(k===''||hasBase(k)))state.base=k;}
+  if((hm=/(?:^|&)layers=([a-z,]*)/.exec(hh))){const L=hm[1].split(',');if((L.includes('major')||L.includes('aquifers'))&&!/shade=/.test(hh))state.base='aquifers';state.minor=L.includes('minor');state.rivers=!!SW&&L.includes('rivers');state.basins=!!SW&&L.includes('basins');}
   svg=$('map');tip=$('tip');
   // overlays panel lives on the map (collapsed by default on phones); an old sidebar #layers container is retired
   const oldL=$('layers');if(oldL)oldL.remove();
@@ -179,22 +181,22 @@ function showTip(e){const t=e.target;const r=svg.getBoundingClientRect();
 function buildControls(){const L=$('layers');if(!L)return;const parts=[];
   if(cfg.controls.includes('pins'))parts.push(`<label><input type="checkbox" id="c-pins"${state.pins?' checked':''}> Data center sites</label>`);
   if(cfg.controls.includes('colo'))parts.push(`<label><input type="checkbox" id="c-colo"${state.colo?' checked':''}> Colocation facilities</label>`);
-  if(cfg.controls.includes('major'))parts.push(`<label><input type="checkbox" id="c-major"${state.major?' checked':''}> Aquifers (major)</label>`);
-  if(cfg.controls.includes('minor'))parts.push(`<label><input type="checkbox" id="c-minor"${state.minor?' checked':''}> Minor aquifers</label>`);
+    if(cfg.controls.includes('minor'))parts.push(`<label><input type="checkbox" id="c-minor"${state.minor?' checked':''}> Minor aquifers</label>`);
   if(cfg.controls.includes('rivers')&&SW)parts.push(`<label><input type="checkbox" id="c-rivers"${state.rivers?' checked':''}> Rivers &amp; reservoirs</label>`);
   if(cfg.controls.includes('basins')&&SW)parts.push(`<label><input type="checkbox" id="c-basins"${state.basins?' checked':''}> River basins</label>`);
-  if(cfg.controls.includes('base')&&WATER){const groups=[...new Set(cfg.baseChoices.filter(k=>WATER[k]).map(k=>BASEGROUP[k]))];
-    parts.push(`<label class="lsel" for="c-base">Shade the map by</label><select id="c-base" aria-label="Shade the map by"><option value="">Nothing (plain map)</option>${groups.map(gname=>`<optgroup label="${gname}">${cfg.baseChoices.filter(k=>WATER[k]&&BASEGROUP[k]===gname).map(k=>`<option value="${k}"${state.base===k?' selected':''}>${BASEOPT[k]}</option>`).join('')}</optgroup>`).join('')}</select><div class="lcap" id="c-cap">${baseCaption(state.base)}</div>`);}
+  if(cfg.controls.includes('base')){const groups=[...new Set(cfg.baseChoices.filter(hasBase).map(k=>BASEGROUP[k]))];
+    parts.push(`<label class="lsel" for="c-base">Shade the map by (one at a time)</label><select id="c-base" aria-label="Shade the map by"><option value="">Nothing (plain map)</option>${groups.map(gname=>`<optgroup label="${gname}">${cfg.baseChoices.filter(k=>hasBase(k)&&BASEGROUP[k]===gname).map(k=>`<option value="${k}"${state.base===k?' selected':''}>${BASEOPT[k]}</option>`).join('')}</optgroup>`).join('')}</select><div class="lcap" id="c-cap">${baseCaption(state.base)}</div>`);}
   L.innerHTML=parts.join('');
   const on=(id,fn)=>{const el=$(id);if(el)el.onchange=e=>{fn(e.target);WM.update();};};
   on('c-pins',el=>state.pins=el.checked);on('c-colo',el=>state.colo=el.checked);on('c-major',el=>state.major=el.checked);on('c-minor',el=>state.minor=el.checked);on('c-rivers',el=>state.rivers=el.checked);on('c-basins',el=>state.basins=el.checked);on('c-base',el=>{state.base=el.value;const cap=$('c-cap');if(cap)cap.textContent=baseCaption(state.base);});}
 WM.update=function(){
+  state.major=state.base==='aquifers';
   gAqMa.style.display=state.major?'':'none';gAqMi.style.display=state.minor?'':'none';
   gAqL.querySelectorAll('text').forEach(t=>t.style.display=(t.dataset.k==='major'?state.major:state.minor)?'':'none');
   gBas.style.display=state.basins?'':'none';gRes.style.display=state.rivers?'':'none';gRiv.style.display=state.rivers?'':'none';gSWL.querySelectorAll('text').forEach(t=>t.style.display=(t.dataset.k==='basin'?state.basins:state.rivers)?'':'none');
-  if(state.base&&WATER){const g=WATER[state.base];const [ix,iy]=px(g.west,g.north);gWR.setAttribute('x',ix);gWR.setAttribute('y',iy);gWR.setAttribute('width',g.cols*g.res*K*100);gWR.setAttribute('height',g.rows*g.res*100);gWR.setAttribute('href',rasterURL(state.base));gWR.style.display='';svg.classList.add('base-on');}
+  if(state.base&&WATER&&WATER[state.base]){const g=WATER[state.base];const [ix,iy]=px(g.west,g.north);gWR.setAttribute('x',ix);gWR.setAttribute('y',iy);gWR.setAttribute('width',g.cols*g.res*K*100);gWR.setAttribute('height',g.rows*g.res*100);gWR.setAttribute('href',rasterURL(state.base));gWR.style.display='';svg.classList.add('base-on');}
   else{gWR.style.display='none';svg.classList.remove('base-on');}
-  document.body.classList.toggle('shaded',!!(state.base&&WATER));
+  document.body.classList.toggle('shaded',!!state.base);
   SITES.forEach(s=>s.el.classList.toggle('dim',!visible(s)));
   gAqMa.classList.toggle('has-hl',!!state.hlAq&&AQ.major.some(a=>a.n===state.hlAq));gAqMi.classList.toggle('has-hl',!!state.hlAq&&AQ.minor.some(a=>a.n===state.hlAq));
   AQ.major.concat(AQ.minor).forEach(a=>a.el.classList.toggle('hl',a.n===state.hlAq));
@@ -207,7 +209,7 @@ WM.setFilter=fn=>{state.filter=fn;WM.update();};
 WM.highlightAquifer=n=>{state.hlAq=n;WM.update();};
 WM.highlightCounty=f=>{state.hlCounty=f;WM.update();};
 WM.select=id=>{state.selId=id;WM.update();};
-WM.setLayers=o=>{Object.assign(state,o);buildControls();WM.update();};
+WM.setLayers=o=>{if(o.major!==undefined){o.base=o.major?'aquifers':(state.base==='aquifers'?'':state.base);delete o.major;}Object.assign(state,o);buildControls();WM.update();};
 WM.collapseAfter=n=>{const sideEl=$('side');if(!sideEl)return;const blks=[...sideEl.querySelectorAll('.blk')];blks.forEach((b,i)=>{if(i>=n)b.classList.add('closed');});
   if(blks.length>n){const bar=document.createElement('div');bar.className='secbar';const btn=document.createElement('button');btn.type='button';const sync=()=>{const anyClosed=blks.some(b=>b.classList.contains('closed'));btn.textContent=anyClosed?`Show all ${blks.length} sections ▾`:'Collapse sections ▴';};
     btn.onclick=()=>{const anyClosed=blks.some(b=>b.classList.contains('closed'));blks.forEach((b,i)=>b.classList.toggle('closed',anyClosed?false:i>=n));sync();};bar.appendChild(btn);blks[0].parentElement.insertBefore(bar,blks[0]);sideEl.addEventListener('click',e=>{if(e.target.closest('.blk>h3'))setTimeout(sync,0);});sync();}};
@@ -217,7 +219,7 @@ function legend(){const L=$('legend');if(!L)return;let h='';
   if(state.minor)h+='<b>Minor aquifers (TWDB)</b><div class="r"><i class="misw"></i>22 minor aquifers — hover or zoom in for names</div>';
   if(state.rivers&&SW)h+='<b>Rivers &amp; reservoirs (TWDB)</b><div class="r"><i class="rivsw"></i>Major river · hover for its name</div><div class="r"><i class="ressw"></i>Major reservoir (lake) · names appear as you zoom</div>';
   if(state.basins&&SW)h+='<b>River basins (TWDB)</b><div class="r"><i class="bassw"></i>Basin boundary · all the land that drains to that river</div>';
-  if(state.base&&WATER){const rg=ramp(state.base);h+=`<b>${binTitle(state.base)}</b>`+BINLBL[state.base].map((l,i)=>`<div class="r"><i class="ramp" style="background:${rg[i]}"></i>${l}</div>`).join('');}
+  if(state.base&&WATER&&WATER[state.base]){const rg=ramp(state.base);h+=`<b>${binTitle(state.base)}</b>`+BINLBL[state.base].map((l,i)=>`<div class="r"><i class="ramp" style="background:${rg[i]}"></i>${l}</div>`).join('');}
   if(cfg.legendNote)h+=`<div class="foot">${cfg.legendNote}</div>`;
   L.innerHTML=`<button class="lgt" type="button" aria-label="Show or hide the legend">Legend ▾</button><div class="lgbody">${h}</div>`;
   L.querySelector('.lgt').onclick=()=>L.classList.toggle('open');}

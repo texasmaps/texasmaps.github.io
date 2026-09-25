@@ -18,7 +18,7 @@
   <div class="stats" id="stats"></div>
 </header>
 <aside>
-  <div class="intro">Which aquifers sit under the data center boom. Click an aquifer on the map or in the list to isolate it and see its sites; click a site for its water context. Use <b>Map overlays</b> on the map to add rivers and reservoirs, river basins, rainfall or wells; click a section title below to open or close it.</div>
+  <div class="intro">Which aquifers sit under the data center boom. Click an aquifer on the map or in the list to isolate it and see its sites; click a site for its water context. The map is shaded by aquifer; <b>Map overlays</b> can switch the shading to rainfall or wells (one at a time) and add rivers and reservoirs or river basins.</div>
   <div class="side" id="side"></div>
 </aside>
 <main>
@@ -60,8 +60,7 @@ function showAquifer(name){
   if(name==='_none')return showNone();
   const x=byName[name];if(!x)return;
   ctx={mode:'aquifer',name};
-  if(x.kind==='minor'&&!WM.state.minor)WM.setLayers({minor:true});
-  if(x.kind==='major'&&!WM.state.major)WM.setLayers({major:true});
+  if(WM.state.base!=='aquifers')WM.setLayers({base:'aquifers'});
   WM.highlightCounty(null);WM.select(null);WM.highlightAquifer(name);
   WM.setFilter(s=>x.kind==='major'?s.aqMs.includes(name):s.aqm.includes(name));
   WM.zoomAquifer(name);
@@ -100,7 +99,7 @@ function showCounty(f){
 function back(){ctx={mode:'list'};WM.highlightAquifer(null);WM.highlightCounty(null);WM.setFilter(null);WM.select(null);WM.fit();renderList();setHash('');}
 side.addEventListener('click',e=>{const r=e.target.closest('.row[data-aq],.row[data-site]');if(!r)return;if(r.dataset.aq)showAquifer(r.dataset.aq);else showSite(WM.byId[r.dataset.site]);WM.closeAside();});
 side.addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('.row[data-aq],.row[data-site]');if(r)r.click();}});
-WM.init({major:true,minor:false,pins:true,colo:false,controls:['pins','colo','major','rivers','basins','base'],
+WM.init({base:'aquifers',minor:false,pins:true,colo:false,controls:['pins','colo','rivers','basins','base'],
   onSite:showSite,onCounty:showCounty,onAquifer:showAquifer,onBackground:()=>{if(ctx.mode!=='list')back();},
   legendNote:'Aquifer outlines are generalized to ~900 m. Where TWDB polygons stack, a site lists all of them.'});
 renderList();

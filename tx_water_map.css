@@ -137,9 +137,9 @@ svg.base-on .pin{stroke-width:2}
 /* when a shading is on, pins switch to colors that stand out on every shade */
 body.shaded{--op:#F7F4EE;--uc:#FFD23F;--pr:#FF4FA3;--wd:#B8B8B8}
 :root[data-theme="light"] body.shaded{--op:#1B1F27;--uc:#B8860B;--pr:#C2185B;--wd:#6B6B6B}
-svg.base-on .pin{stroke:#15171C;stroke-width:1.6}
-svg.base-on .pin.hot{stroke:var(--hot);stroke-width:2.6}
-svg.base-on .pin.sel{stroke:#FFFFFF;stroke-width:3}
+svg.base-on .pin,body.shaded .pin{stroke:#15171C;stroke-width:1.6}
+svg.base-on .pin.hot,body.shaded .pin.hot{stroke:var(--hot);stroke-width:2.6}
+svg.base-on .pin.sel,body.shaded .pin.sel{stroke:#FFFFFF;stroke-width:3}
 body.shaded .legend .r i.ring{background:var(--paper2);box-shadow:0 0 0 2.5px var(--hot)}
 .ctrl button{width:32px;height:32px;border:1px solid var(--rule);background:var(--paper2);border-radius:6px;cursor:pointer;font-size:16px;box-shadow:var(--shadow)}
 .legend{position:absolute;left:12px;bottom:12px;background:var(--paper2);border:1px solid var(--rule);border-radius:8px;padding:10px 12px;font-size:11px;box-shadow:var(--shadow);max-width:240px;max-height:calc(100vh - 140px);overflow:auto}
