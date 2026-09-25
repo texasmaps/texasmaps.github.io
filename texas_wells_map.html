@@ -54,14 +54,14 @@ function renderList(){
   const nwRank=NW?Object.keys(CW.counties).sort((a,b)=>CW.counties[b].nw-CW.counties[a].nw).slice(0,10):[];
   const nwRow=(f,i)=>{const c=CW.counties[f],n=(byCounty[f]||[]).length,tu=topUse(c.nwu);return `<div class="row" data-county="${f}" tabindex="0"><span class="v" style="text-align:left">${i+1}</span><div><div class="n">${esc(c.n)} County</div><div class="m">${n?n+' project'+(n===1?'':'s'):'no projects'}${tu?' · mostly '+tu.toLowerCase():''}</div></div><span class="v"><b>${num(c.nw)}</b><br>since 2020</span></div>`;};
   const newest=NW?P.slice().sort((a,b)=>b.newwells10-a.newwells10).slice(0,10):[];
-  side.innerHTML=`${NW?`<div class="blk"><h3>Water wells drilled since 2020 <small>${num(NW.total)} statewide, by use</small></h3>${WM.useBars(NW.uses,NW.total)}</div>
-    <div class="blk"><h3>Counties by wells drilled since 2020 <small>top 10 of 254</small></h3>${nwRank.map(nwRow).join('')}</div>
-    <div class="blk"><h3>Projects with the most new wells nearby <small>drilled since 2020, within ~6 mi</small></h3>${newest.map(s=>WM.siteRow(s,`<b>${num(s.newwells10)}</b><br>new wells`)).join('')}</div>`:''}
-    <div class="blk"><h3>All recorded wells by primary use <small>statewide</small></h3>${WM.useBars(CW.use,CW.total)}</div>
-    <div class="blk"><h3>Counties by recorded wells <small>top 10 of 254</small></h3>${countyRank.slice(0,10).map(countyRow).join('')}</div>
-    <div class="blk"><h3>Projects in the most well-dense areas <small>recorded wells within ~6 mi</small></h3>${densest.slice(0,10).map(s=>WM.siteRow(s,`<b>${num(s.wells10)}</b><br>wells`)).join('')}</div>
+  side.innerHTML=`${NW?`<div class="blk"><h3>Most new wells near a project <small>drilled since 2020 · within ~6 mi</small></h3>${newest.map(s=>WM.siteRow(s,`<b>${num(s.newwells10)}</b><br>new wells`)).join('')}</div>
+    <div class="blk"><h3>Counties drilling the most <small>since 2020 · top 10</small></h3>${nwRank.map(nwRow).join('')}</div>
+    <div class="blk"><h3>New wells by use <small>${num(NW.total)} since 2020</small></h3>${WM.useBars(NW.uses,NW.total)}</div>`:''}
+    <div class="blk"><h3>Most recorded wells near a project <small>within ~6 mi</small></h3>${densest.slice(0,10).map(s=>WM.siteRow(s,`<b>${num(s.wells10)}</b><br>wells`)).join('')}</div>
+    <div class="blk"><h3>Counties with the most recorded wells <small>top 10</small></h3>${countyRank.slice(0,10).map(countyRow).join('')}</div>
+    <div class="blk"><h3>Recorded wells by use <small>${num(CW.total)} statewide</small></h3>${WM.useBars(CW.use,CW.total)}</div>
     <div class="note">"Recorded wells" are the TWDB Groundwater Database (updated nightly; this copy ${esc(CW.generated||'')}), not every well ever drilled. "Drilled since 2020" counts new and replacement water-supply wells in TWDB's Submitted Driller's Reports${NW?' through '+esc(NW.through):''}, excluding monitoring wells, soil borings and test, injection or geothermal holes. Neither is a measure of pumping. "Unused" includes plugged wells. Counts exclude colocation facilities and withdrawn projects. Sites: Texas Data Center Watch.</div>`;
-  WM.collapseAfter(1);
+  WM.collapseAfter(2);
 }
 function setHash(h){try{history.replaceState(null,'',location.pathname+location.search+(h?'#'+h:''));}catch(e){}}
 function showCounty(f){
@@ -70,8 +70,8 @@ function showCounty(f){
   const rank=countyRank.indexOf(f)+1;
   side.innerHTML=`<div class="detail"><button class="back" id="back">← Back to list</button><h2>${esc(WM.cname[f])} County</h2><div class="sub">${num(c.w)} TWDB-recorded wells${rank?' · #'+rank+' of 254 counties':''}${c.r?' · '+c.r+' in/yr average rainfall':''}</div>
     <dl class="kv">${NW?`<dt>Drilled since 2020</dt><dd>${num(c.nw||0)} water wells${c.nw?' · #'+(Object.keys(CW.counties).sort((a,b)=>CW.counties[b].nw-CW.counties[a].nw).indexOf(f)+1)+' of 254':''}</dd>`:''}<dt>Projects</dt><dd>${sites.length}${sites.length?' · '+fmtMW(sumMW(sites))+' announced':''}</dd></dl></div>
-    ${NW?`<div class="blk"><h3>Drilled since 2020, by use <small>${esc(WM.cname[f])} County</small></h3>${WM.useBars(c.nwu||{},c.nw||0)}</div>`:''}
-    <div class="blk"><h3>All recorded wells by use <small>${esc(WM.cname[f])} County</small></h3>${WM.useBars(c.u,c.w)}</div>
+    ${NW?`<div class="blk"><h3>New wells by use <small>${esc(WM.cname[f])} County · since 2020</small></h3>${WM.useBars(c.nwu||{},c.nw||0)}</div>`:''}
+    <div class="blk"><h3>Recorded wells by use <small>${esc(WM.cname[f])} County</small></h3>${WM.useBars(c.u,c.w)}</div>
     <div class="blk"><h3>Sites in ${esc(WM.cname[f])} County <small>most wells nearby first</small></h3>${sites.length?sites.map(s=>WM.siteRow(s,`<b>${num(s.wells10)}</b><br>wells ≤6 mi${NW?'<br>'+num(s.newwells10)+' new':''}`)).join(''):'<div class="empty">No data center projects listed here.</div>'}</div>`;
   $('back').onclick=back;setHash('county='+f);
 }
