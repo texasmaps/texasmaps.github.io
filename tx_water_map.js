@@ -89,8 +89,8 @@ COUNTIES.features.forEach(f=>{let d='',sx=0,sy=0,n=0,x0=1e9,y0=1e9,x1=-1e9,y1=-1
 Object.assign(WM,{cname,ccent,cbbox});
 
 // ---------- map ----------
-let svg,view,gC,gL,gWR,gAqMi,gAqMa,gAqL,gP,gBas,gRes,gRiv,gSWL,tip,cfg,tx=0,ty=0,sc=1,drag=null;
-const state={major:false,minor:false,base:'',pins:true,colo:false,rivers:false,basins:false,filter:null,hlAq:null,hlCounty:null,selId:null};WM.state=state;
+let svg,view,gC,gL,gWR,gAqMi,gAqMa,gAqLn,gAqL,gP,gBas,gRes,gRiv,gSWL,tip,cfg,tx=0,ty=0,sc=1,drag=null;
+const state={major:false,minor:false,base:'',pins:true,colo:false,rivers:false,basins:false,aqlines:false,filter:null,hlAq:null,hlCounty:null,selId:null};WM.state=state;
 const rad=s=>s.kind==='facility'?2.6:(s.mw?Math.max(4,Math.min(13,2.5+Math.sqrt(s.mw)/6)):4.5);
 function visible(s){return state.pins&&(state.colo||s.kind!=='facility')&&s.status!=='withdrawn'&&(!state.filter||state.filter(s));}
 WM.visible=visible;
@@ -111,14 +111,14 @@ Object.assign(WM,{fit,zoomTo,zoomAt,
   zoomSite:s=>{const [x,y]=px(s.lon,s.lat);zoomTo(x-25,y-25,50,50);}});
 
 WM.init=function(c){
-  cfg=Object.assign({major:false,minor:false,base:'',pins:true,colo:false,rivers:false,basins:false,controls:['pins','colo','major','rivers','basins','base'],baseChoices:null,onSite:null,onCounty:null,onAquifer:null,onBackground:null,legendNote:''},c);
+  cfg=Object.assign({major:false,minor:false,base:'',pins:true,colo:false,rivers:false,basins:false,aqlines:false,controls:['pins','colo','aqlines','rivers','basins','base'],baseChoices:null,onSite:null,onCounty:null,onAquifer:null,onBackground:null,legendNote:''},c);
   if(!cfg.baseChoices)cfg.baseChoices=Object.keys(BASEOPT).filter(hasBase);
-  Object.assign(state,{major:false,minor:cfg.minor,base:hasBase(cfg.base)?cfg.base:'',pins:cfg.pins,colo:cfg.colo,rivers:!!SW&&cfg.rivers,basins:!!SW&&cfg.basins});
+  Object.assign(state,{major:false,minor:cfg.minor,base:hasBase(cfg.base)?cfg.base:'',pins:cfg.pins,colo:cfg.colo,rivers:!!SW&&cfg.rivers,basins:!!SW&&cfg.basins,aqlines:!!cfg.aqlines});
   if(cfg.major&&!state.base)state.base='aquifers';   // legacy config: 'major aquifers on' means shade by aquifers
   // shareable links work the same on every page: #shade=precip|recent|wells|newwells|none and #layers=major,minor
   const hh=decodeURIComponent(location.hash||'').replace(/^#/,'');let hm;
   if((hm=/(?:^|&)shade=([a-z]+)/.exec(hh))){const k={aquifers:'aquifers',aq:'aquifers',rain:'precip',precip:'precip',normal:'precip',recent:'recent',wells:'wells',new:'newwells',newwells:'newwells',none:''}[hm[1]];if(k!==undefined&&(k===''||hasBase(k)))state.base=k;}
-  if((hm=/(?:^|&)layers=([a-z,]*)/.exec(hh))){const L=hm[1].split(',');if((L.includes('major')||L.includes('aquifers'))&&!/shade=/.test(hh))state.base='aquifers';state.minor=L.includes('minor');state.rivers=!!SW&&L.includes('rivers');state.basins=!!SW&&L.includes('basins');}
+  if((hm=/(?:^|&)layers=([a-z,]*)/.exec(hh))){const L=hm[1].split(',');if((L.includes('major')||L.includes('aquifers'))&&!/shade=/.test(hh))state.base='aquifers';state.minor=L.includes('minor');state.rivers=!!SW&&L.includes('rivers');state.basins=!!SW&&L.includes('basins');state.aqlines=L.includes('outlines')||L.includes('aqlines');}
   svg=$('map');tip=$('tip');
   // overlays panel lives on the map (collapsed by default on phones); an old sidebar #layers container is retired
   const oldL=$('layers');if(oldL)oldL.remove();
@@ -126,8 +126,8 @@ WM.init=function(c){
   lp.innerHTML='<button class="lpt" type="button">Map overlays <span class="chev">▾</span></button><div class="lbody" id="layers"></div>';
   svg.parentElement.appendChild(lp);lp.querySelector('.lpt').onclick=()=>lp.classList.toggle('closed');
   const sideEl=$('side');if(sideEl)sideEl.addEventListener('click',e=>{const h=e.target.closest('.blk>h3');if(h)h.parentElement.classList.toggle('closed');});
-  svg.innerHTML='<defs><pattern id="hatch-mi" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5"/></pattern><pattern id="hatch-aq" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5"/></pattern></defs><g id="view"><image id="wraster" preserveAspectRatio="none" style="display:none"></image><g id="counties"></g><g id="aq-minor"></g><g id="aq-major"></g><g id="basins"></g><g id="reservoirs"></g><g id="rivers"></g><g id="clabels"></g><g id="aq-labels"></g><g id="sw-labels"></g><g id="pins"></g></g>';
-  view=$('view');gC=$('counties');gL=$('clabels');gWR=$('wraster');gAqMi=$('aq-minor');gAqMa=$('aq-major');gAqL=$('aq-labels');gP=$('pins');gBas=$('basins');gRes=$('reservoirs');gRiv=$('rivers');gSWL=$('sw-labels');
+  svg.innerHTML='<defs><pattern id="hatch-mi" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5"/></pattern><pattern id="hatch-aq" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5"/></pattern></defs><g id="view"><image id="wraster" preserveAspectRatio="none" style="display:none"></image><g id="counties"></g><g id="aq-minor"></g><g id="aq-major"></g><g id="aq-lines"></g><g id="basins"></g><g id="reservoirs"></g><g id="rivers"></g><g id="clabels"></g><g id="aq-labels"></g><g id="sw-labels"></g><g id="pins"></g></g>';
+  view=$('view');gC=$('counties');gL=$('clabels');gWR=$('wraster');gAqMi=$('aq-minor');gAqMa=$('aq-major');gAqLn=$('aq-lines');gAqL=$('aq-labels');gP=$('pins');gBas=$('basins');gRes=$('reservoirs');gRiv=$('rivers');gSWL=$('sw-labels');
   if(SW){
     const linesPath=ls=>{let d='';ls.forEach(l=>l.forEach((p,i)=>{d+=(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1);}));return d;};
     SW.basins.forEach(b=>{const p=svgEl('path');p.setAttribute('d',ringsPath(b.rings));p.setAttribute('class','basin');p.dataset.n=b.n;gBas.appendChild(p);
@@ -143,6 +143,11 @@ WM.init=function(c){
     if(k==='major'){p.style.fill=a.n==='Seymour'?'url(#hatch-aq)':`var(${AQVAR[a.n]})`;p.style.stroke=`var(${AQVAR[a.n]})`;}
     a.el=p;g.appendChild(p);
     const t=svgEl('text');t.setAttribute('class','aqlabel '+(k==='major'?'ma':'mi'));const [lx,ly]=px(a.c[0],a.c[1]);t.setAttribute('x',lx);t.setAttribute('y',ly);t.textContent=a.n;t.dataset.k=k;a.label=t;gAqL.appendChild(t);}));
+  // outline set: only rings covering roughly 500 sq km or more (about 400 projected units), so the overlay stays clean; the fill view keeps every pod
+  const ringArea=r=>{let s=0;for(let i=0,j=r.length-1;i<r.length;j=i++){const [x0,y0]=px(r[j][0],r[j][1]),[x1,y1]=px(r[i][0],r[i][1]);s+=x0*y1-x1*y0;}return Math.abs(s)/2;};
+  AQ.major.forEach(a=>{const big=a.rings.filter(r=>ringArea(r)>=400);if(!big.length)return;const d=ringsPath(big);
+    const c=svgEl('path');c.setAttribute('d',d);c.setAttribute('class','aqline-case');gAqLn.appendChild(c);
+    const p=svgEl('path');p.setAttribute('d',d);p.setAttribute('class','aqline');p.style.stroke=`var(${AQVAR[a.n]})`;p.dataset.n=a.n;gAqLn.appendChild(p);});
   SITES.forEach(s=>{const [x,y]=px(s.lon,s.lat);const c=svgEl('circle');c.setAttribute('cx',x);c.setAttribute('cy',y);c.setAttribute('r',rad(s));c.setAttribute('fill',COL[s.status]||'#888');c.setAttribute('class','pin'+(s.hot?' hot':''));c.dataset.id=s.id;s.el=c;gP.appendChild(c);});
   [...gP.querySelectorAll('.pin.hot')].forEach(e=>gP.appendChild(e));
   // interaction
@@ -207,10 +212,10 @@ function click(e,t){
   if(t.classList.contains('county')){if(cfg.onCounty)cfg.onCounty(t.dataset.fips);return;}
   if(cfg.onBackground)cfg.onBackground();
 }
-function siteTip(s){const p=[];if(state.major)p.push(s.aqMs.length?s.aqMs.map(esc).join(' + ')+' aquifer':'no major aquifer');if(state.rivers&&s.river)p.push(esc(s.river.n)+' '+mi(s.river.km)+' mi');if(state.basins&&s.basin)p.push(esc(s.basin)+' basin');if(WATER){p.push(state.base==='recent'?(s.recent?s.recent+'% of usual rain, last 12 mo':''):(s.rain?s.rain+' in/yr rain':''));p.push(state.base==='newwells'?num(s.newwells10)+' wells drilled since 2020 within 6 mi':num(s.wells10)+' wells within 6 mi');}
+function siteTip(s){const p=[];if(state.major||state.aqlines)p.push(s.aqMs.length?s.aqMs.map(esc).join(' + ')+' aquifer':'no major aquifer');if(state.rivers&&s.river)p.push(esc(s.river.n)+' '+mi(s.river.km)+' mi');if(state.basins&&s.basin)p.push(esc(s.basin)+' basin');if(WATER){p.push(state.base==='recent'?(s.recent?s.recent+'% of usual rain, last 12 mo':''):(s.rain?s.rain+' in/yr rain':''));p.push(state.base==='newwells'?num(s.newwells10)+' wells drilled since 2020 within 6 mi':num(s.wells10)+' wells within 6 mi');}
   return `<b>${esc(s.name)}</b><small>${esc(s.operator||'')} · ${LBL[s.status]}${s.mw?' · '+fmtMW(s.mw):''}</small><small>${esc(s.city||'')}, ${esc(s.county)} County</small><small>${p.filter(Boolean).join(' · ')}</small>`;}
 function countyTip(f,e){const c=CW.counties[f]||{};const n=SITES.filter(s=>s.fips===f&&visible(s)).length;const [lon,lat]=cursorLonLat(e);const w=waterAt(lon,lat);const p=[];
-  if(state.major)p.push(w.ma.length?w.ma.map(a=>esc(a.n)).join(' + ')+' aquifer':'no major aquifer here');
+  if(state.major||state.aqlines)p.push(w.ma.length?w.ma.map(a=>esc(a.n)).join(' + ')+' aquifer':'no major aquifer here');
   if(state.rivers&&SW){const [X,Y]=px(lon,lat);const rs=nearestReservoir(X,Y,lon,lat,0.01);if(rs&&rs.km===0)p.push(esc(rs.n)+' · '+Math.round(rs.r.a*0.3861)+' sq mi'+(rs.r.t==='supply'?' · water supply':''));const rv=nearestRiver(X,Y,8/sc);if(rv)p.push(esc(rv.n));}
   if(state.basins&&SW){const b=basinOf(lon,lat);if(b)p.push(esc(b.n)+' River Basin');}
   if(state.base==='precip'&&w.rain)p.push(w.rain+' in/yr here');if(state.base==='recent'&&w.recent)p.push(w.recent+'% of usual rain here, last 12 mo');if(state.base==='wells')p.push(w.wells+' well'+(w.wells===1?'':'s')+' in this cell');if(state.base==='newwells')p.push(w.newwells+' well'+(w.newwells===1?'':'s')+' drilled since 2020 in this cell');
@@ -224,17 +229,19 @@ function buildControls(){const L=$('layers');if(!L)return;const parts=[];
   if(cfg.controls.includes('pins'))parts.push(`<label><input type="checkbox" id="c-pins"${state.pins?' checked':''}> Data center sites</label>`);
   if(cfg.controls.includes('colo'))parts.push(`<label><input type="checkbox" id="c-colo"${state.colo?' checked':''}> Small colocation sites</label>`);
     if(cfg.controls.includes('minor'))parts.push(`<label><input type="checkbox" id="c-minor"${state.minor?' checked':''}> Minor aquifers</label>`);
+  if(cfg.controls.includes('aqlines')&&AQ.major.length)parts.push(`<label id="l-aqlines"><input type="checkbox" id="c-aqlines"${state.aqlines?' checked':''}> Aquifer outlines</label>`);
   if(cfg.controls.includes('rivers')&&SW)parts.push(`<label><input type="checkbox" id="c-rivers"${state.rivers?' checked':''}> Rivers &amp; lakes</label>`);
   if(cfg.controls.includes('basins')&&SW)parts.push(`<label><input type="checkbox" id="c-basins"${state.basins?' checked':''}> River basins</label>`);
   if(cfg.controls.includes('base')){const groups=[...new Set(cfg.baseChoices.filter(hasBase).map(k=>BASEGROUP[k]))];
     parts.push(`<label class="lsel" for="c-base">Color the map by</label><select id="c-base" aria-label="Shade the map by"><option value="">Nothing (plain map)</option>${groups.map(gname=>`<optgroup label="${gname}">${cfg.baseChoices.filter(k=>hasBase(k)&&BASEGROUP[k]===gname).map(k=>`<option value="${k}"${state.base===k?' selected':''}>${BASEOPT[k]}</option>`).join('')}</optgroup>`).join('')}</select><div class="lcap" id="c-cap">${baseCaption(state.base)}</div>`);}
   L.innerHTML=parts.join('');
   const on=(id,fn)=>{const el=$(id);if(el)el.onchange=e=>{fn(e.target);WM.update();};};
-  on('c-pins',el=>state.pins=el.checked);on('c-colo',el=>state.colo=el.checked);on('c-major',el=>state.major=el.checked);on('c-minor',el=>state.minor=el.checked);on('c-rivers',el=>state.rivers=el.checked);on('c-basins',el=>state.basins=el.checked);on('c-base',el=>{state.base=el.value;const cap=$('c-cap');if(cap)cap.textContent=baseCaption(state.base);});}
+  on('c-pins',el=>state.pins=el.checked);on('c-colo',el=>state.colo=el.checked);on('c-major',el=>state.major=el.checked);on('c-minor',el=>state.minor=el.checked);on('c-aqlines',el=>state.aqlines=el.checked);on('c-rivers',el=>state.rivers=el.checked);on('c-basins',el=>state.basins=el.checked);on('c-base',el=>{state.base=el.value;const cap=$('c-cap');if(cap)cap.textContent=baseCaption(state.base);});}
 WM.update=function(){
-  state.major=state.base==='aquifers';
-  gAqMa.style.display=state.major?'':'none';gAqMi.style.display=state.minor?'':'none';
-  gAqL.querySelectorAll('text').forEach(t=>t.style.display=(t.dataset.k==='major'?state.major:state.minor)?'':'none');
+  state.major=state.base==='aquifers';const lines=state.aqlines&&!state.major;
+  gAqMa.style.display=state.major?'':'none';gAqLn.style.display=lines?'':'none';gAqMi.style.display=state.minor?'':'none';
+  const la=$('l-aqlines');if(la)la.style.display=state.major?'none':'';
+  gAqL.querySelectorAll('text').forEach(t=>t.style.display=(t.dataset.k==='major'?(state.major||lines):state.minor)?'':'none');
   gBas.style.display=state.basins?'':'none';gRes.style.display=state.rivers?'':'none';gRiv.style.display=state.rivers?'':'none';gSWL.querySelectorAll('text').forEach(t=>t.style.display=(t.dataset.k==='basin'?state.basins:state.rivers)?'':'none');
   if(state.base&&WATER&&WATER[state.base]){const g=WATER[state.base];const [ix,iy]=px(g.west,g.north);gWR.setAttribute('x',ix);gWR.setAttribute('y',iy);gWR.setAttribute('width',g.cols*g.res*K*100);gWR.setAttribute('height',g.rows*g.res*100);gWR.setAttribute('href',rasterURL(state.base));gWR.style.display='';svg.classList.add('base-on');}
   else{gWR.style.display='none';svg.classList.remove('base-on');}
@@ -258,6 +265,7 @@ WM.collapseAfter=n=>{const sideEl=$('side');if(!sideEl)return;const blks=[...sid
 function legend(){const L=$('legend');if(!L)return;let h='';
   if(state.pins)h+='<b>Data center sites</b>'+['operating','under_construction','proposed'].map(k=>`<div class="r"><i style="background:${COL[k]}"></i>${LBL[k]}</div>`).join('')+'<div class="r"><i class="ring"></i>Red ring: local opposition or a lawsuit</div><div class="foot">Bigger dots are bigger projects (announced power).</div>';
   if(state.major)h+='<b>Major aquifers (TWDB)</b>'+AQ.major.map(a=>`<div class="r"><i class="aqsw${a.n==='Seymour'?' hsw':''}" style="--c:var(${AQVAR[a.n]})"></i>${esc(a.n)}</div>`).join('');
+  else if(state.aqlines)h+='<b>Aquifer outlines</b>'+AQ.major.map(a=>`<div class="r"><i class="aqsw ol" style="--c:var(${AQVAR[a.n]})"></i>${esc(a.n)}</div>`).join('');
   if(state.minor)h+='<b>Minor aquifers (TWDB)</b><div class="r"><i class="misw"></i>22 minor aquifers — hover or zoom in for names</div>';
   if(state.rivers&&SW)h+='<b>Rivers &amp; lakes</b><div class="r"><i class="rivsw"></i>Major river (hover for its name)</div><div class="r"><i class="ressw"></i>Major lake (names appear as you zoom in)</div>';
   if(state.basins&&SW)h+='<b>River basins</b><div class="r"><i class="bassw"></i>Basin boundary: all the land that drains to that river</div>';
