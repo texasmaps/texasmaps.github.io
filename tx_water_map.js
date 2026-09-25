@@ -44,7 +44,7 @@ const RAMP={precip:{light:['#cde2fb','#9ec5f4','#6da7ec','#3987e5','#256abf','#1
 const BINS={precip:[12,20,28,36,48],wells:[3,6,11,21,41],newwells:[3,6,11,21,41],recent:[50,70,90,110,130,150]};
 const BINLBL={precip:['under 12','12–20','20–28','28–36','36–48','48 and up'],wells:['1–2','3–5','6–10','11–20','21–40','41 and up'],newwells:['1–2','3–5','6–10','11–20','21–40','41 and up'],
               recent:['under 50% of normal','50–70%','70–90%','90–110% · near normal','110–130%','130–150%','over 150% of normal']};
-const BASEOPT={precip:'Shade: avg. annual rainfall',recent:'Shade: last 12 months vs. normal',wells:'Shade: all recorded wells',newwells:'Shade: water wells drilled since 2020'};
+const BASEOPT={precip:'Rainfall: average annual (normal)',recent:'Rainfall: last 12 months vs. normal',wells:'Wells: all recorded',newwells:'Wells: drilled since 2020'};
 function binTitle(k){const g=(WATER&&WATER[k])||{};return k==='precip'?`Avg. annual rainfall, inches/yr (${g.label||'normal'})`:k==='recent'?`Rainfall ${g.label||'last 12 months'} as % of the ${g.normal||'1991–2020'} normal`:k==='wells'?'TWDB-recorded wells per ~10 sq mi cell':`Water-supply wells drilled since ${(g.since||'2020').slice(0,4)} per ~10 sq mi cell`;}
 const BINTITLE={get precip(){return binTitle('precip');},get recent(){return binTitle('recent');},get wells(){return binTitle('wells');},get newwells(){return binTitle('newwells');}};
 function binOf(v,b){let i=0;while(i<b.length&&v>=b[i])i++;return i;}
@@ -90,6 +90,10 @@ WM.init=function(c){
   cfg=Object.assign({major:false,minor:false,base:'',pins:true,colo:false,controls:['pins','colo','major','minor','base'],baseChoices:null,onSite:null,onCounty:null,onAquifer:null,onBackground:null,legendNote:''},c);
   if(!cfg.baseChoices)cfg.baseChoices=Object.keys(BASEOPT).filter(k=>WATER&&WATER[k]);
   Object.assign(state,{major:cfg.major,minor:cfg.minor,base:WATER?cfg.base:'',pins:cfg.pins,colo:cfg.colo});
+  // shareable links work the same on every page: #shade=precip|recent|wells|newwells|none and #layers=major,minor
+  const hh=decodeURIComponent(location.hash||'').replace(/^#/,'');let hm;
+  if((hm=/(?:^|&)shade=([a-z]+)/.exec(hh))){const k={rain:'precip',precip:'precip',normal:'precip',recent:'recent',wells:'wells',new:'newwells',newwells:'newwells',none:''}[hm[1]];if(k!==undefined&&(k===''||(WATER&&WATER[k])))state.base=k;}
+  if((hm=/(?:^|&)layers=([a-z,]*)/.exec(hh))){const L=hm[1].split(',');state.major=L.includes('major')||L.includes('aquifers');state.minor=L.includes('minor');}
   svg=$('map');tip=$('tip');
   svg.innerHTML='<defs><pattern id="hatch-mi" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5"/></pattern><pattern id="hatch-aq" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5"/></pattern></defs><g id="view"><image id="wraster" preserveAspectRatio="none" style="display:none"></image><g id="counties"></g><g id="aq-minor"></g><g id="aq-major"></g><g id="clabels"></g><g id="aq-labels"></g><g id="pins"></g></g>';
   view=$('view');gC=$('counties');gL=$('clabels');gWR=$('wraster');gAqMi=$('aq-minor');gAqMa=$('aq-major');gAqL=$('aq-labels');gP=$('pins');
@@ -137,7 +141,7 @@ function buildControls(){const L=$('layers');if(!L)return;const parts=[];
   if(cfg.controls.includes('colo'))parts.push(`<label><input type="checkbox" id="c-colo"${state.colo?' checked':''}> Colocation facilities</label>`);
   if(cfg.controls.includes('major'))parts.push(`<label><input type="checkbox" id="c-major"${state.major?' checked':''}> Major aquifers</label>`);
   if(cfg.controls.includes('minor'))parts.push(`<label><input type="checkbox" id="c-minor"${state.minor?' checked':''}> Minor aquifers</label>`);
-  if(cfg.controls.includes('base')&&WATER)parts.push(`<select id="c-base" aria-label="Base shading"><option value="">No base shading</option>${cfg.baseChoices.filter(k=>WATER[k]).map(k=>`<option value="${k}"${state.base===k?' selected':''}>${BASEOPT[k]}</option>`).join('')}</select>`);
+  if(cfg.controls.includes('base')&&WATER)parts.push(`<select id="c-base" aria-label="Base shading"><option value="">Shading: none</option>${cfg.baseChoices.filter(k=>WATER[k]).map(k=>`<option value="${k}"${state.base===k?' selected':''}>${BASEOPT[k]}</option>`).join('')}</select>`);
   L.innerHTML=parts.join('');
   const on=(id,fn)=>{const el=$(id);if(el)el.onchange=e=>{fn(e.target);WM.update();};};
   on('c-pins',el=>state.pins=el.checked);on('c-colo',el=>state.colo=el.checked);on('c-major',el=>state.major=el.checked);on('c-minor',el=>state.minor=el.checked);on('c-base',el=>state.base=el.value);}

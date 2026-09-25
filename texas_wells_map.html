@@ -18,7 +18,7 @@
   <div class="stats" id="stats"></div>
 </header>
 <aside>
-  <div class="intro">Where the data center boom meets well country. Shade by all TWDB-recorded wells, or by water wells drilled since 2020 from driller's reports, per ~10 square miles. Click a county for its wells by use, or a site for the wells around it.</div>
+  <div class="intro">Where the data center boom meets well country. Shade by all TWDB-recorded wells, or by water wells drilled since 2020 from driller's reports, per ~10 square miles; the same menu can shade by rainfall, and the checkboxes add aquifers. Click a county for its wells by use, or a site for the wells around it.</div>
   <div class="layers" id="layers"></div>
   <div class="side" id="side"></div>
 </aside>
@@ -84,12 +84,11 @@ function showSite(s){
 function back(){ctx={mode:'list'};WM.highlightCounty(null);WM.setFilter(null);WM.select(null);WM.fit();renderList();setHash('');}
 side.addEventListener('click',e=>{const r=e.target.closest('.row[data-site],.row[data-county]');if(!r)return;if(r.dataset.county)showCounty(r.dataset.county);else showSite(WM.byId[r.dataset.site]);WM.closeAside();});
 side.addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('.row');if(r)r.click();}});
-WM.init({major:false,minor:false,base:'wells',pins:true,colo:false,controls:['pins','colo','major','minor','base'],baseChoices:['wells','newwells'],
+WM.init({major:false,minor:false,base:'wells',pins:true,colo:false,controls:['pins','colo','major','minor','base'],
   onSite:showSite,onCounty:showCounty,onAquifer:null,onBackground:()=>{if(ctx.mode!=='list')back();},
   legendNote:'TWDB Groundwater Database well locations, or water-supply wells drilled since 2020 from TWDB driller\'s reports, counted per 0.05° cell (about 10 square miles).'});
 renderList();
 (function(){const h=decodeURIComponent(location.hash||'').replace(/^#/,'');let m;
-  if(/(?:^|&)shade=new/.test(h)&&NW)WM.setLayers({base:'newwells'});
   if((m=/(?:^|&)site=([^&]+)/.exec(h))&&WM.byId[m[1]])showSite(WM.byId[m[1]]);
   else if((m=/(?:^|&)county=(\d+)/.exec(h))&&WM.cname[m[1]])showCounty(m[1]);})();
 </script>

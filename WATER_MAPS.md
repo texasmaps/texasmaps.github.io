@@ -5,10 +5,12 @@ Three standalone maps that put the data center sites on Texas Water Development 
 | Page | Shows | Sidebar | Deep links |
 |---|---|---|---|
 | `texas_aquifers_map.html` | 9 major and 22 minor aquifers | aquifers ranked by projects, announced MW, contested sites; click one to isolate it | `#aq=<name>`, `#aq=none`, `#county=<fips>`, `#site=<id>` |
-| `texas_rainfall_map.html` | PRISM 1991–2020 average annual rainfall, or the last 12 months as a percent of that normal | projects by rainfall zone, driest sites (normal and last 12 months), driest counties with projects | `#zone=<0-5>`, `#shade=recent`, `#county=<fips>`, `#site=<id>` |
-| `texas_wells_map.html` | TWDB Groundwater Database well density, or water-supply wells drilled since 2020 (driller's reports) | wells by use (all recorded, and drilled since 2020), counties by well count, projects with the most wells within ~6 mi | `#shade=new`, `#county=<fips>`, `#site=<id>` |
+| `texas_rainfall_map.html` | PRISM 1991–2020 average annual rainfall, or the last 12 months as a percent of that normal | projects by rainfall zone, driest sites (normal and last 12 months), driest counties with projects | `#zone=<0-5>`, `#county=<fips>`, `#site=<id>` |
+| `texas_wells_map.html` | TWDB Groundwater Database well density, or water-supply wells drilled since 2020 (driller's reports) | wells by use (all recorded, and drilled since 2020), counties by well count, projects with the most wells within ~6 mi | `#county=<fips>`, `#site=<id>` |
 
-On every page: hover or click a county or a site for its water context (aquifers at the pin, rainfall, wells nearby). Pins use the Data Center Watch status colors.
+On every page the same layer controls are available: checkboxes for data center sites, colocation facilities, major aquifers and minor aquifers, and a shading menu with rainfall (average annual, or last 12 months vs. normal) and wells (all recorded, or drilled since 2020). So any page can show any combination; the pages differ in what their sidebar ranks and explains. Hover or click a county or a site for its water context. Pins use the Data Center Watch status colors.
+
+Links work the same everywhere: `#shade=precip|recent|wells|newwells|none` picks the shading and `#layers=major,minor` turns aquifer outlines on, combinable with the page's own links (e.g. `texas_wells_map.html#shade=recent&layers=major`).
 
 ## Files
 
