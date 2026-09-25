@@ -35,12 +35,16 @@ def lcc_inverse(x,y):
     for _ in range(8): phi=math.pi/2-2*math.atan(t*((1-E*math.sin(phi))/(1+E*math.sin(phi)))**(E/2))
     return lon,math.degrees(phi)
 
-def q(pts,tol,closed):
-    r=dp(pts,tol); out=[]
-    for x,y in r:
-        p=(round(x*Q),round(y*Q))
-        if not out or out[-1]!=p: out.append(p)
-    if closed and len(out)>=2 and out[0]==out[-1]: out.pop()
+def q(pts,tol,closed,retry=False):
+    """simplify + quantize; for a feature's main outline (retry=True) a degenerate result is retried with finer tolerances, then raw points"""
+    need=3 if closed else 2
+    for t in ((tol,tol/4,tol/20,0) if retry else (tol,)):
+        r=dp(pts,t) if t else pts; out=[]
+        for x,y in r:
+            p=(round(x*Q),round(y*Q))
+            if not out or out[-1]!=p: out.append(p)
+        if closed and len(out)>=2 and out[0]==out[-1]: out.pop()
+        if len(out)>=need: return out
     return out
 def area_km2(ring):  # ring in 1e-3 deg ints
     s=0
@@ -79,20 +83,32 @@ def build(workdir):
     d=next(iter(load_zip(os.path.join(workdir,RESERVOIRS)).values())); res=[]
     for s,r in zip(d['shapes'],d['recs']):
         if not s or not r: continue
-        rings=[]; best=None; besta=0
-        for ring in s:
-            ll=[lcc_inverse(x,y) for x,y in ring]; qq=q(ll,TOL_RES,True)
+        rings=[]; best=None; besta=0; area_m2=0
+        def raw_area(ring):
+            sa=0
+            for i in range(len(ring)):
+                x0,y0=ring[i]; x1,y1=ring[(i+1)%len(ring)]; sa+=x0*y1-x1*y0
+            return abs(sa)/2
+        main=max(range(len(s)),key=lambda i:raw_area(s[i]))
+        for ri,ring in enumerate(s):
+            # area from the original projected outline (metres, before simplification); LCC distortion is under 1% in Texas
+            sa=0
+            for i in range(len(ring)):
+                x0,y0=ring[i]; x1,y1=ring[(i+1)%len(ring)]; sa+=x0*y1-x1*y0
+            area_m2=max(area_m2,abs(sa)/2)
+            ll=[lcc_inverse(x,y) for x,y in ring]; qq=q(ll,TOL_RES,True,retry=(ri==main))
             if len(qq)<3: continue
             a=area_km2(qq); rings.append(qq)
             if a>besta: besta=a; best=qq
         if not rings: continue
-        res.append({'n':title(r['RES_NAME']),'t':'supply' if r['TYPE']=='Water Supply' else 'other','c':centroid(best),'a':round(sum(area_km2(x) for x in rings[:1]) if len(rings)==1 else besta,1),'r':[enc_ring(x) for x in rings]})
+        res.append({'n':title(r['RES_NAME']),'t':'supply' if r['TYPE']=='Water Supply' else 'other','c':centroid(best),'a':round(area_m2/1e6,1),'r':[enc_ring(x) for x in rings]})
     res.sort(key=lambda x:-x['a'])
     # basins
     d=next(iter(load_zip(os.path.join(workdir,BASINS)).values())); basins=[]
     for s,r in zip(d['shapes'],d['recs']):
         if not s or not r: continue
-        rings=[q(ring,TOL_BASIN,True) for ring in s]; rings=[x for x in rings if len(x)>=3]
+        main=max(range(len(s)),key=lambda i:abs(area_km2([(round(x*Q),round(y*Q)) for x,y in s[i]])))
+        rings=[q(ring,TOL_BASIN,True,retry=(i==main)) for i,ring in enumerate(s)]; rings=[x for x in rings if len(x)>=3]
         big=max(rings,key=area_km2); basins.append({'n':r['basin_name'].strip(),'c':centroid(big),'r':[enc_ring(x) for x in rings]})
     basins.sort(key=lambda b:b['n'])
     return rivers,res,basins
@@ -102,7 +118,7 @@ if __name__=='__main__':
     os.makedirs(workdir,exist_ok=True); today=datetime.date.today().isoformat()
     rivers,res,basins=build(workdir)
     js=('// Surface water for the Texas water maps, built by tools/build_surface_water.py on %s. Source: Texas Water Development Board GIS data (https://www.twdb.texas.gov/mapping/gisdata.asp).\n'
-        '// rivers: Major Rivers (NHD 1:100k, 2009), %d named rivers, generalized to ~%g deg. reservoirs: Existing Reservoirs (2012 State Water Plan, Nov 2014), %d major reservoirs converted from the file\'s Lambert Conformal Conic projection to lat/lon, generalized to ~%g deg; t = "supply" (water supply) or "other"; a = area in sq km; c = label point. basins: Major River Basins (2014), %d basins, generalized to ~%g deg.\n'
+        '// rivers: Major Rivers (NHD 1:100k, 2009), %d named rivers, generalized to ~%g deg. reservoirs: Existing Reservoirs (2012 State Water Plan, Nov 2014), %d major reservoirs converted from the file\'s Lambert Conformal Conic projection to lat/lon, generalized to ~%g deg; t = "supply" (water supply) or "other"; a = area in sq km measured on TWDB\'s original outline; c = label point. basins: Major River Basins (2014), %d basins, generalized to ~%g deg.\n'
         '// Encoding of l (polylines) and r (rings): zigzag varint pairs (5-bit chunks, alphabet A-Za-z0-9+/, continuation bit 32) of delta lon,lat in 1/1000 degree, as in tx_aquifers.js.\n')%(today,len(rivers),TOL_RIVER,len(res),TOL_RES,len(basins),TOL_BASIN)
     js+='window.TX_SURFACE='+json.dumps({'rivers':rivers,'reservoirs':res,'basins':basins},separators=(',',':'),ensure_ascii=False)+';\n'
     open(os.path.join(ROOT,'tx_surface_water.js'),'w').write(js)
