@@ -1,9 +1,9 @@
 /* Shared styles for the standalone TWDB water maps (texas_aquifers_map.html, texas_rainfall_map.html, texas_wells_map.html).
    Same palette and layout family as texas_data_center_map.html. */
 :root{
-  --paper:#F7F4EE; --paper2:#FFFFFF; --ink:#1B1F27; --ink2:#4E535E; --ink3:#8A8F99; --rule:#DED7C9;
-  --maroon:#4A0404; --maroon2:#6E1A1A; --olive:#6B8E23; --tan:#D2B48C; --cream:#FFF4C7;
-  --water:#DCE6EC; --county:#FBFAF6; --county-line:#B9B2A4;
+  --paper:#F3F5F8; --paper2:#FFFFFF; --ink:#161B26; --ink2:#4A5060; --ink3:#7C8494; --rule:#E1E5EC;
+  --maroon:#4A0404; --maroon2:#6E1A1A; --olive:#6B8E23; --tan:#D2B48C; --cream:#EAF0F8;
+  --water:#E6EBF1; --county:#FFFFFF; --county-line:#C7CDD8;
   --op:#3B5B8C; --uc:#C8842A; --pr:#A3262A; --wd:#9A9A9A; --hot:#E0242E; --shadow:0 10px 30px rgba(27,31,39,.12);
   --aq-ogallala:#eda100; --aq-etp:#2a78d6; --aq-pecos:#1baf7a; --aq-trinity:#008300; --aq-ebfz:#e87ba4; --aq-cw:#4a3aa7; --aq-gc:#eb6834; --aq-hueco:#e34948;
   --river:#1E88A8; --river-case:#FFFFFF; --basin:#8A6D1F;
@@ -181,7 +181,15 @@ svg.base-on .pin{stroke-width:2}
 .lpanel .lcap{font-size:11px;color:var(--ink3);line-height:1.35}
 /* when a shading is on, pins switch to colors that stand out on every shade */
 body.shaded{--op:#F7F4EE;--uc:#FFD23F;--pr:#FF4FA3;--wd:#B8B8B8}
-:root[data-theme="light"] body.shaded{--op:#1B1F27;--uc:#B8860B;--pr:#C2185B;--wd:#6B6B6B}
+/* light theme + shading: operating = filled black, under construction = hollow (white with a dark ring), proposed = magenta */
+:root[data-theme="light"] body.shaded{--op:#161B26;--uc:#FFFFFF;--pr:#C2185B;--wd:#6B6B6B}
+:root[data-theme="light"] body.shaded .pin.st-under_construction:not(.hot){stroke:#161B26!important;stroke-width:1.8}
+:root[data-theme="light"] body.shaded .st-under_construction:not(.pin):not(.hot){box-shadow:0 0 0 1.5px #161B26}
+:root[data-theme="light"] svg.base-on .pin,:root[data-theme="light"] body.shaded .pin{stroke:#FFFFFF;stroke-width:1.8}
+:root[data-theme="light"] svg.base-on .pin.hot,:root[data-theme="light"] body.shaded .pin.hot{stroke:var(--hot);stroke-width:2.6}
+:root[data-theme="light"] svg.base-on .pin.sel,:root[data-theme="light"] body.shaded .pin.sel{stroke:#161B26;stroke-width:3}
+:root[data-theme="light"] .aqline-case{stroke:#FFFFFF}
+:root[data-theme="light"] .aqlabel,:root[data-theme="light"] .swlabel{stroke:#FFFFFF}
 svg.base-on .pin,body.shaded .pin{stroke:#15171C;stroke-width:1.6}
 svg.base-on .pin.hot,body.shaded .pin.hot{stroke:var(--hot);stroke-width:2.6}
 svg.base-on .pin.sel,body.shaded .pin.sel{stroke:#FFFFFF;stroke-width:3}
