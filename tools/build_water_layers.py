@@ -10,10 +10,10 @@ Sources (https://www.twdb.texas.gov/mapping/gisdata.asp):
   Texas Precipitation:  https://www.twdb.texas.gov/mapping/gisdata/doc/Precipitation_Shapefile.zip
   Well locations:       https://www.twdb.texas.gov/mapping/gisdata/doc/well/TWDB_Groundwater.zip (updated nightly)
 
-Usage:  python3 tools/build_water_layers.py [--workdir DIR]
+Usage:  python3 tools/build_water_layers.py [--workdir DIR]   (downloads are cached in the system temp dir)
 Pure Python 3 (no third-party packages). Downloads ~13 MB and runs for a minute or two.
 """
-import json, math, os, sys, struct, zipfile, collections, statistics, urllib.request, datetime
+import json, math, os, sys, struct, zipfile, collections, statistics, urllib.request, datetime, tempfile
 
 BASE='https://services.twdb.texas.gov/arcgis/rest/services/Base/BaseLayerQueryService/MapServer'
 PRECIP_URL='https://www.twdb.texas.gov/mapping/gisdata/doc/Precipitation_Shapefile.zip'
@@ -296,7 +296,7 @@ def build_aquifers(workdir, today):
 
 if __name__=='__main__':
     root=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    workdir=sys.argv[sys.argv.index('--workdir')+1] if '--workdir' in sys.argv else os.path.join(root,'_water_build')
+    workdir=sys.argv[sys.argv.index('--workdir')+1] if '--workdir' in sys.argv else os.path.join(tempfile.gettempdir(),'texasmaps_water_build')
     os.makedirs(workdir,exist_ok=True)
     today=datetime.date.today().isoformat()
     open(os.path.join(root,'tx_aquifers.js'),'w').write(build_aquifers(workdir,today))

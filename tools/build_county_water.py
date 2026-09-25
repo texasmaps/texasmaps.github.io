@@ -10,7 +10,8 @@ Run after tools/build_water_layers.py, or whenever texas_data_center_map.html's 
   python3 tools/build_county_water.py [--workdir DIR]
 Pure Python 3. Downloads the TWDB well shapefile (~7 MB) if it is not already in the work directory.
 """
-import json, os, re, sys, math, collections, datetime
+import json, os, re, sys, math, collections, datetime, tempfile
+sys.dont_write_bytecode=True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from build_water_layers import load_zip, fetch, WELLS_URL, ALPHA
 
@@ -54,7 +55,7 @@ def rasterize(polys, res, west, north, cols, rows):
 def norm(name): return re.sub(r'[^a-z]','',name.lower())
 
 def main():
-    workdir=sys.argv[sys.argv.index('--workdir')+1] if '--workdir' in sys.argv else os.path.join(ROOT,'_water_build')
+    workdir=sys.argv[sys.argv.index('--workdir')+1] if '--workdir' in sys.argv else os.path.join(tempfile.gettempdir(),'texasmaps_water_build')
     os.makedirs(workdir,exist_ok=True)
     today=datetime.date.today().isoformat()
     html=open(os.path.join(ROOT,'texas_data_center_map.html'),encoding='utf-8').read()

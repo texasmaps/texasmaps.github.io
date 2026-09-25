@@ -46,7 +46,7 @@ body.phone #launch{display:flex;flex:1}
   <header>
     <div class="row1">
       <h1>🗺 Texas County Maps</h1>
-      <span class="sub">Interactive maps · one workspace · 254 counties · Central Texas demographics & turnout · districts · data centers · water</span>
+      <span class="sub">Eight interactive maps · one workspace · 254 counties · Central Texas demographics & turnout · districts · data centers</span>
     </div>
     <nav id="tabs"></nav>
   </header>
@@ -65,12 +65,9 @@ body.phone #launch{display:flex;flex:1}
     {label:'Rural-Urban & SES',file:'texas_rural_ses_map.html',            color:'#d94801'},
     {label:'Elections',        file:'texas_elections_map.html',            color:'#cb181d'},
     {label:'Central Texas Deep Dive', file:'texas_central_deepdive.html',   color:'#0891b2'},
-    {label:'Data Center Watch', file:'texas_data_center_map.html',          color:'#4a0404'},
-    {label:'Aquifers & Data Centers', file:'texas_aquifers_map.html', color:'#1c5cab'},
-    {label:'Rainfall & Data Centers', file:'texas_rainfall_map.html', color:'#2a78d6'},
-    {label:'Wells & Data Centers', file:'texas_wells_map.html', color:'#c54e1c'}
+    {label:'Data Center Watch', file:'texas_data_center_map.html',          color:'#4a0404'}
   ];
-  const DESC={'tx_region_builder.html':'Regional campaign map · officials & candidates','tx_districts_map.html':'Congress, House, Senate, SBOE · county precincts · cities','texas_race_map.html':'Race & ethnicity by county · largest cities','texas_families_households_map.html':'Families & households','texas_rural_ses_map.html':'Rural–urban & socioeconomic','texas_elections_map.html':'2022 · 2024 · 2026 primary results','texas_central_deepdive.html':'30 Central TX counties · turnout trends · top-3 cities','texas_data_center_map.html':'Data center projects & opposition (large page)','texas_aquifers_map.html':'Which aquifers sit under the data center boom · TWDB major & minor aquifers','texas_rainfall_map.html':'Where the data center boom lands on the rainfall map · NRCS 1981–2010 via TWDB','texas_wells_map.html':'Where the data center boom meets well country · TWDB Groundwater Database'};
+  const DESC={'tx_region_builder.html':'Regional campaign map · officials & candidates','tx_districts_map.html':'Congress, House, Senate, SBOE · county precincts · cities','texas_race_map.html':'Race & ethnicity by county · largest cities','texas_families_households_map.html':'Families & households','texas_rural_ses_map.html':'Rural–urban & socioeconomic','texas_elections_map.html':'2022 · 2024 · 2026 primary results','texas_central_deepdive.html':'30 Central TX counties · turnout trends · top-3 cities','texas_data_center_map.html':'Data center projects & opposition (large page)'};
   const PHONE=window.matchMedia('(max-width:760px)').matches;
   if(PHONE){
     document.body.classList.add('phone');
@@ -83,14 +80,11 @@ body.phone #launch{display:flex;flex:1}
   const loading=document.getElementById('loading');
   let current=-1;
   function show(i){
-    if(i===current)return;
-    // same page, different #hash (the water views of the data center map): the iframe won't reload, so skip the loading veil
-    const same=current>=0&&MAPS[current].file.split('#')[0]===MAPS[i].file.split('#')[0];
-    current=i;
+    if(i===current)return;current=i;
     document.querySelectorAll('#tabs button').forEach((b,j)=>{
       const on=j===i;b.classList.toggle('active',on);b.style.background=on?MAPS[j].color:'#fff';
     });
-    if(!same)loading.classList.add('on');
+    loading.classList.add('on');
     frame.src=MAPS[i].file;
     // reflect selection in the URL hash so it can be shared/bookmarked
     history.replaceState(null,'','#'+encodeURIComponent(MAPS[i].file.replace('.html','')));
