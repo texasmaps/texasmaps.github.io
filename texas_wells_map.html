@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Texas Groundwater Wells & Data Centers</title>
+<meta name="description" content="Density of TWDB-recorded groundwater wells across Texas with data center sites from Texas Data Center Watch: which projects land in the most well-dependent country.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tx_water_map.css">
+</head>
+<body>
+<div class="app">
+<header>
+  <button id="menubtn" aria-label="Show the list">☰ List</button>
+  <h1>Texas <span>Groundwater Wells</span> &amp; Data Centers</h1>
+  <a class="allmaps" href="index.html">All maps</a>
+  <span class="src" id="src">TWDB Groundwater Database</span>
+  <div class="stats" id="stats"></div>
+</header>
+<aside>
+  <div class="intro">Where the data center boom meets well country. Shading counts TWDB-recorded wells per ~10 square miles. Click a county for its wells by use, or a site for the wells around it.</div>
+  <div class="layers" id="layers"></div>
+  <div class="side" id="side"></div>
+</aside>
+<main>
+  <svg id="map" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div class="ctrl"><button id="zin" title="Zoom in">+</button><button id="zout" title="Zoom out">−</button><button id="zfit" title="Reset view">⌂</button></div>
+  <div class="legend" id="legend"></div>
+  <div class="tip" id="tip"></div>
+</main>
+</div>
+<script src="tx_counties.js"></script>
+<script src="tx_dc_sites.js"></script>
+<script src="tx_aquifers.js"></script>
+<script src="tx_water_grid.js"></script>
+<script src="tx_county_water.js"></script>
+<script src="tx_water_map.js"></script>
+<script>
+const {esc,fmtMW,num,COL,LBL}=WM, $=id=>document.getElementById(id);
+const P=WM.projects, side=$('side'), CW=WM.cw;
+const sumMW=list=>Math.round(list.reduce((t,s)=>t+(s.mw||0),0));
+const byCounty={};P.forEach(s=>(byCounty[s.fips]=byCounty[s.fips]||[]).push(s));
+const w10=P.map(s=>s.wells10).sort((a,b)=>a-b), median=w10[Math.floor(w10.length/2)];
+const dense=P.filter(s=>s.wells10>=200);
+const countyRank=Object.entries(CW.counties).sort((a,b)=>b[1].w-a[1].w).map(([f])=>f);
+const topUse=u=>{const e=Object.entries(u||{}).filter(([k])=>k!=='Unknown'&&k!=='Unused').sort((a,b)=>b[1]-a[1])[0];return e?e[0]:null;};
+$('src').textContent='TWDB Groundwater Database · '+num(CW.total)+' wells';
+const stat=(v,l)=>`<div class="stat"><b>${v}</b><small>${l}</small></div>`;
+$('stats').innerHTML=stat(P.length,'projects')+stat(num(median),'median wells within 6 mi')+stat(dense.length,'projects with 200+ nearby');
+let ctx={mode:'list'};
+const countyRow=(f,i)=>{const c=CW.counties[f],n=(byCounty[f]||[]).length,tu=topUse(c.u);return `<div class="row" data-county="${f}" tabindex="0"><span class="v" style="text-align:left">${i+1}</span><div><div class="n">${esc(c.n)} County</div><div class="m">${n?n+' project'+(n===1?'':'s'):'no projects'}${tu?' · mostly '+tu.toLowerCase():''}</div></div><span class="v"><b>${num(c.w)}</b><br>wells</span></div>`;};
+function renderList(){
+  const densest=P.slice().sort((a,b)=>b.wells10-a.wells10).slice(0,12);
+  side.innerHTML=`<div class="blk"><h3>Wells by primary use <small>statewide</small></h3>${WM.useBars(CW.use,CW.total)}</div>
+    <div class="blk"><h3>Counties by well count <small>top 12 of 254</small></h3>${countyRank.slice(0,12).map(countyRow).join('')}</div>
+    <div class="blk"><h3>Projects in the most well-dense areas <small>wells within ~6 mi</small></h3>${densest.map(s=>WM.siteRow(s,`<b>${num(s.wells10)}</b><br>wells`)).join('')}</div>
+    <div class="note">Wells are records in the TWDB Groundwater Database (updated nightly by TWDB; this copy ${esc(CW.generated||'')}), not every well ever drilled and not a measure of pumping. "Unused" includes plugged wells. Counts exclude colocation facilities and withdrawn projects. Sites: Texas Data Center Watch.</div>`;
+}
+function setHash(h){try{history.replaceState(null,'',location.pathname+location.search+(h?'#'+h:''));}catch(e){}}
+function showCounty(f){
+  ctx={mode:'county',fips:f};WM.setFilter(null);WM.select(null);WM.highlightCounty(f);WM.zoomCounty(f);
+  const c=CW.counties[f]||{w:0,u:{}};const sites=(byCounty[f]||[]).slice().sort((a,b)=>b.wells10-a.wells10);
+  const rank=countyRank.indexOf(f)+1;
+  side.innerHTML=`<div class="detail"><button class="back" id="back">← Back to list</button><h2>${esc(WM.cname[f])} County</h2><div class="sub">${num(c.w)} TWDB-recorded wells${rank?' · #'+rank+' of 254 counties':''}${c.r?' · '+c.r+' in/yr average rainfall':''}</div>
+    <dl class="kv"><dt>Projects</dt><dd>${sites.length}${sites.length?' · '+fmtMW(sumMW(sites))+' announced':''}</dd></dl></div>
+    <div class="blk"><h3>Wells by primary use <small>${esc(WM.cname[f])} County</small></h3>${WM.useBars(c.u,c.w)}</div>
+    <div class="blk"><h3>Sites in ${esc(WM.cname[f])} County <small>most wells nearby first</small></h3>${sites.length?sites.map(s=>WM.siteRow(s,`<b>${num(s.wells10)}</b><br>wells ≤6 mi`)).join(''):'<div class="empty">No data center projects listed here.</div>'}</div>`;
+  $('back').onclick=back;setHash('county='+f);
+}
+function showSite(s){
+  WM.select(s.id);WM.zoomSite(s);
+  const c=CW.counties[s.fips]||{};
+  side.innerHTML=`<div class="detail" style="padding-bottom:0"><button class="back" id="back">← Back</button></div>`+WM.siteHTML(s,`<div class="note" style="padding:0 0 4px">${num(s.wellsCell)} well${s.wellsCell===1?'':'s'} in the pin's own ~10 sq mi cell; ${num(c.w)} in ${esc(s.county)} County${topUse(c.u)?', mostly '+topUse(c.u).toLowerCase():''}.</div>`);
+  $('back').onclick=()=>{WM.select(null);if(ctx.mode==='county')showCounty(ctx.fips);else back();};
+  setHash('site='+encodeURIComponent(s.id));
+}
+function back(){ctx={mode:'list'};WM.highlightCounty(null);WM.setFilter(null);WM.select(null);WM.fit();renderList();setHash('');}
+side.addEventListener('click',e=>{const r=e.target.closest('.row[data-site],.row[data-county]');if(!r)return;if(r.dataset.county)showCounty(r.dataset.county);else showSite(WM.byId[r.dataset.site]);WM.closeAside();});
+side.addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('.row');if(r)r.click();}});
+WM.init({major:false,minor:false,base:'wells',pins:true,colo:false,controls:['pins','colo','major','minor'],
+  onSite:showSite,onCounty:showCounty,onAquifer:null,onBackground:()=>{if(ctx.mode!=='list')back();},
+  legendNote:'TWDB Groundwater Database well locations counted per 0.05° cell (about 10 square miles).'});
+renderList();
+(function(){const h=decodeURIComponent(location.hash||'').replace(/^#/,'');let m;
+  if((m=/(?:^|&)site=([^&]+)/.exec(h))&&WM.byId[m[1]])showSite(WM.byId[m[1]]);
+  else if((m=/(?:^|&)county=(\d+)/.exec(h))&&WM.cname[m[1]])showCounty(m[1]);})();
+</script>
+</body>
+</html>
