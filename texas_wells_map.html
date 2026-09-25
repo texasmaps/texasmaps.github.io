@@ -6,7 +6,7 @@
 <title>Texas Groundwater Wells & Data Centers</title>
 <meta name="description" content="Density of TWDB-recorded groundwater wells across Texas, and water wells drilled since 2020, with data center sites from Texas Data Center Watch: which projects land in the most well-dependent country.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="tx_water_map.css?v=20260925-2">
+<link rel="stylesheet" href="tx_water_map.css?v=20260925-3">
 </head>
 <body>
 <div class="app">
@@ -27,13 +27,13 @@
   <div class="tip" id="tip"></div>
 </main>
 </div>
-<script src="tx_counties.js?v=20260925-2"></script>
-<script src="tx_dc_sites.js?v=20260925-2"></script>
-<script src="tx_aquifers.js?v=20260925-2"></script>
-<script src="tx_water_grid.js?v=20260925-2"></script>
-<script src="tx_county_water.js?v=20260925-2"></script>
-<script src="tx_surface_water.js?v=20260925-2"></script>
-<script src="tx_water_map.js?v=20260925-2"></script>
+<script src="tx_counties.js?v=20260925-3"></script>
+<script src="tx_dc_sites.js?v=20260925-3"></script>
+<script src="tx_aquifers.js?v=20260925-3"></script>
+<script src="tx_water_grid.js?v=20260925-3"></script>
+<script src="tx_county_water.js?v=20260925-3"></script>
+<script src="tx_surface_water.js?v=20260925-3"></script>
+<script src="tx_water_map.js?v=20260925-3"></script>
 <script>
 const {esc,fmtMW,num,COL,LBL}=WM, $=id=>document.getElementById(id);
 const P=WM.projects, side=$('side'), CW=WM.cw, NW=WM.water&&WM.water.newwells;
@@ -57,14 +57,14 @@ function renderList(){
       `<b>${esc(top.n)} County</b> leads with ${num(top.nw)} new wells${tu?', mostly '+tu.toLowerCase():''}.`,
       `A typical project has <b>${num(median)} recorded wells</b> within six miles. ${esc(best.name)} in ${esc(best.county)} County has ${num(best.newwells10)} new wells nearby.`);}
   facts.push(`<b>${dense.length} projects</b> sit in areas with 200 or more recorded wells nearby.`);
-  side.innerHTML=WM.glance(facts)+`${NW?`<div class="blk"><h3>Most new wells near a project <small>drilled since 2020 · within ~6 mi</small></h3>${newest.map(s=>WM.siteRow(s,`<b>${num(s.newwells10)}</b><br>new wells`)).join('')}</div>
+  side.innerHTML=WM.glance(facts)+WM.siteList()+`${NW?`<div class="blk"><h3>Most new wells near a project <small>drilled since 2020 · within ~6 mi</small></h3>${newest.map(s=>WM.siteRow(s,`<b>${num(s.newwells10)}</b><br>new wells`)).join('')}</div>
     <div class="blk"><h3>Counties drilling the most <small>since 2020 · top 10</small></h3>${nwRank.map(nwRow).join('')}</div>
     <div class="blk"><h3>New wells by use <small>${num(NW.total)} since 2020</small></h3>${WM.useBars(NW.uses,NW.total)}</div>`:''}
     <div class="blk"><h3>Most recorded wells near a project <small>within ~6 mi</small></h3>${densest.slice(0,10).map(s=>WM.siteRow(s,`<b>${num(s.wells10)}</b><br>wells`)).join('')}</div>
     <div class="blk"><h3>Counties with the most recorded wells <small>top 10</small></h3>${countyRank.slice(0,10).map(countyRow).join('')}</div>
     <div class="blk"><h3>Recorded wells by use <small>${num(CW.total)} statewide</small></h3>${WM.useBars(CW.use,CW.total)}</div>
     `+WM.note('Counts leave out small colocation sites and withdrawn projects. A well count is wells on record, not water pumped.');
-  WM.collapseAfter(3);
+  WM.renderRows();WM.collapseAfter(2);
 }
 function setHash(h){try{history.replaceState(null,'',location.pathname+location.search+(h?'#'+h:''));}catch(e){}}
 function showCounty(f){
@@ -89,6 +89,7 @@ function back(){ctx={mode:'list'};WM.highlightCounty(null);WM.setFilter(null);WM
 side.addEventListener('click',e=>{const r=e.target.closest('.row[data-site],.row[data-county]');if(!r)return;if(r.dataset.county)showCounty(r.dataset.county);else showSite(WM.byId[r.dataset.site]);WM.closeAside();});
 side.addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('.row');if(r)r.click();}});
 WM.init({major:false,minor:false,base:'wells',pins:true,colo:false,controls:['pins','colo','aqlines','rivers','basins','base'],
+  listMetric:s=>NW?({html:`<b>${num(s.newwells10)}</b><br>new wells ≤6 mi`,key:s.newwells10}):({html:`<b>${num(s.wells10)}</b><br>wells ≤6 mi`,key:s.wells10}),listSortLabel:'most new wells nearby',
   onSite:showSite,onCounty:showCounty,onAquifer:null,onBackground:()=>{if(ctx.mode!=='list')back();},
   legendNote:'Well records: Texas Water Development Board.',welcomeTitle:'Data centers and Texas groundwater wells',
   about:`<p>This map shows how much the land around each data center already relies on groundwater. "All recorded wells" are the ${num(CW.total)} wells in the Texas Water Development Board\'s Groundwater Database (this copy ${esc(CW.generated||'')}), not every well ever drilled. "Water wells drilled since 2020" counts the ${NW?num(NW.total):''} new and replacement water-supply wells in the reports every licensed driller must file${NW?', through '+esc(NW.through):''}; monitoring wells, soil borings and test, injection or geothermal holes are left out.</p><p>Shading counts wells per cell of about 10 square miles. Neither count says how much water is pumped, and "unused" includes plugged wells.</p>`});

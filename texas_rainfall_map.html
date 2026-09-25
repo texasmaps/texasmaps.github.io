@@ -6,7 +6,7 @@
 <title>Texas Rainfall & Data Centers</title>
 <meta name="description" content="Average annual rainfall across Texas (PRISM 1991–2020 normals) and the last 12 months versus normal, with data center sites from Texas Data Center Watch: which projects sit in the driest parts of the state.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="tx_water_map.css?v=20260925-2">
+<link rel="stylesheet" href="tx_water_map.css?v=20260925-3">
 </head>
 <body>
 <div class="app">
@@ -27,13 +27,13 @@
   <div class="tip" id="tip"></div>
 </main>
 </div>
-<script src="tx_counties.js?v=20260925-2"></script>
-<script src="tx_dc_sites.js?v=20260925-2"></script>
-<script src="tx_aquifers.js?v=20260925-2"></script>
-<script src="tx_water_grid.js?v=20260925-2"></script>
-<script src="tx_county_water.js?v=20260925-2"></script>
-<script src="tx_surface_water.js?v=20260925-2"></script>
-<script src="tx_water_map.js?v=20260925-2"></script>
+<script src="tx_counties.js?v=20260925-3"></script>
+<script src="tx_dc_sites.js?v=20260925-3"></script>
+<script src="tx_aquifers.js?v=20260925-3"></script>
+<script src="tx_water_grid.js?v=20260925-3"></script>
+<script src="tx_county_water.js?v=20260925-3"></script>
+<script src="tx_surface_water.js?v=20260925-3"></script>
+<script src="tx_water_map.js?v=20260925-3"></script>
 <script>
 const {esc,fmtMW,num,COL,LBL}=WM, $=id=>document.getElementById(id);
 const P=WM.projects, side=$('side'), BINS=WM.BINS.precip, LBLS=WM.BINLBL.precip, RC=WM.water&&WM.water.recent;
@@ -58,12 +58,12 @@ function renderList(){
     RC&&driestNow?`The driest spot right now: <b>${esc(driestNow.name)}</b> in ${esc(driestNow.county)} County, at ${driestNow.recent}% of its usual rain.`:'',
     `<b>${dry.length} ${pl(dry.length,'project is','projects are')}</b> in the dry west, where under 20 inches falls in a normal year. A typical project gets ${median} inches a year; Houston gets about ${hou}, El Paso about ${elp}.`,
     RC?`<b>${wet} ${pl(wet,'project is','projects are')}</b> in ${pl(wet,'a place','places')} that ${pl(wet,'was','were')} wetter than usual this year.`:''].filter(Boolean);
-  side.innerHTML=WM.glance(facts)+`${RC?`<div class="blk"><h3>Driest vs. normal <small>last 12 months · ${esc(RC.label)}</small></h3>${P.filter(s=>s.recent).sort((a,b)=>a.recent-b.recent||(b.mw||0)-(a.mw||0)).slice(0,12).map(s=>WM.siteRow(s,`<b>${s.recent}%</b><br>of normal`)).join('')}</div>`:''}
+  side.innerHTML=WM.glance(facts)+WM.siteList()+`${RC?`<div class="blk"><h3>Driest vs. normal <small>last 12 months · ${esc(RC.label)}</small></h3>${P.filter(s=>s.recent).sort((a,b)=>a.recent-b.recent||(b.mw||0)-(a.mw||0)).slice(0,12).map(s=>WM.siteRow(s,`<b>${s.recent}%</b><br>of normal`)).join('')}</div>`:''}
     <div class="blk"><h3>Projects by rainfall zone <small>avg. annual, inches</small></h3>${zones.map(zoneRow).join('')}</div>
     <div class="blk"><h3>Driest sites <small>lowest normal rainfall first</small></h3>${driest.map(s=>WM.siteRow(s,`<b>${s.rain}</b><br>in/yr`)).join('')}</div>
     <div class="blk"><h3>Driest counties with projects <small>county average</small></h3>${dryCounties.map(countyRow).join('')}</div>
     `+WM.note('Counts leave out small colocation sites and withdrawn projects.');
-  WM.collapseAfter(2);
+  WM.renderRows();WM.collapseAfter(2);
 }
 function setHash(h){try{history.replaceState(null,'',location.pathname+location.search+(h?'#'+h:''));}catch(e){}}
 function showZone(i){
@@ -95,6 +95,7 @@ function back(){ctx={mode:'list'};WM.highlightCounty(null);WM.setFilter(null);WM
 side.addEventListener('click',e=>{const r=e.target.closest('.row[data-zone],.row[data-site],.row[data-county]');if(!r)return;if(r.dataset.zone)showZone(+r.dataset.zone);else if(r.dataset.county)showCounty(r.dataset.county);else showSite(WM.byId[r.dataset.site]);WM.closeAside();});
 side.addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('.row');if(r)r.click();}});
 WM.init({major:false,minor:false,base:RC?'recent':'precip',pins:true,colo:false,controls:['pins','colo','aqlines','rivers','basins','base'],
+  listMetric:s=>RC?({html:`<b>${s.recent||'—'}%</b><br>of usual rain`,key:s.recent||999}):({html:`<b>${s.rain||'—'}</b><br>in/yr`,key:s.rain||999}),listSortLabel:'driest first',listAsc:true,
   onSite:showSite,onCounty:showCounty,onAquifer:null,onBackground:()=>{if(ctx.mode!=='list')back();},
   onUpdate:()=>{if(ctx.mode==='list')renderList();},
   legendNote:'Rainfall data: PRISM Climate Group, Oregon State University.',welcomeTitle:'Data centers and Texas rainfall',

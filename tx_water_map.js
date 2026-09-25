@@ -92,7 +92,18 @@ Object.assign(WM,{cname,ccent,cbbox});
 let svg,view,gC,gL,gWR,gAqMi,gAqMa,gAqLn,gAqL,gP,gBas,gRes,gRiv,gSWL,tip,cfg,tx=0,ty=0,sc=1,drag=null;
 const state={major:false,minor:false,base:'',pins:true,colo:false,rivers:false,basins:false,aqlines:false,filter:null,hlAq:null,hlCounty:null,selId:null};WM.state=state;
 const rad=s=>s.kind==='facility'?2.6:(s.mw?Math.max(4,Math.min(13,2.5+Math.sqrt(s.mw)/6)):4.5);
-function visible(s){return state.pins&&(state.colo||s.kind!=='facility')&&s.status!=='withdrawn'&&(!state.filter||state.filter(s));}
+const fstate={status:new Set(['operating','under_construction','proposed']),hot:false,sort:'metric'};WM.fstate=fstate;
+const listable=s=>(state.colo||s.kind!=='facility')&&s.status!=='withdrawn'&&fstate.status.has(s.status)&&(!fstate.hot||s.hot);
+function visible(s){return state.pins&&listable(s)&&(!state.filter||state.filter(s));}
+// "All data center projects": the Data Center Watch list, with this map's water figure on every row
+WM.siteList=function(){if(!cfg.listMetric)return '';
+  const chips=[['operating','Operating'],['under_construction','Under construction'],['proposed','Proposed']].map(([k,l])=>`<button type="button" class="chip${fstate.status.has(k)?'':' off'}" data-s="${k}"><i style="background:${COL[k]}"></i>${l}</button>`).join('')+`<button type="button" class="chip${fstate.hot?' on':''}" data-hot="1"><i></i>Contested only</button>`;
+  return `<div class="blk" id="allsites"><h3>All data center projects <small id="lcount"></small></h3><div class="chips">${chips}</div><div class="listhead"><span>Sorted by</span><select id="lsort" aria-label="Sort the list"><option value="metric"${fstate.sort==='metric'?' selected':''}>${esc(cfg.listSortLabel||'this map')}</option><option value="mw"${fstate.sort==='mw'?' selected':''}>largest (MW)</option><option value="name"${fstate.sort==='name'?' selected':''}>A–Z</option><option value="county"${fstate.sort==='county'?' selected':''}>county</option></select></div><div class="rows"></div></div>`;};
+function renderRows(){const box=document.querySelector('#allsites .rows');if(!box||!cfg.listMetric)return;const m=cfg.listMetric,key=s=>m(s).key;const list=SITES.filter(listable);
+  list.sort((a,b)=>fstate.sort==='mw'?(b.mw||0)-(a.mw||0):fstate.sort==='name'?a.name.localeCompare(b.name):fstate.sort==='county'?(a.county.localeCompare(b.county)||(b.mw||0)-(a.mw||0)):(typeof key(a)==='string'?(String(key(a)).localeCompare(String(key(b)))||(b.mw||0)-(a.mw||0)):((cfg.listAsc?key(a)-key(b):key(b)-key(a))||(b.mw||0)-(a.mw||0))));
+  box.innerHTML=list.map(s=>WM.siteRow(s,m(s).html)).join('')||'<div class="empty">No sites match these filters.</div>';
+  const c=$('lcount');if(c)c.textContent=list.length+' of '+SITES.filter(s=>s.kind!=='facility'&&s.status!=='withdrawn').length+' shown';}
+WM.renderRows=renderRows;
 WM.visible=visible;
 function apply(){view.setAttribute('transform',`translate(${tx} ${ty}) scale(${sc})`);const k=1/sc;
   gP.querySelectorAll('.pin').forEach(p=>p.setAttribute('r',rad(byId[p.dataset.id])*Math.sqrt(k)));
@@ -125,7 +136,9 @@ WM.init=function(c){
   const lp=document.createElement('div');lp.className='lpanel'+(window.innerWidth<=800?' closed':'');lp.id='lpanel';
   lp.innerHTML='<button class="lpt" type="button">Map overlays <span class="chev">▾</span></button><div class="lbody" id="layers"></div>';
   svg.parentElement.appendChild(lp);lp.querySelector('.lpt').onclick=()=>lp.classList.toggle('closed');
-  const sideEl=$('side');if(sideEl)sideEl.addEventListener('click',e=>{const h=e.target.closest('.blk>h3');if(h)h.parentElement.classList.toggle('closed');});
+  const sideEl=$('side');if(sideEl){sideEl.addEventListener('click',e=>{const h=e.target.closest('.blk>h3');if(h)h.parentElement.classList.toggle('closed');
+    const ch=e.target.closest('#allsites .chip');if(!ch)return;if(ch.dataset.hot){fstate.hot=!fstate.hot;ch.classList.toggle('on',fstate.hot);}else{const k=ch.dataset.s;if(fstate.status.has(k))fstate.status.delete(k);else fstate.status.add(k);ch.classList.toggle('off',!fstate.status.has(k));}WM.update();});
+    sideEl.addEventListener('change',e=>{if(e.target.id==='lsort'){fstate.sort=e.target.value;renderRows();}});}
   svg.innerHTML='<defs><pattern id="hatch-mi" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5"/></pattern><pattern id="hatch-aq" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5"/></pattern></defs><g id="view"><image id="wraster" preserveAspectRatio="none" style="display:none"></image><g id="counties"></g><g id="aq-minor"></g><g id="aq-major"></g><g id="aq-lines"></g><g id="basins"></g><g id="reservoirs"></g><g id="rivers"></g><g id="clabels"></g><g id="aq-labels"></g><g id="sw-labels"></g><g id="pins"></g></g>';
   view=$('view');gC=$('counties');gL=$('clabels');gWR=$('wraster');gAqMi=$('aq-minor');gAqMa=$('aq-major');gAqLn=$('aq-lines');gAqL=$('aq-labels');gP=$('pins');gBas=$('basins');gRes=$('reservoirs');gRiv=$('rivers');gSWL=$('sw-labels');
   if(SW){
@@ -252,7 +265,7 @@ WM.update=function(){
   gC.querySelectorAll('.county').forEach(p=>p.classList.toggle('hl',p.dataset.fips===state.hlCounty));
   gP.querySelectorAll('.pin').forEach(p=>p.classList.toggle('sel',p.dataset.id===state.selId));
   if(state.selId&&byId[state.selId])gP.appendChild(byId[state.selId].el);
-  legend();if(cfg.onUpdate)cfg.onUpdate();
+  legend();renderRows();if(cfg.onUpdate)cfg.onUpdate();
 };
 WM.setFilter=fn=>{state.filter=fn;WM.update();};
 WM.highlightAquifer=n=>{state.hlAq=n;WM.update();};
