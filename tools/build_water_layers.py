@@ -39,11 +39,20 @@ def fetch(url,path):
     if os.path.exists(path) and os.path.getsize(path)>1000: return
     print('downloading',url); urllib.request.urlretrieve(url,path)
 
-def head_ok(url):
-    try:
-        r=urllib.request.urlopen(urllib.request.Request(url,method='HEAD'),timeout=60)
-        return 'attachment' in (r.headers.get('Content-Disposition') or '') or int(r.headers.get('Content-Length') or 0)>100000
-    except Exception: return False
+def latest_prism_month(workdir):
+    """Newest month PRISM serves. The service answers a missing month with a short text reply instead of a zip,
+    so fetch candidates (newest first) into the cache and accept the first real zip file."""
+    today=datetime.date.today(); y,m=today.year,today.month
+    for _ in range(8):
+        m-=1
+        if m==0: m=12; y-=1
+        ym='%04d%02d'%(y,m); p=os.path.join(workdir,'prism_m_%s_4km.zip'%ym)
+        try:
+            if not (os.path.exists(p) and os.path.getsize(p)>100000): urllib.request.urlretrieve(PRISM_MONTH%ym,p)
+            if os.path.getsize(p)>100000 and zipfile.is_zipfile(p): return y,m
+        except Exception: pass
+        if os.path.exists(p): os.remove(p)
+    raise SystemExit('could not find a recent PRISM monthly grid')
 
 # ---------------- shapefile reader ----------------
 import struct, zipfile, sys, json, collections, os
@@ -381,7 +390,7 @@ def build_precip(root, workdir, mask, res, cols, rows):
     print('precip: cells',sum(1 for r in grid for v in r if v),'| no-pixel fallbacks',miss,'| sample Austin',grid[int((LAT1-30.27)/res)][int((-97.74-LON0)/res)],'in')
     return grid
 
-def month_list(arg):
+def month_list(arg, workdir):
     if arg:
         a,b=arg.split('-'); y,m=int(a[:4]),int(a[4:]); out=[]
         while True:
@@ -390,11 +399,7 @@ def month_list(arg):
             m+=1
             if m>12: m=1; y+=1
         return out
-    today=datetime.date.today(); y,m=today.year,today.month
-    for _ in range(8):   # find the latest month PRISM serves
-        m-=1
-        if m==0: m=12; y-=1
-        if head_ok(PRISM_MONTH%('%04d%02d'%(y,m))): break
+    y,m=latest_prism_month(workdir)
     out=[]
     for _ in range(12):
         out.append('%04d%02d'%(y,m)); m-=1
@@ -472,7 +477,7 @@ def grid_obj(grid,res,cols,rows,**extra):
 def build_grids(root, workdir, today, months_arg=None):
     pres=0.025; mask,cols,rows=texas_mask(root,pres)
     precip=build_precip(root,workdir,mask,pres,cols,rows)
-    months=month_list(months_arg); recent,rres,rcols,rrows,rwest,rnorth=build_recent(workdir,months,mask,pres)
+    months=month_list(months_arg,workdir); recent,rres,rcols,rrows,rwest,rnorth=build_recent(workdir,months,mask,pres)
     wres=0.05; wcols=round((LON1-LON0)/wres); wrows=round((LAT1-LAT0)/wres)
     wells,n_wells=build_wells(workdir,wres,wcols,wrows)
     newwells,n_new,uses,through=build_newwells(workdir,wres,wcols,wrows)

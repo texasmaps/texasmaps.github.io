@@ -23,7 +23,7 @@ All files must stay together in the repository root; the pages load them by rela
 
 Pure Python 3, no packages. Downloads (about 300 MB: PRISM grids, the TWDB well shapefile and the full driller's-reports database) are cached in the system temp directory, so nothing lands in the repository except the output files.
 
-1. `python3 tools/build_water_layers.py` — fetches TWDB aquifers, the PRISM 1991–2020 normals, the latest 12 PRISM monthly grids, the TWDB well shapefile and the driller's-reports database; writes `tx_aquifers.js` and `tx_water_grid.js`. `--months YYYYMM-YYYYMM` pins the 12-month window.
+1. `python3 tools/build_water_layers.py` — fetches TWDB aquifers, the PRISM 1991–2020 normals, the latest 12 PRISM monthly grids, the TWDB well shapefile and the driller's-reports database; writes `tx_aquifers.js` and `tx_water_grid.js`. By default the 12-month window ends at the newest month PRISM has published (usually the month before last); `--months YYYYMM-YYYYMM` pins it.
 2. `python3 tools/build_county_water.py` — copies counties and sites out of `texas_data_center_map.html` and writes `tx_counties.js`, `tx_dc_sites.js`, `tx_county_water.js`. Run it whenever the site list in Data Center Watch changes, so the water maps keep the same sites.
 
 ## Optional hooks (not applied, to leave existing pages untouched)
