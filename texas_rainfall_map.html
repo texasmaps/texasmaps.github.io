@@ -18,8 +18,7 @@
   <div class="stats" id="stats"></div>
 </header>
 <aside>
-  <div class="intro">Where the data center boom lands on the rainfall map: the 1991–2020 normal, or the last 12 months against it. Use the checkboxes and shading menu to add aquifers or wells. Click a rainfall zone to see its projects, a county for its averages, or a site for its water context.</div>
-  <div class="layers" id="layers"></div>
+  <div class="intro">Where the data center boom lands on the rainfall map. The map opens on the last 12 months against the 1991–2020 normal; <b>Map overlays</b> on the map switches to the normal itself, or adds aquifers and wells. Click a section title below to open or close it, a county for its averages, or a site for its water context.</div>
   <div class="side" id="side"></div>
 </aside>
 <main>
@@ -54,11 +53,12 @@ const countyRow=f=>{const c=WM.cw.counties[f]||{},n=byCounty[f].length;return `<
 function renderList(){
   const driest=P.filter(s=>s.rain).sort((a,b)=>a.rain-b.rain||(b.mw||0)-(a.mw||0)).slice(0,12);
   const dryCounties=Object.keys(byCounty).filter(f=>WM.cw.counties[f]&&WM.cw.counties[f].r).sort((a,b)=>WM.cw.counties[a].r-WM.cw.counties[b].r).slice(0,12);
-  side.innerHTML=`<div class="blk"><h3>Projects by rainfall zone <small>avg. annual, inches</small></h3>${zones.map(zoneRow).join('')}</div>
+  side.innerHTML=`${RC?`<div class="blk"><h3>Driest vs. normal <small>last 12 months · ${esc(RC.label)}</small></h3>${P.filter(s=>s.recent).sort((a,b)=>a.recent-b.recent||(b.mw||0)-(a.mw||0)).slice(0,12).map(s=>WM.siteRow(s,`<b>${s.recent}%</b><br>of normal`)).join('')}</div>`:''}
+    <div class="blk"><h3>Projects by rainfall zone <small>avg. annual, inches</small></h3>${zones.map(zoneRow).join('')}</div>
     <div class="blk"><h3>Driest sites <small>lowest normal rainfall first</small></h3>${driest.map(s=>WM.siteRow(s,`<b>${s.rain}</b><br>in/yr`)).join('')}</div>
-    ${RC?`<div class="blk"><h3>Driest vs. normal <small>last 12 months · ${esc(RC.label)}</small></h3>${P.filter(s=>s.recent).sort((a,b)=>a.recent-b.recent||(b.mw||0)-(a.mw||0)).slice(0,12).map(s=>WM.siteRow(s,`<b>${s.recent}%</b><br>of normal`)).join('')}</div>`:''}
     <div class="blk"><h3>Driest counties with projects <small>county average</small></h3>${dryCounties.map(countyRow).join('')}</div>
     <div class="note">Rainfall is the PRISM 1991–2020 average annual precipitation (800 m grid) read at each pin; county figures average the same grid over the county. "Last 12 months" is PRISM's monthly totals for the window divided by the annual normal (4 km grid). Counts exclude colocation facilities and withdrawn projects. PRISM Climate Group, Oregon State University; sites from Texas Data Center Watch.</div>`;
+  WM.collapseAfter(1);
 }
 function setHash(h){try{history.replaceState(null,'',location.pathname+location.search+(h?'#'+h:''));}catch(e){}}
 function showZone(i){
@@ -89,7 +89,7 @@ function showCounty(f){
 function back(){ctx={mode:'list'};WM.highlightCounty(null);WM.setFilter(null);WM.select(null);WM.fit();renderList();setHash('');}
 side.addEventListener('click',e=>{const r=e.target.closest('.row[data-zone],.row[data-site],.row[data-county]');if(!r)return;if(r.dataset.zone)showZone(+r.dataset.zone);else if(r.dataset.county)showCounty(r.dataset.county);else showSite(WM.byId[r.dataset.site]);WM.closeAside();});
 side.addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('.row');if(r)r.click();}});
-WM.init({major:false,minor:false,base:'precip',pins:true,colo:false,controls:['pins','colo','major','minor','base'],
+WM.init({major:false,minor:false,base:RC?'recent':'precip',pins:true,colo:false,controls:['pins','colo','major','minor','base'],
   onSite:showSite,onCounty:showCounty,onAquifer:null,onBackground:()=>{if(ctx.mode!=='list')back();},
   onUpdate:()=>{if(ctx.mode==='list')renderList();},
   legendNote:'PRISM Climate Group, Oregon State University: 1991–2020 normals (800 m) and recent monthly grids (4 km), resampled to ~2.5 km cells.'});

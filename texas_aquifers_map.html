@@ -18,8 +18,7 @@
   <div class="stats" id="stats"></div>
 </header>
 <aside>
-  <div class="intro">Which aquifers sit under the data center boom. Click an aquifer on the map or in the list to isolate it and see its sites; click a site for its water context. The shading menu adds rainfall or wells underneath.</div>
-  <div class="layers" id="layers"></div>
+  <div class="intro">Which aquifers sit under the data center boom. Click an aquifer on the map or in the list to isolate it and see its sites; click a site for its water context. Use <b>Map overlays</b> on the map to add rainfall or wells; click a section title below to open or close it.</div>
   <div class="side" id="side"></div>
 </aside>
 <main>
@@ -54,6 +53,7 @@ function renderList(){
     <div class="row" data-aq="_none" tabindex="0"><span class="sw" style="--c:var(--ink3)"></span><div><div class="n">Not over a major aquifer</div><div class="m">${none.length} projects${none.filter(s=>s.hot).length?' · '+none.filter(s=>s.hot).length+' contested':''}</div></div><span class="v"><b>${fmtMW(sumMW(none))}</b><br>announced</span></div></div>
     <div class="blk"><h3>Minor aquifers <small>${minors.filter(x=>x.on.length).length} of 22 have projects</small></h3>${minors.filter(x=>x.on.length).map(aqRow).join('')}</div>
     <div class="note">Counts exclude colocation facilities and withdrawn projects. A site over stacked aquifers (Edwards over Trinity in San Antonio) counts toward each. Boundaries: Texas Water Development Board major (2006) and minor (2017) aquifers. Sites: Texas Data Center Watch.</div>`;
+  WM.collapseAfter(1);
 }
 function setHash(h){try{history.replaceState(null,'',location.pathname+location.search+(h?'#'+h:''));}catch(e){}}
 function showAquifer(name){

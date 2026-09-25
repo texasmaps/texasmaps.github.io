@@ -18,8 +18,7 @@
   <div class="stats" id="stats"></div>
 </header>
 <aside>
-  <div class="intro">Where the data center boom meets well country. Shade by all TWDB-recorded wells, or by water wells drilled since 2020 from driller's reports, per ~10 square miles; the same menu can shade by rainfall, and the checkboxes add aquifers. Click a county for its wells by use, or a site for the wells around it.</div>
-  <div class="layers" id="layers"></div>
+  <div class="intro">Where the data center boom meets well country. Shading counts TWDB-recorded wells per ~10 square miles; <b>Map overlays</b> on the map switches to wells drilled since 2020, rainfall, or aquifers. Click a section title below to open or close it, a county for its wells by use, or a site for the wells around it.</div>
   <div class="side" id="side"></div>
 </aside>
 <main>
@@ -61,6 +60,7 @@ function renderList(){
     <div class="blk"><h3>Counties by recorded wells <small>top 10 of 254</small></h3>${countyRank.slice(0,10).map(countyRow).join('')}</div>
     <div class="blk"><h3>Projects in the most well-dense areas <small>recorded wells within ~6 mi</small></h3>${densest.slice(0,10).map(s=>WM.siteRow(s,`<b>${num(s.wells10)}</b><br>wells`)).join('')}</div>
     <div class="note">"Recorded wells" are the TWDB Groundwater Database (updated nightly; this copy ${esc(CW.generated||'')}), not every well ever drilled. "Drilled since 2020" counts new and replacement water-supply wells in TWDB's Submitted Driller's Reports${NW?' through '+esc(NW.through):''}, excluding monitoring wells, soil borings and test, injection or geothermal holes. Neither is a measure of pumping. "Unused" includes plugged wells. Counts exclude colocation facilities and withdrawn projects. Sites: Texas Data Center Watch.</div>`;
+  WM.collapseAfter(1);
 }
 function setHash(h){try{history.replaceState(null,'',location.pathname+location.search+(h?'#'+h:''));}catch(e){}}
 function showCounty(f){

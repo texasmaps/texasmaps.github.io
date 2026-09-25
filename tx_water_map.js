@@ -95,6 +95,12 @@ WM.init=function(c){
   if((hm=/(?:^|&)shade=([a-z]+)/.exec(hh))){const k={rain:'precip',precip:'precip',normal:'precip',recent:'recent',wells:'wells',new:'newwells',newwells:'newwells',none:''}[hm[1]];if(k!==undefined&&(k===''||(WATER&&WATER[k])))state.base=k;}
   if((hm=/(?:^|&)layers=([a-z,]*)/.exec(hh))){const L=hm[1].split(',');state.major=L.includes('major')||L.includes('aquifers');state.minor=L.includes('minor');}
   svg=$('map');tip=$('tip');
+  // overlays panel lives on the map (collapsed by default on phones); an old sidebar #layers container is retired
+  const oldL=$('layers');if(oldL)oldL.remove();
+  const lp=document.createElement('div');lp.className='lpanel'+(window.innerWidth<=800?' closed':'');lp.id='lpanel';
+  lp.innerHTML='<button class="lpt" type="button">Map overlays <span class="chev">▾</span></button><div class="lbody" id="layers"></div>';
+  svg.parentElement.appendChild(lp);lp.querySelector('.lpt').onclick=()=>lp.classList.toggle('closed');
+  const sideEl=$('side');if(sideEl)sideEl.addEventListener('click',e=>{const h=e.target.closest('.blk>h3');if(h)h.parentElement.classList.toggle('closed');});
   svg.innerHTML='<defs><pattern id="hatch-mi" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5"/></pattern><pattern id="hatch-aq" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5"/></pattern></defs><g id="view"><image id="wraster" preserveAspectRatio="none" style="display:none"></image><g id="counties"></g><g id="aq-minor"></g><g id="aq-major"></g><g id="clabels"></g><g id="aq-labels"></g><g id="pins"></g></g>';
   view=$('view');gC=$('counties');gL=$('clabels');gWR=$('wraster');gAqMi=$('aq-minor');gAqMa=$('aq-major');gAqL=$('aq-labels');gP=$('pins');
   COUNTIES.features.forEach(f=>{const p=svgEl('path');p.setAttribute('d',cpath[f.id]);p.setAttribute('class','county');p.dataset.fips=f.id;gC.appendChild(p);
@@ -150,6 +156,7 @@ WM.update=function(){
   gAqL.querySelectorAll('text').forEach(t=>t.style.display=(t.dataset.k==='major'?state.major:state.minor)?'':'none');
   if(state.base&&WATER){const g=WATER[state.base];const [ix,iy]=px(g.west,g.north);gWR.setAttribute('x',ix);gWR.setAttribute('y',iy);gWR.setAttribute('width',g.cols*g.res*K*100);gWR.setAttribute('height',g.rows*g.res*100);gWR.setAttribute('href',rasterURL(state.base));gWR.style.display='';svg.classList.add('base-on');}
   else{gWR.style.display='none';svg.classList.remove('base-on');}
+  document.body.classList.toggle('shaded',!!(state.base&&WATER));
   SITES.forEach(s=>s.el.classList.toggle('dim',!visible(s)));
   gAqMa.classList.toggle('has-hl',!!state.hlAq&&AQ.major.some(a=>a.n===state.hlAq));gAqMi.classList.toggle('has-hl',!!state.hlAq&&AQ.minor.some(a=>a.n===state.hlAq));
   AQ.major.concat(AQ.minor).forEach(a=>a.el.classList.toggle('hl',a.n===state.hlAq));
@@ -163,6 +170,7 @@ WM.highlightAquifer=n=>{state.hlAq=n;WM.update();};
 WM.highlightCounty=f=>{state.hlCounty=f;WM.update();};
 WM.select=id=>{state.selId=id;WM.update();};
 WM.setLayers=o=>{Object.assign(state,o);buildControls();WM.update();};
+WM.collapseAfter=n=>{const sideEl=$('side');if(sideEl)sideEl.querySelectorAll('.blk').forEach((b,i)=>{if(i>=n)b.classList.add('closed');});};
 function legend(){const L=$('legend');if(!L)return;let h='';
   if(state.pins)h+='<b>Data center sites</b>'+['operating','under_construction','proposed'].map(k=>`<div class="r"><i style="background:${COL[k]}"></i>${LBL[k]}</div>`).join('')+'<div class="r"><i class="ring"></i>Contested (opposition, lawsuit, water/air fight)</div>';
   if(state.major)h+='<b>Major aquifers (TWDB)</b>'+AQ.major.map(a=>`<div class="r"><i class="aqsw${a.n==='Seymour'?' hsw':''}" style="--c:var(${AQVAR[a.n]})"></i>${esc(a.n)}</div>`).join('');
