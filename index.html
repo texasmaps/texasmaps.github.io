@@ -67,10 +67,10 @@ body.phone #launch{display:flex;flex:1}
     {label:'Central Texas Deep Dive', file:'texas_central_deepdive.html',   color:'#0891b2'},
     {label:'Data Center Watch', file:'texas_data_center_map.html',          color:'#4a0404'},
     {label:'Aquifers & Data Centers', file:'texas_aquifers_map.html', color:'#1c5cab'},
-    {label:'Data Centers × Rainfall', file:'texas_data_center_map.html#water=precip',        color:'#2a78d6'},
+    {label:'Rainfall & Data Centers', file:'texas_rainfall_map.html', color:'#2a78d6'},
     {label:'Data Centers × Wells',    file:'texas_data_center_map.html#water=wells',         color:'#c54e1c'}
   ];
-  const DESC={'tx_region_builder.html':'Regional campaign map · officials & candidates','tx_districts_map.html':'Congress, House, Senate, SBOE · county precincts · cities','texas_race_map.html':'Race & ethnicity by county · largest cities','texas_families_households_map.html':'Families & households','texas_rural_ses_map.html':'Rural–urban & socioeconomic','texas_elections_map.html':'2022 · 2024 · 2026 primary results','texas_central_deepdive.html':'30 Central TX counties · turnout trends · top-3 cities','texas_data_center_map.html':'Data center projects & opposition (large page)','texas_aquifers_map.html':'Which aquifers sit under the data center boom · TWDB major & minor aquifers','texas_data_center_map.html#water=precip':'Data center sites over average annual rainfall (NRCS 1981–2010)','texas_data_center_map.html#water=wells':'Data center sites over TWDB groundwater well density'};
+  const DESC={'tx_region_builder.html':'Regional campaign map · officials & candidates','tx_districts_map.html':'Congress, House, Senate, SBOE · county precincts · cities','texas_race_map.html':'Race & ethnicity by county · largest cities','texas_families_households_map.html':'Families & households','texas_rural_ses_map.html':'Rural–urban & socioeconomic','texas_elections_map.html':'2022 · 2024 · 2026 primary results','texas_central_deepdive.html':'30 Central TX counties · turnout trends · top-3 cities','texas_data_center_map.html':'Data center projects & opposition (large page)','texas_aquifers_map.html':'Which aquifers sit under the data center boom · TWDB major & minor aquifers','texas_rainfall_map.html':'Where the data center boom lands on the rainfall map · NRCS 1981–2010 via TWDB','texas_data_center_map.html#water=wells':'Data center sites over TWDB groundwater well density'};
   const PHONE=window.matchMedia('(max-width:760px)').matches;
   if(PHONE){
     document.body.classList.add('phone');
