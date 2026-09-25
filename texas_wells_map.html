@@ -6,7 +6,7 @@
 <title>Texas Groundwater Wells & Data Centers</title>
 <meta name="description" content="Density of TWDB-recorded groundwater wells across Texas, and water wells drilled since 2020, with data center sites from Texas Data Center Watch: which projects land in the most well-dependent country.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="tx_water_map.css?v=20260925-4">
+<link rel="stylesheet" href="tx_water_map.css?v=20260925-5">
 </head>
 <body>
 <div class="app">
@@ -17,7 +17,7 @@
   <div class="stats" id="stats"></div>
 </header>
 <aside>
-  <div class="intro">How much the country around each data center already depends on groundwater. Darker shading means more wells. Click a county for its wells, or a site for the wells around it.</div>
+  <div class="intro">How many groundwater wells already surround each data center, a rough sign of how much the area draws on groundwater. <span id="shade-word">Brighter</span> shading means more wells on record. Click a county for its wells, or a site for the wells around it.</div>
   <div class="side" id="side"></div>
 </aside>
 <main>
@@ -27,16 +27,17 @@
   <div class="tip" id="tip"></div>
 </main>
 </div>
-<script src="tx_counties.js?v=20260925-4"></script>
-<script src="tx_dc_sites.js?v=20260925-4"></script>
-<script src="tx_aquifers.js?v=20260925-4"></script>
-<script src="tx_water_grid.js?v=20260925-4"></script>
-<script src="tx_county_water.js?v=20260925-4"></script>
-<script src="tx_surface_water.js?v=20260925-4"></script>
-<script src="tx_water_map.js?v=20260925-4"></script>
+<script src="tx_counties.js?v=20260925-5"></script>
+<script src="tx_dc_sites.js?v=20260925-5"></script>
+<script src="tx_aquifers.js?v=20260925-5"></script>
+<script src="tx_water_grid.js?v=20260925-5"></script>
+<script src="tx_county_water.js?v=20260925-5"></script>
+<script src="tx_surface_water.js?v=20260925-5"></script>
+<script src="tx_water_map.js?v=20260925-5"></script>
 <script>
 const {esc,fmtMW,num,COL,LBL}=WM, $=id=>document.getElementById(id);
 const P=WM.projects, side=$('side'), CW=WM.cw, NW=WM.water&&WM.water.newwells;
+$('shade-word').textContent=WM.isDark()?'Brighter':'Darker';   // the color scale flips with the theme: on the dark theme more wells = brighter
 const sumMW=list=>Math.round(list.reduce((t,s)=>t+(s.mw||0),0));
 const byCounty={};P.forEach(s=>(byCounty[s.fips]=byCounty[s.fips]||[]).push(s));
 const w10=P.map(s=>s.wells10).sort((a,b)=>a-b), median=w10[Math.floor(w10.length/2)];
