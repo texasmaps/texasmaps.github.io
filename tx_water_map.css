@@ -103,6 +103,15 @@ aside{border-right:1px solid var(--rule);background:var(--paper2);display:flex;f
 .bar{height:5px;background:var(--rule);border-radius:3px;overflow:hidden;margin-top:5px}
 .bar i{display:block;height:100%;background:var(--c,var(--olive))}
 .empty{color:var(--ink3);font-size:13px;font-style:italic;padding:10px 14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:4px 14px 8px}
+.chip{border:1px solid var(--rule);background:var(--paper);border-radius:999px;padding:4px 10px 4px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--ink)}
+.chip i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.chip.off{opacity:.5}
+.chip[data-hot] i{box-shadow:0 0 0 1.5px var(--hot);background:transparent}
+.chip[data-hot].on{background:var(--cream);border-color:var(--maroon)}
+.chip[data-hot].on i{background:var(--hot)}
+.listhead{padding:2px 14px 6px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);display:flex;justify-content:space-between;align-items:center}
+.listhead select{border:0;background:none;font-size:11px;text-transform:none;letter-spacing:0;cursor:pointer;color:var(--ink2)}
 .detail{padding:12px 14px}
 .detail .status{display:inline-flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--ink2)}
 .detail .status i{width:9px;height:9px;border-radius:50%}
@@ -140,6 +149,9 @@ svg.base-on .pin{stroke-width:2}
 .aq{pointer-events:none;fill-rule:evenodd;stroke-width:1.1;vector-effect:non-scaling-stroke;stroke-linejoin:round;transition:opacity .15s}
 .aq.minor{fill:url(#hatch-mi);stroke:var(--ink2);stroke-width:.8;stroke-dasharray:3 2}
 #aq-major.has-hl .aq:not(.hl){opacity:.18}
+.aqline-case{fill:none;stroke:var(--paper2);stroke-width:4;vector-effect:non-scaling-stroke;stroke-linejoin:round;pointer-events:none;opacity:.75}
+.aqline{fill:none;stroke-width:1.8;vector-effect:non-scaling-stroke;stroke-linejoin:round;pointer-events:none}
+.legend .r i.aqsw.ol{background:none;border:2px solid var(--c);opacity:1}
 #aq-minor.has-hl .aq:not(.hl){opacity:.18}
 .aq.hl{stroke-width:2.6}
 #hatch-mi line{stroke:var(--ink2);stroke-width:1}
