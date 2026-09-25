@@ -18,7 +18,7 @@
   <div class="stats" id="stats"></div>
 </header>
 <aside>
-  <div class="intro">Where the data center boom lands on the rainfall map. The map opens on the last 12 months against the 1991–2020 normal; <b>Map overlays</b> on the map switches to the normal itself, or adds aquifers and wells. Click a section title below to open or close it, a county for its averages, or a site for its water context.</div>
+  <div class="intro">Where the data center boom lands on the rainfall map. The map opens on the last 12 months against the 1991–2020 normal; <b>Map overlays</b> on the map switches to the long-term average, or adds rivers and reservoirs, basins, aquifers and wells. Click a section title below to open or close it, a county for its averages, or a site for its water context.</div>
   <div class="side" id="side"></div>
 </aside>
 <main>
@@ -33,6 +33,7 @@
 <script src="tx_aquifers.js"></script>
 <script src="tx_water_grid.js"></script>
 <script src="tx_county_water.js"></script>
+<script src="tx_surface_water.js"></script>
 <script src="tx_water_map.js"></script>
 <script>
 const {esc,fmtMW,num,COL,LBL}=WM, $=id=>document.getElementById(id);
@@ -89,7 +90,7 @@ function showCounty(f){
 function back(){ctx={mode:'list'};WM.highlightCounty(null);WM.setFilter(null);WM.select(null);WM.fit();renderList();setHash('');}
 side.addEventListener('click',e=>{const r=e.target.closest('.row[data-zone],.row[data-site],.row[data-county]');if(!r)return;if(r.dataset.zone)showZone(+r.dataset.zone);else if(r.dataset.county)showCounty(r.dataset.county);else showSite(WM.byId[r.dataset.site]);WM.closeAside();});
 side.addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('.row');if(r)r.click();}});
-WM.init({major:false,minor:false,base:RC?'recent':'precip',pins:true,colo:false,controls:['pins','colo','major','minor','base'],
+WM.init({major:false,minor:false,base:RC?'recent':'precip',pins:true,colo:false,controls:['pins','colo','major','rivers','basins','base'],
   onSite:showSite,onCounty:showCounty,onAquifer:null,onBackground:()=>{if(ctx.mode!=='list')back();},
   onUpdate:()=>{if(ctx.mode==='list')renderList();},
   legendNote:'PRISM Climate Group, Oregon State University: 1991–2020 normals (800 m) and recent monthly grids (4 km), resampled to ~2.5 km cells.'});

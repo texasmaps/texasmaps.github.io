@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Texas Aquifers & Data Centers</title>
-<meta name="description" content="Which Texas aquifers sit under the state's data center boom. TWDB major and minor aquifer boundaries with data center sites from Texas Data Center Watch.">
+<meta name="description" content="Which Texas aquifers sit under the state's data center boom. TWDB major aquifer boundaries with data center sites from Texas Data Center Watch.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="tx_water_map.css">
 </head>
@@ -14,11 +14,11 @@
   <button id="menubtn" aria-label="Show the aquifer list">☰ List</button>
   <h1>Texas <span>Aquifers</span> &amp; Data Centers</h1>
   <a class="allmaps" href="index.html">All maps</a>
-  <span class="src">TWDB major &amp; minor aquifers</span>
+  <span class="src">TWDB major aquifers</span>
   <div class="stats" id="stats"></div>
 </header>
 <aside>
-  <div class="intro">Which aquifers sit under the data center boom. Click an aquifer on the map or in the list to isolate it and see its sites; click a site for its water context. Use <b>Map overlays</b> on the map to add rainfall or wells; click a section title below to open or close it.</div>
+  <div class="intro">Which aquifers sit under the data center boom. Click an aquifer on the map or in the list to isolate it and see its sites; click a site for its water context. Use <b>Map overlays</b> on the map to add rivers and reservoirs, river basins, rainfall or wells; click a section title below to open or close it.</div>
   <div class="side" id="side"></div>
 </aside>
 <main>
@@ -33,6 +33,7 @@
 <script src="tx_aquifers.js"></script>
 <script src="tx_water_grid.js"></script>
 <script src="tx_county_water.js"></script>
+<script src="tx_surface_water.js"></script>
 <script src="tx_water_map.js"></script>
 <script>
 const {esc,fmtMW,num,COL,LBL,AQVAR,EBFZ}=WM, $=id=>document.getElementById(id);
@@ -51,8 +52,7 @@ const aqRow=x=>`<div class="row" data-aq="${esc(x.n)}" tabindex="0">${swatch(x)}
 function renderList(){
   side.innerHTML=`<div class="blk"><h3>Major aquifers <small>ranked by data center projects</small></h3>${majors.map(aqRow).join('')}
     <div class="row" data-aq="_none" tabindex="0"><span class="sw" style="--c:var(--ink3)"></span><div><div class="n">Not over a major aquifer</div><div class="m">${none.length} projects${none.filter(s=>s.hot).length?' · '+none.filter(s=>s.hot).length+' contested':''}</div></div><span class="v"><b>${fmtMW(sumMW(none))}</b><br>announced</span></div></div>
-    <div class="blk"><h3>Minor aquifers <small>${minors.filter(x=>x.on.length).length} of 22 have projects</small></h3>${minors.filter(x=>x.on.length).map(aqRow).join('')}</div>
-    <div class="note">Counts exclude colocation facilities and withdrawn projects. A site over stacked aquifers (Edwards over Trinity in San Antonio) counts toward each. Boundaries: Texas Water Development Board major (2006) and minor (2017) aquifers. Sites: Texas Data Center Watch.</div>`;
+    <div class="note">Counts exclude colocation facilities and withdrawn projects. A site over stacked aquifers (Edwards over Trinity in San Antonio) counts toward each. Boundaries: Texas Water Development Board major aquifers (2006). Sites: Texas Data Center Watch.</div>`;
   WM.collapseAfter(1);
 }
 function setHash(h){try{history.replaceState(null,'',location.pathname+location.search+(h?'#'+h:''));}catch(e){}}
@@ -76,8 +76,8 @@ function showAquifer(name){
 function showNone(){
   ctx={mode:'none'};WM.highlightCounty(null);WM.select(null);WM.highlightAquifer(null);WM.setFilter(s=>!s.aqMs.length);WM.fit();
   const sites=none.slice().sort((a,b)=>(b.mw||0)-(a.mw||0));
-  side.innerHTML=`<div class="detail"><button class="back" id="back">← All aquifers</button><h2>Not over a major aquifer</h2><div class="sub">${none.length} projects · ${fmtMW(sumMW(none))} announced</div><div class="note" style="padding:6px 0 0">These sites sit outside every TWDB major aquifer boundary. Some are over a minor aquifer; check the site card.</div></div>
-    <div class="blk"><h3>Sites <small>largest first</small></h3>${sites.map(s=>WM.siteRow(s,s.aqm.length?esc(s.aqm[0])+' (minor)':(s.mw?fmtMW(s.mw):''))).join('')}</div>`;
+  side.innerHTML=`<div class="detail"><button class="back" id="back">← All aquifers</button><h2>Not over a major aquifer</h2><div class="sub">${none.length} projects · ${fmtMW(sumMW(none))} announced</div><div class="note" style="padding:6px 0 0">These sites sit outside every TWDB major aquifer boundary.</div></div>
+    <div class="blk"><h3>Sites <small>largest first</small></h3>${sites.map(s=>WM.siteRow(s)).join('')}</div>`;
   $('back').onclick=back;setHash('aq=none');
 }
 function showSite(s){
@@ -92,7 +92,7 @@ function showCounty(f){
   const [cx,cy]=WM.ccent[f];const w=WM.waterAt(cx/(WM.K*100)-107,37-cy/100);
   const aqs=[...new Set([...w.ma.map(a=>a.n),...sites.flatMap(s=>s.aqMs)])],mins=[...new Set([...w.mi.map(a=>a.n),...sites.flatMap(s=>s.aqm)])];
   side.innerHTML=`<div class="detail"><button class="back" id="back">← All aquifers</button><h2>${esc(WM.cname[f])} County</h2><div class="sub">${sites.length} data center project${sites.length===1?'':'s'}</div>
-    <dl class="kv"><dt>Major aquifers</dt><dd>${aqs.length?aqs.map(esc).join(', '):'<span class="empty" style="padding:0">none at the sampled points</span>'}</dd><dt>Minor aquifers</dt><dd>${mins.length?mins.map(esc).join(', '):'—'}</dd><dt>Avg. rainfall</dt><dd>${c.r?c.r+' in/yr':'—'}</dd><dt>TWDB wells</dt><dd>${num(c.w)}</dd></dl></div>
+    <dl class="kv"><dt>Major aquifers</dt><dd>${aqs.length?aqs.map(esc).join(', '):'<span class="empty" style="padding:0">none at the sampled points</span>'}</dd><dt>Avg. rainfall</dt><dd>${c.r?c.r+' in/yr':'—'}</dd><dt>TWDB wells</dt><dd>${num(c.w)}</dd></dl></div>
     <div class="blk"><h3>Sites in ${esc(WM.cname[f])} County</h3>${sites.length?sites.map(s=>WM.siteRow(s)).join(''):'<div class="empty">No data center projects listed here.</div>'}</div>
     <div class="note">Aquifers listed are those under the county center and under its sites; a county can straddle several.</div>`;
   $('back').onclick=back;setHash('county='+f);
@@ -100,7 +100,7 @@ function showCounty(f){
 function back(){ctx={mode:'list'};WM.highlightAquifer(null);WM.highlightCounty(null);WM.setFilter(null);WM.select(null);WM.fit();renderList();setHash('');}
 side.addEventListener('click',e=>{const r=e.target.closest('.row[data-aq],.row[data-site]');if(!r)return;if(r.dataset.aq)showAquifer(r.dataset.aq);else showSite(WM.byId[r.dataset.site]);WM.closeAside();});
 side.addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('.row[data-aq],.row[data-site]');if(r)r.click();}});
-WM.init({major:true,minor:false,pins:true,colo:false,controls:['pins','colo','major','minor','base'],
+WM.init({major:true,minor:false,pins:true,colo:false,controls:['pins','colo','major','rivers','basins','base'],
   onSite:showSite,onCounty:showCounty,onAquifer:showAquifer,onBackground:()=>{if(ctx.mode!=='list')back();},
   legendNote:'Aquifer outlines are generalized to ~900 m. Where TWDB polygons stack, a site lists all of them.'});
 renderList();

@@ -6,18 +6,21 @@
   --water:#DCE6EC; --county:#FBFAF6; --county-line:#B9B2A4;
   --op:#3B5B8C; --uc:#C8842A; --pr:#A3262A; --wd:#9A9A9A; --hot:#E0242E; --shadow:0 10px 30px rgba(27,31,39,.12);
   --aq-ogallala:#eda100; --aq-etp:#2a78d6; --aq-pecos:#1baf7a; --aq-trinity:#008300; --aq-ebfz:#e87ba4; --aq-cw:#4a3aa7; --aq-gc:#eb6834; --aq-hueco:#e34948;
+  --river:#1E88A8; --river-case:#FFFFFF; --basin:#8A6D1F;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --paper:#15171C; --paper2:#1E2128; --ink:#ECE8E0; --ink2:#B6B2A9; --ink3:#7E7B74; --rule:#2F333B;
   --maroon:#E0B1B1; --maroon2:#C98C8C; --cream:#3A3320; --water:#1A2028; --county:#232730; --county-line:#454A55;
   --op:#7FA3D6; --uc:#E2A75A; --pr:#E06A6E; --wd:#6B6B6B; --hot:#FF5A62; --shadow:0 10px 30px rgba(0,0,0,.5);
   --aq-ogallala:#c98500; --aq-etp:#3987e5; --aq-pecos:#199e70; --aq-trinity:#008300; --aq-ebfz:#d55181; --aq-cw:#9085e9; --aq-gc:#d95926; --aq-hueco:#e66767;
+  --river:#5CE1E6; --river-case:#0B1B2B; --basin:#E8D8A0;
 }}
 :root[data-theme="dark"]{
   --paper:#15171C; --paper2:#1E2128; --ink:#ECE8E0; --ink2:#B6B2A9; --ink3:#7E7B74; --rule:#2F333B;
   --maroon:#E0B1B1; --maroon2:#C98C8C; --cream:#3A3320; --water:#1A2028; --county:#232730; --county-line:#454A55;
   --op:#7FA3D6; --uc:#E2A75A; --pr:#E06A6E; --wd:#6B6B6B; --hot:#FF5A62; --shadow:0 10px 30px rgba(0,0,0,.5);
   --aq-ogallala:#c98500; --aq-etp:#3987e5; --aq-pecos:#199e70; --aq-trinity:#008300; --aq-ebfz:#d55181; --aq-cw:#9085e9; --aq-gc:#d95926; --aq-hueco:#e66767;
+  --river:#5CE1E6; --river-case:#0B1B2B; --basin:#E8D8A0;
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
@@ -108,6 +111,15 @@ svg.base-on .pin{stroke-width:2}
 .aqlabel{font-family:"Archivo",sans-serif;font-weight:700;font-stretch:85%;letter-spacing:.08em;text-transform:uppercase;fill:var(--ink);paint-order:stroke;stroke:var(--paper2);stroke-linejoin:round;pointer-events:none;text-anchor:middle;opacity:.92}
 .aqlabel.mi{font-weight:600;letter-spacing:.03em;text-transform:none;fill:var(--ink2);transition:opacity .15s}
 #wraster{image-rendering:pixelated;pointer-events:none}
+.river-case{fill:none;stroke:var(--river-case);stroke-width:3.4;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round;pointer-events:none}
+.river{fill:none;stroke:var(--river);stroke-width:1.7;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round;pointer-events:none}
+.res{fill:var(--river);fill-opacity:.85;stroke:var(--river-case);stroke-width:.9;vector-effect:non-scaling-stroke;fill-rule:evenodd;pointer-events:none}
+.basin{fill:none;stroke:var(--basin);stroke-width:1.5;stroke-dasharray:7 4;vector-effect:non-scaling-stroke;stroke-linejoin:round;pointer-events:none}
+.swlabel{font-family:"IBM Plex Sans",sans-serif;font-weight:600;font-style:italic;fill:var(--river);paint-order:stroke;stroke:var(--river-case);stroke-linejoin:round;pointer-events:none;text-anchor:middle;transition:opacity .15s}
+.swlabel.basin{font-family:"Archivo",sans-serif;font-weight:700;font-stretch:85%;font-style:normal;letter-spacing:.1em;text-transform:uppercase;fill:var(--basin);stroke:var(--paper2);opacity:.95}
+.legend .r i.rivsw{width:16px;height:3px;border-radius:2px;background:var(--river);box-shadow:0 0 0 1px var(--river-case)}
+.legend .r i.ressw{border-radius:2px;background:var(--river);opacity:.9}
+.legend .r i.bassw{border-radius:2px;background:none;border:1.5px dashed var(--basin)}
 .ctrl{position:absolute;left:12px;top:12px;display:flex;flex-direction:column;gap:4px}
 .lpanel{position:absolute;right:12px;top:12px;z-index:6;background:var(--paper2);border:1px solid var(--rule);border-radius:8px;box-shadow:var(--shadow);font-size:12px;color:var(--ink2);max-width:270px}
 .lpanel .lpt{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;padding:8px 12px;font-weight:600;font-size:12px;cursor:pointer;color:var(--ink);text-align:left}
@@ -117,6 +129,8 @@ svg.base-on .pin{stroke-width:2}
 .lpanel.closed .lbody{display:none}
 .lpanel label{display:flex;align-items:center;gap:6px;cursor:pointer}
 .lpanel select{border:1px solid var(--rule);background:var(--paper);border-radius:6px;padding:4px 6px;font-size:12px;cursor:pointer;max-width:100%}
+.lpanel .lsel{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-top:4px;cursor:default}
+.lpanel .lcap{font-size:11px;color:var(--ink3);line-height:1.35}
 /* when a shading is on, pins switch to colors that stand out on every shade */
 body.shaded{--op:#F7F4EE;--uc:#FFD23F;--pr:#FF4FA3;--wd:#B8B8B8}
 :root[data-theme="light"] body.shaded{--op:#1B1F27;--uc:#B8860B;--pr:#C2185B;--wd:#6B6B6B}
