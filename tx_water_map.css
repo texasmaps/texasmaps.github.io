@@ -190,6 +190,7 @@ body.shaded .legend .r i.ring{background:var(--paper2);box-shadow:0 0 0 2.5px va
 .tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--paper);padding:6px 9px;border-radius:5px;font-size:12px;display:none;z-index:30;max-width:280px;box-shadow:var(--shadow)}
 .tip small{display:block;opacity:.75}
 @media (max-width:1360px){.mapnav{display:none}}
+@media (max-width:1100px){.stat:nth-child(n+3){display:none}}
 @media (max-width:800px){
   .app{grid-template-columns:1fr;grid-template-rows:56px 1fr}
   header{grid-column:1;min-width:0;overflow:hidden;gap:10px;padding:0 12px}
