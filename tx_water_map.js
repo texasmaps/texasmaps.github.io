@@ -56,11 +56,12 @@ const byId={};SITES.forEach(s=>byId[s.id]=s);WM.byId=byId;
 WM.projects=SITES.filter(s=>s.kind!=='facility'&&s.status!=='withdrawn');
 
 // ---------- ramps / bins (same as the Data Center Watch map) ----------
-const ORANGE={light:['#f9d7cb','#efb19b','#e28969','#d45e2f','#af4517','#883008'],dark:['#883008','#af4517','#d45e2f','#e28969','#efb19b','#f9d7cb']};
-const RAMP={precip:{light:['#cde2fb','#9ec5f4','#6da7ec','#3987e5','#256abf','#184f95'],dark:['#184f95','#256abf','#3987e5','#6da7ec','#9ec5f4','#cde2fb']},
+// dark theme: the value rises with brightness AND saturation, so the top step is a vivid orange/blue rather than a pale tint
+const ORANGE={light:['#f9d7cb','#efb19b','#e28969','#d45e2f','#af4517','#883008'],dark:["#7f4c31", "#a15930", "#c5652d", "#e97125", "#ff8a47", "#ffae85"]};
+const RAMP={precip:{light:['#cde2fb','#9ec5f4','#6da7ec','#3987e5','#256abf','#184f95'],dark:["#3b5c87", "#4570a8", "#4e85ca", "#589aed", "#72b1ff", "#9dc7fe"]},
             wells:ORANGE,newwells:ORANGE,
             // diverging: dry (orange) <- neutral gray -> wet (blue); extremes are darkest in light mode, lightest in dark mode
-            recent:{light:['#883008','#d45e2f','#efb19b','#eceae4','#9ec5f4','#3987e5','#184f95'],dark:['#efb19b','#e28969','#d45e2f','#3a3f4a','#3987e5','#6da7ec','#9ec5f4']}};
+            recent:{light:['#883008','#d45e2f','#efb19b','#eceae4','#9ec5f4','#3987e5','#184f95'],dark:["#fea983", "#ea763c", "#ac603d", "#3a3f4a", "#4879b7", "#5b9df0", "#97c4fe"]}};
 const BINS={precip:[12,20,28,36,48],wells:[3,6,11,21,41],newwells:[3,6,11,21,41],recent:[50,70,90,110,130,150]};
 const BINLBL={precip:['under 12','12–20','20–28','28–36','36–48','48 and up'],wells:['1–2','3–5','6–10','11–20','21–40','41 and up'],newwells:['1–2','3–5','6–10','11–20','21–40','41 and up'],
               recent:['under half the usual rain (below 50%)','much drier: 50–70% of usual','drier: 70–90%','about usual: 90–110%','wetter: 110–130%','much wetter: 130–150%','over 1.5× the usual rain']};

@@ -21,7 +21,7 @@ Links work the same everywhere: `#shade=aquifers|precip|recent|wells|newwells|no
 
 All files must stay together in the repository root; the pages load them by relative path.
 
-**Cache note.** GitHub Pages tells browsers to keep files for 10 minutes, so a plain reload can pick up a new page while still using an old copy of `tx_water_map.js`, which breaks the map until the cache expires. Every local script and stylesheet reference in the three pages therefore carries a version query (`?v=YYYYMMDD-n`, currently `20260925-5`). Bump it in all three pages whenever `tx_water_map.js`, `tx_water_map.css` or a data file changes.
+**Cache note.** GitHub Pages tells browsers to keep files for 10 minutes, so a plain reload can pick up a new page while still using an old copy of `tx_water_map.js`, which breaks the map until the cache expires. Every local script and stylesheet reference in the three pages therefore carries a version query (`?v=YYYYMMDD-n`, currently `20260925-6`). Bump it in all three pages whenever `tx_water_map.js`, `tx_water_map.css` or a data file changes.
 
 ## Rebuilding the data
 
