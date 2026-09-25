@@ -155,8 +155,50 @@ WM.init=function(c){
   window.addEventListener('resize',fit);
   const mb=$('menubtn'),aside=document.querySelector('aside');if(mb)mb.onclick=()=>aside.classList.toggle('open');
   try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{for(const k in rasterCache)delete rasterCache[k];WM.update();});}catch(e){}
-  buildControls();WM.update();fit();
+  buildControls();initHeader();initSearch();initAbout();initWelcome();WM.update();fit();
 };
+const PAGES=[['texas_aquifers_map.html','Aquifers'],['texas_rainfall_map.html','Rainfall'],['texas_wells_map.html','Wells'],['texas_data_center_map.html','Data Center Watch']];
+function initHeader(){const hdr=document.querySelector('header');if(!hdr)return;const here=(location.pathname.split('/').pop()||'');hdr.querySelectorAll('.src').forEach(e=>e.remove());
+  const nav=document.createElement('nav');nav.className='mapnav';nav.setAttribute('aria-label','Other maps');nav.innerHTML=PAGES.map(([f,l])=>`<a href="${f}"${f===here?' class="cur" aria-current="page"':''}>${l}</a>`).join('');
+  const btn=document.createElement('button');btn.type='button';btn.className='aboutbtn';btn.textContent='About this map';btn.onclick=()=>WM.openAbout();
+  const anchor=hdr.querySelector('.allmaps');if(anchor){anchor.after(nav);nav.after(btn);}else{hdr.appendChild(nav);hdr.appendChild(btn);}}
+function initSearch(){const aside=document.querySelector('aside'),side=$('side');if(!aside||!side||$('q'))return;
+  const box=document.createElement('div');box.className='search';box.innerHTML='<input id="q" type="search" placeholder="Search a city, county, company or site…" autocomplete="off" aria-label="Search"><div class="sugg" id="sugg" role="listbox"></div>';aside.insertBefore(box,side);
+  const q=box.querySelector('input'),sg=box.querySelector('.sugg');let items=[];const P=WM.projects;
+  const cities={};P.forEach(s=>{if(!s.city)return;const k=s.city.toLowerCase()+'|'+s.fips;cities[k]=cities[k]||{city:s.city,county:s.county,fips:s.fips,n:0};cities[k].n++;});
+  const co=s=>(s.operator||'').split(/[\/(,;]/)[0].trim();const ops={};P.forEach(s=>{const o=co(s);if(o)ops[o]=(ops[o]||0)+1;});
+  function build(v){v=v.toLowerCase();items=[];
+    Object.keys(cname).filter(f=>cname[f].toLowerCase().startsWith(v)).slice(0,4).forEach(f=>items.push({t:cname[f]+' County',k:'county',f}));
+    Object.values(cities).filter(c=>c.city.toLowerCase().startsWith(v)).slice(0,4).forEach(c=>items.push({t:c.city+', '+c.county+' County',k:'city',c}));
+    Object.keys(ops).filter(o=>o.toLowerCase().includes(v)).sort((a,b)=>ops[b]-ops[a]).slice(0,4).forEach(o=>items.push({t:o+' ('+ops[o]+')',k:'company',o}));
+    P.filter(s=>s.name.toLowerCase().includes(v)).slice(0,6).forEach(s=>items.push({t:s.name,k:'site',s}));
+    sg.innerHTML=items.map((it,i)=>`<div role="option" data-i="${i}">${esc(it.t)}<small>${it.k}</small></div>`).join('');sg.style.display=items.length?'block':'none';}
+  function pick(it){sg.style.display='none';q.value='';
+    if(it.k==='county'&&cfg.onCounty)cfg.onCounty(it.f);else if(it.k==='city'&&cfg.onCounty)cfg.onCounty(it.c.fips);
+    else if(it.k==='site'&&cfg.onSite)cfg.onSite(it.s);else if(it.k==='company')showCompany(it.o);WM.closeAside();}
+  function showCompany(o){WM.highlightCounty(null);WM.select(null);WM.setFilter(s=>co(s)===o);WM.fit();const list=P.filter(s=>co(s)===o).sort((a,b)=>(b.mw||0)-(a.mw||0));
+    side.innerHTML=`<div class="detail"><button class="back" id="back">← Back</button><h2>${esc(o)}</h2><div class="sub">${list.length} project${list.length===1?'':'s'} in Texas · ${fmtMW(Math.round(list.reduce((t,s)=>t+(s.mw||0),0)))} announced</div></div><div class="blk"><h3>Sites <small>largest first</small></h3>${list.map(s=>WM.siteRow(s)).join('')}</div>`;
+    $('back').onclick=()=>{WM.setFilter(null);if(cfg.onBackground)cfg.onBackground();};}
+  q.addEventListener('input',()=>{const v=q.value.trim();if(v.length<2){sg.style.display='none';return;}build(v);});
+  sg.addEventListener('mousedown',e=>{const d=e.target.closest('[data-i]');if(d){e.preventDefault();pick(items[+d.dataset.i]);}});
+  q.addEventListener('keydown',e=>{if(e.key==='Enter'&&items.length)pick(items[0]);if(e.key==='Escape')sg.style.display='none';});
+  q.addEventListener('blur',()=>setTimeout(()=>sg.style.display='none',150));}
+function initWelcome(){let seen=false;try{seen=localStorage.getItem('txwater_welcome')==='1';}catch(e){}if(seen||cfg.noWelcome)return;
+  const tips=cfg.welcomeTips||['Every dot is a data center project. Bigger dots are bigger projects, and a red ring means local opposition.','Hover a dot or a county for details; click for the full water story.','Use <b>Map overlays</b> (top right) to color the map by aquifers, rainfall or wells.'];
+  if(window.innerWidth<=800)tips.push('Tap <b>List</b> for search and the rankings.');
+  const w=document.createElement('div');w.className='welcome';w.setAttribute('role','dialog');w.innerHTML=`<h2>${cfg.welcomeTitle||'Texas data centers and water'}</h2><ol>${tips.map(t=>`<li>${t}</li>`).join('')}</ol><button type="button">Explore the map</button>`;
+  svg.parentElement.appendChild(w);w.querySelector('button').onclick=()=>{w.remove();try{localStorage.setItem('txwater_welcome','1');}catch(e){}};}
+function initAbout(){const here=(location.pathname.split('/').pop()||'');const panel=document.createElement('div');panel.className='about';panel.innerHTML=`<div class="aboutbox"><button class="close" aria-label="Close">×</button><h2>About this map</h2>${cfg.about||''}
+    <h3>Where the data comes from</h3><ul><li><b>Data center sites</b>: Texas Data Center Watch, which tracks every announced project. A dot sits at the reported site when it is known, otherwise at the city or county center; each site card says which.</li>
+    <li><b>Aquifers, rivers, lakes, river basins and well records</b>: the Texas Water Development Board, the state's water agency. Well records are refreshed nightly.</li>
+    <li><b>Rainfall</b>: the PRISM Climate Group at Oregon State University, the standard source for U.S. rainfall averages (1991–2020) and recent months.</li></ul>
+    <h3>Things to keep in mind</h3><ul><li>A well count is the number of wells on record, not how much water is pumped. "Drilled since 2020" counts only wells whose driller filed a report.</li><li>Rainfall for the most recent months is provisional and can shift slightly as more station data arrive.</li><li>Aquifer and river outlines are simplified for a statewide map; where two aquifers stack, a site counts toward both.</li><li>A site's water values are read at its dot; for a dot placed at a city or county center they describe that spot, not the parcel.</li></ul>
+    <h3>See also</h3><p>${PAGES.filter(([f])=>f!==here).map(([f,l])=>`<a href="${f}">${l}</a>`).join(' · ')} · <a href="index.html">All maps</a></p>
+    <p class="fine">Full technical notes and download links are in the repository's WATER_MAPS.md.</p></div>`;
+  document.body.appendChild(panel);const close=()=>panel.classList.remove('open');panel.querySelector('.close').onclick=close;panel.addEventListener('click',e=>{if(e.target===panel)close();});document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+  WM.openAbout=()=>panel.classList.add('open');document.addEventListener('click',e=>{if(e.target.closest('.aboutlink')){e.preventDefault();WM.openAbout();}});}
+WM.glance=facts=>`<div class="blk glance"><h3>At a glance</h3><ul class="facts">${facts.map(f=>`<li>${f}</li>`).join('')}</ul></div>`;
+WM.note=text=>`<div class="note">${text} <a href="#" class="aboutlink">About this map and its data</a></div>`;
 WM.closeAside=()=>{if(window.innerWidth<=800)document.querySelector('aside').classList.remove('open');};
 function click(e,t){
   if(t.classList.contains('pin')){if(cfg.onSite)cfg.onSite(byId[t.dataset.id]);return;}
@@ -180,12 +222,12 @@ function showTip(e){const t=e.target;const r=svg.getBoundingClientRect();
   tip.style.display='block';const x=e.clientX-r.left+14,y=e.clientY-r.top+14;tip.style.left=Math.min(x,r.width-300)+'px';tip.style.top=Math.min(y,r.height-90)+'px';}
 function buildControls(){const L=$('layers');if(!L)return;const parts=[];
   if(cfg.controls.includes('pins'))parts.push(`<label><input type="checkbox" id="c-pins"${state.pins?' checked':''}> Data center sites</label>`);
-  if(cfg.controls.includes('colo'))parts.push(`<label><input type="checkbox" id="c-colo"${state.colo?' checked':''}> Colocation facilities</label>`);
+  if(cfg.controls.includes('colo'))parts.push(`<label><input type="checkbox" id="c-colo"${state.colo?' checked':''}> Small colocation sites</label>`);
     if(cfg.controls.includes('minor'))parts.push(`<label><input type="checkbox" id="c-minor"${state.minor?' checked':''}> Minor aquifers</label>`);
-  if(cfg.controls.includes('rivers')&&SW)parts.push(`<label><input type="checkbox" id="c-rivers"${state.rivers?' checked':''}> Rivers &amp; reservoirs</label>`);
+  if(cfg.controls.includes('rivers')&&SW)parts.push(`<label><input type="checkbox" id="c-rivers"${state.rivers?' checked':''}> Rivers &amp; lakes</label>`);
   if(cfg.controls.includes('basins')&&SW)parts.push(`<label><input type="checkbox" id="c-basins"${state.basins?' checked':''}> River basins</label>`);
   if(cfg.controls.includes('base')){const groups=[...new Set(cfg.baseChoices.filter(hasBase).map(k=>BASEGROUP[k]))];
-    parts.push(`<label class="lsel" for="c-base">Shade the map by (one at a time)</label><select id="c-base" aria-label="Shade the map by"><option value="">Nothing (plain map)</option>${groups.map(gname=>`<optgroup label="${gname}">${cfg.baseChoices.filter(k=>hasBase(k)&&BASEGROUP[k]===gname).map(k=>`<option value="${k}"${state.base===k?' selected':''}>${BASEOPT[k]}</option>`).join('')}</optgroup>`).join('')}</select><div class="lcap" id="c-cap">${baseCaption(state.base)}</div>`);}
+    parts.push(`<label class="lsel" for="c-base">Color the map by</label><select id="c-base" aria-label="Shade the map by"><option value="">Nothing (plain map)</option>${groups.map(gname=>`<optgroup label="${gname}">${cfg.baseChoices.filter(k=>hasBase(k)&&BASEGROUP[k]===gname).map(k=>`<option value="${k}"${state.base===k?' selected':''}>${BASEOPT[k]}</option>`).join('')}</optgroup>`).join('')}</select><div class="lcap" id="c-cap">${baseCaption(state.base)}</div>`);}
   L.innerHTML=parts.join('');
   const on=(id,fn)=>{const el=$(id);if(el)el.onchange=e=>{fn(e.target);WM.update();};};
   on('c-pins',el=>state.pins=el.checked);on('c-colo',el=>state.colo=el.checked);on('c-major',el=>state.major=el.checked);on('c-minor',el=>state.minor=el.checked);on('c-rivers',el=>state.rivers=el.checked);on('c-basins',el=>state.basins=el.checked);on('c-base',el=>{state.base=el.value;const cap=$('c-cap');if(cap)cap.textContent=baseCaption(state.base);});}
@@ -214,11 +256,11 @@ WM.collapseAfter=n=>{const sideEl=$('side');if(!sideEl)return;const blks=[...sid
   if(blks.length>n){const bar=document.createElement('div');bar.className='secbar';const btn=document.createElement('button');btn.type='button';const sync=()=>{const anyClosed=blks.some(b=>b.classList.contains('closed'));btn.textContent=anyClosed?`Show all ${blks.length} sections ▾`:'Collapse sections ▴';};
     btn.onclick=()=>{const anyClosed=blks.some(b=>b.classList.contains('closed'));blks.forEach((b,i)=>b.classList.toggle('closed',anyClosed?false:i>=n));sync();};bar.appendChild(btn);blks[0].parentElement.insertBefore(bar,blks[0]);sideEl.addEventListener('click',e=>{if(e.target.closest('.blk>h3'))setTimeout(sync,0);});sync();}};
 function legend(){const L=$('legend');if(!L)return;let h='';
-  if(state.pins)h+='<b>Data center sites</b>'+['operating','under_construction','proposed'].map(k=>`<div class="r"><i style="background:${COL[k]}"></i>${LBL[k]}</div>`).join('')+'<div class="r"><i class="ring"></i>Contested (opposition, lawsuit, water/air fight)</div>';
+  if(state.pins)h+='<b>Data center sites</b>'+['operating','under_construction','proposed'].map(k=>`<div class="r"><i style="background:${COL[k]}"></i>${LBL[k]}</div>`).join('')+'<div class="r"><i class="ring"></i>Red ring: local opposition or a lawsuit</div><div class="foot">Bigger dots are bigger projects (announced power).</div>';
   if(state.major)h+='<b>Major aquifers (TWDB)</b>'+AQ.major.map(a=>`<div class="r"><i class="aqsw${a.n==='Seymour'?' hsw':''}" style="--c:var(${AQVAR[a.n]})"></i>${esc(a.n)}</div>`).join('');
   if(state.minor)h+='<b>Minor aquifers (TWDB)</b><div class="r"><i class="misw"></i>22 minor aquifers — hover or zoom in for names</div>';
-  if(state.rivers&&SW)h+='<b>Rivers &amp; reservoirs (TWDB)</b><div class="r"><i class="rivsw"></i>Major river · hover for its name</div><div class="r"><i class="ressw"></i>Major reservoir (lake) · names appear as you zoom</div>';
-  if(state.basins&&SW)h+='<b>River basins (TWDB)</b><div class="r"><i class="bassw"></i>Basin boundary · all the land that drains to that river</div>';
+  if(state.rivers&&SW)h+='<b>Rivers &amp; lakes</b><div class="r"><i class="rivsw"></i>Major river (hover for its name)</div><div class="r"><i class="ressw"></i>Major lake (names appear as you zoom in)</div>';
+  if(state.basins&&SW)h+='<b>River basins</b><div class="r"><i class="bassw"></i>Basin boundary: all the land that drains to that river</div>';
   if(state.base&&WATER&&WATER[state.base]){const rg=ramp(state.base);h+=`<b>${binTitle(state.base)}</b>`+BINLBL[state.base].map((l,i)=>`<div class="r"><i class="ramp" style="background:${rg[i]}"></i>${l}</div>`).join('');}
   if(cfg.legendNote)h+=`<div class="foot">${cfg.legendNote}</div>`;
   L.innerHTML=`<button class="lgt" type="button" aria-label="Show or hide the legend">Legend ▾</button><div class="lgbody">${h}</div>`;

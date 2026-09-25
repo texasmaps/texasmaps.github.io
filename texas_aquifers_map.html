@@ -14,11 +14,10 @@
   <button id="menubtn" aria-label="Show the aquifer list">☰ List</button>
   <h1>Texas <span>Aquifers</span> &amp; Data Centers</h1>
   <a class="allmaps" href="index.html">All maps</a>
-  <span class="src">TWDB major aquifers</span>
   <div class="stats" id="stats"></div>
 </header>
 <aside>
-  <div class="intro">Which aquifers sit under the data center boom. Click an aquifer on the map or in the list to isolate it and see its sites; click a site for its water context. The map is shaded by aquifer; <b>Map overlays</b> can switch the shading to rainfall or wells (one at a time) and add rivers and reservoirs or river basins.</div>
+  <div class="intro">Which underground water sources sit beneath the data center boom. Click an aquifer to see its sites, or a site for its water story.</div>
   <div class="side" id="side"></div>
 </aside>
 <main>
@@ -45,15 +44,20 @@ const byName={};majors.concat(minors).forEach(x=>byName[x.n]=x);
 const none=P.filter(s=>!s.aqMs.length);
 const sumMW=list=>Math.round(list.reduce((t,s)=>t+(s.mw||0),0));
 const stat=(v,l)=>`<div class="stat"><b>${v}</b><small>${l}</small></div>`;
-$('stats').innerHTML=stat(P.length,'projects')+stat(P.length-none.length,'over a major aquifer')+stat(byName[EBFZ].on.length,'on the Edwards BFZ')+stat(fmtMW(sumMW(P)),'announced');
+$('stats').innerHTML=stat(P.length,'data center projects')+stat(P.length-none.length,'sit over a major aquifer')+stat(byName[EBFZ].on.length,'on the Edwards Aquifer');
 let ctx={mode:'list'};
 const swatch=x=>x.kind==='major'?`<span class="sw${x.n==='Seymour'?' hsw':''}" style="--c:var(${AQVAR[x.n]})"></span>`:'<span class="sw misw"></span>';
 const aqRow=x=>`<div class="row" data-aq="${esc(x.n)}" tabindex="0">${swatch(x)}<div><div class="n">${esc(x.n)}</div><div class="m">${x.on.length} project${x.on.length===1?'':'s'}${x.hot?' · '+x.hot+' contested':''}</div></div><span class="v"><b>${x.mw?fmtMW(Math.round(x.mw)):'—'}</b><br>announced</span></div>`;
 function renderList(){
-  side.innerHTML=`<div class="blk"><h3>Major aquifers <small>ranked by data center projects</small></h3>${majors.map(aqRow).join('')}
+  const tr=byName['Trinity'],og=byName['Ogallala'],eb=byName[EBFZ];
+  const facts=[`<b>${tr.on.length} of ${P.length} projects</b> sit over the Trinity Aquifer, the underground water source beneath Dallas–Fort Worth and the Hill Country.`,
+    `<b>${eb.on.length} projects</b> sit on the Edwards Aquifer, San Antonio's main water supply; ${eb.hot} of them face local opposition.`,
+    `<b>${og.on.length} projects</b> announcing ${fmtMW(Math.round(og.mw))} of power sit on the Ogallala, the Panhandle aquifer whose water levels have been falling for decades.`,
+    `<b>${none.length} projects</b> sit over no major aquifer at all.`];
+  side.innerHTML=WM.glance(facts)+`<div class="blk"><h3>Major aquifers <small>ranked by data center projects</small></h3>${majors.map(aqRow).join('')}
     <div class="row" data-aq="_none" tabindex="0"><span class="sw" style="--c:var(--ink3)"></span><div><div class="n">Not over a major aquifer</div><div class="m">${none.length} projects${none.filter(s=>s.hot).length?' · '+none.filter(s=>s.hot).length+' contested':''}</div></div><span class="v"><b>${fmtMW(sumMW(none))}</b><br>announced</span></div></div>
-    <div class="note">Counts exclude colocation facilities and withdrawn projects. A site over stacked aquifers (Edwards over Trinity in San Antonio) counts toward each. Boundaries: Texas Water Development Board major aquifers (2006). Sites: Texas Data Center Watch.</div>`;
-  WM.collapseAfter(1);
+    `+WM.note('Counts leave out small colocation sites and withdrawn projects. A site over two stacked aquifers counts toward both.');
+  WM.collapseAfter(2);
 }
 function setHash(h){try{history.replaceState(null,'',location.pathname+location.search+(h?'#'+h:''));}catch(e){}}
 function showAquifer(name){
@@ -101,7 +105,8 @@ side.addEventListener('click',e=>{const r=e.target.closest('.row[data-aq],.row[d
 side.addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('.row[data-aq],.row[data-site]');if(r)r.click();}});
 WM.init({base:'aquifers',minor:false,pins:true,colo:false,controls:['pins','colo','rivers','basins','base'],
   onSite:showSite,onCounty:showCounty,onAquifer:showAquifer,onBackground:()=>{if(ctx.mode!=='list')back();},
-  legendNote:'Aquifer outlines are generalized to ~900 m. Where TWDB polygons stack, a site lists all of them.'});
+  legendNote:'Aquifer outlines are simplified. Where two aquifers stack, a site lists both.',welcomeTitle:'Data centers and Texas aquifers',
+  about:'<p>This map shows the nine major aquifers of Texas, the underground layers that supply most of the state\'s groundwater, with every data center project on top. Colors tell the aquifers apart; hover for a name. Click an aquifer in the list to see only its sites.</p><p>Boundaries are the Texas Water Development Board\'s official major aquifers (2006 delineation). Where two aquifers stack, for example the Edwards over the Trinity around San Antonio, a site sits over both and counts toward each.</p>'});
 renderList();
 (function(){const h=decodeURIComponent(location.hash||'').replace(/^#/,'');let m;
   if((m=/(?:^|&)site=([^&]+)/.exec(h))&&WM.byId[m[1]])showSite(WM.byId[m[1]]);

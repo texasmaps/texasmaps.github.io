@@ -12,13 +12,12 @@
 <div class="app">
 <header>
   <button id="menubtn" aria-label="Show the list">☰ List</button>
-  <h1>Texas <span>Groundwater Wells</span> &amp; Data Centers</h1>
+  <h1>Texas <span>Wells</span> &amp; Data Centers</h1>
   <a class="allmaps" href="index.html">All maps</a>
-  <span class="src" id="src">TWDB well records</span>
   <div class="stats" id="stats"></div>
 </header>
 <aside>
-  <div class="intro">Where the data center boom meets well country. Shading counts TWDB-recorded wells per ~10 square miles; <b>Map overlays</b> can switch the shading to wells drilled since 2020, rainfall or aquifers (one at a time) and add rivers and reservoirs or river basins. Click a section title below to open or close it, a county for its wells by use, or a site for the wells around it.</div>
+  <div class="intro">How much the country around each data center already depends on groundwater. Darker shading means more wells. Click a county for its wells, or a site for the wells around it.</div>
   <div class="side" id="side"></div>
 </aside>
 <main>
@@ -44,9 +43,8 @@ const w10=P.map(s=>s.wells10).sort((a,b)=>a-b), median=w10[Math.floor(w10.length
 const dense=P.filter(s=>s.wells10>=200);
 const countyRank=Object.entries(CW.counties).sort((a,b)=>b[1].w-a[1].w).map(([f])=>f);
 const topUse=u=>{const e=Object.entries(u||{}).filter(([k])=>k!=='Unknown'&&k!=='Unused').sort((a,b)=>b[1]-a[1])[0];return e?e[0]:null;};
-$('src').textContent='TWDB'+(NW?' · driller\'s reports to '+NW.through:'');
 const stat=(v,l)=>`<div class="stat"><b>${v}</b><small>${l}</small></div>`;
-$('stats').innerHTML=stat(num(CW.total),'recorded wells')+(NW?stat(num(NW.total),'drilled since 2020'):'')+stat(num(median),'median within 6 mi of a project');
+$('stats').innerHTML=(NW?stat(num(NW.total),'water wells drilled since 2020'):stat(num(CW.total),'recorded wells'))+stat(num(median),'wells near a typical project')+stat(dense.length,'projects with 200+ wells nearby');
 let ctx={mode:'list'};
 const countyRow=(f,i)=>{const c=CW.counties[f],n=(byCounty[f]||[]).length,tu=topUse(c.u);return `<div class="row" data-county="${f}" tabindex="0"><span class="v" style="text-align:left">${i+1}</span><div><div class="n">${esc(c.n)} County</div><div class="m">${n?n+' project'+(n===1?'':'s'):'no projects'}${tu?' · mostly '+tu.toLowerCase():''}</div></div><span class="v"><b>${num(c.w)}</b><br>wells</span></div>`;};
 function renderList(){
@@ -54,14 +52,19 @@ function renderList(){
   const nwRank=NW?Object.keys(CW.counties).sort((a,b)=>CW.counties[b].nw-CW.counties[a].nw).slice(0,10):[];
   const nwRow=(f,i)=>{const c=CW.counties[f],n=(byCounty[f]||[]).length,tu=topUse(c.nwu);return `<div class="row" data-county="${f}" tabindex="0"><span class="v" style="text-align:left">${i+1}</span><div><div class="n">${esc(c.n)} County</div><div class="m">${n?n+' project'+(n===1?'':'s'):'no projects'}${tu?' · mostly '+tu.toLowerCase():''}</div></div><span class="v"><b>${num(c.nw)}</b><br>since 2020</span></div>`;};
   const newest=NW?P.slice().sort((a,b)=>b.newwells10-a.newwells10).slice(0,10):[];
-  side.innerHTML=`${NW?`<div class="blk"><h3>Most new wells near a project <small>drilled since 2020 · within ~6 mi</small></h3>${newest.map(s=>WM.siteRow(s,`<b>${num(s.newwells10)}</b><br>new wells`)).join('')}</div>
+  const facts=[];if(NW){const dom=NW.uses.Domestic||0,top=CW.counties[nwRank[0]],tu=topUse(top.nwu),best=newest[0];
+    facts.push(`Texans have drilled <b>${num(NW.total)} new water wells</b> since 2020, ${Math.round(100*dom/NW.total)}% of them for homes.`,
+      `<b>${esc(top.n)} County</b> leads with ${num(top.nw)} new wells${tu?', mostly '+tu.toLowerCase():''}.`,
+      `A typical project has <b>${num(median)} recorded wells</b> within six miles. ${esc(best.name)} in ${esc(best.county)} County has ${num(best.newwells10)} new wells nearby.`);}
+  facts.push(`<b>${dense.length} projects</b> sit in areas with 200 or more recorded wells nearby.`);
+  side.innerHTML=WM.glance(facts)+`${NW?`<div class="blk"><h3>Most new wells near a project <small>drilled since 2020 · within ~6 mi</small></h3>${newest.map(s=>WM.siteRow(s,`<b>${num(s.newwells10)}</b><br>new wells`)).join('')}</div>
     <div class="blk"><h3>Counties drilling the most <small>since 2020 · top 10</small></h3>${nwRank.map(nwRow).join('')}</div>
     <div class="blk"><h3>New wells by use <small>${num(NW.total)} since 2020</small></h3>${WM.useBars(NW.uses,NW.total)}</div>`:''}
     <div class="blk"><h3>Most recorded wells near a project <small>within ~6 mi</small></h3>${densest.slice(0,10).map(s=>WM.siteRow(s,`<b>${num(s.wells10)}</b><br>wells`)).join('')}</div>
     <div class="blk"><h3>Counties with the most recorded wells <small>top 10</small></h3>${countyRank.slice(0,10).map(countyRow).join('')}</div>
     <div class="blk"><h3>Recorded wells by use <small>${num(CW.total)} statewide</small></h3>${WM.useBars(CW.use,CW.total)}</div>
-    <div class="note">"Recorded wells" are the TWDB Groundwater Database (updated nightly; this copy ${esc(CW.generated||'')}), not every well ever drilled. "Drilled since 2020" counts new and replacement water-supply wells in TWDB's Submitted Driller's Reports${NW?' through '+esc(NW.through):''}, excluding monitoring wells, soil borings and test, injection or geothermal holes. Neither is a measure of pumping. "Unused" includes plugged wells. Counts exclude colocation facilities and withdrawn projects. Sites: Texas Data Center Watch.</div>`;
-  WM.collapseAfter(2);
+    `+WM.note('Counts leave out small colocation sites and withdrawn projects. A well count is wells on record, not water pumped.');
+  WM.collapseAfter(3);
 }
 function setHash(h){try{history.replaceState(null,'',location.pathname+location.search+(h?'#'+h:''));}catch(e){}}
 function showCounty(f){
@@ -87,7 +90,8 @@ side.addEventListener('click',e=>{const r=e.target.closest('.row[data-site],.row
 side.addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('.row');if(r)r.click();}});
 WM.init({major:false,minor:false,base:'wells',pins:true,colo:false,controls:['pins','colo','rivers','basins','base'],
   onSite:showSite,onCounty:showCounty,onAquifer:null,onBackground:()=>{if(ctx.mode!=='list')back();},
-  legendNote:'TWDB Groundwater Database well locations, or water-supply wells drilled since 2020 from TWDB driller\'s reports, counted per 0.05° cell (about 10 square miles).'});
+  legendNote:'Well records: Texas Water Development Board.',welcomeTitle:'Data centers and Texas groundwater wells',
+  about:`<p>This map shows how much the land around each data center already relies on groundwater. "All recorded wells" are the ${num(CW.total)} wells in the Texas Water Development Board\'s Groundwater Database (this copy ${esc(CW.generated||'')}), not every well ever drilled. "Water wells drilled since 2020" counts the ${NW?num(NW.total):''} new and replacement water-supply wells in the reports every licensed driller must file${NW?', through '+esc(NW.through):''}; monitoring wells, soil borings and test, injection or geothermal holes are left out.</p><p>Shading counts wells per cell of about 10 square miles. Neither count says how much water is pumped, and "unused" includes plugged wells.</p>`});
 renderList();
 (function(){const h=decodeURIComponent(location.hash||'').replace(/^#/,'');let m;
   if((m=/(?:^|&)site=([^&]+)/.exec(h))&&WM.byId[m[1]])showSite(WM.byId[m[1]]);
