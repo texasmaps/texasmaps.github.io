@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Texas Rainfall & Data Centers</title>
-<meta name="description" content="Average annual rainfall across Texas (NRCS 1981–2010, via TWDB) with data center sites from Texas Data Center Watch: which projects sit in the driest parts of the state.">
+<meta name="description" content="Average annual rainfall across Texas (PRISM 1991–2020 normals) and the last 12 months versus normal, with data center sites from Texas Data Center Watch: which projects sit in the driest parts of the state.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="tx_water_map.css">
 </head>
@@ -14,11 +14,11 @@
   <button id="menubtn" aria-label="Show the list">☰ List</button>
   <h1>Texas <span>Rainfall</span> &amp; Data Centers</h1>
   <a class="allmaps" href="index.html">All maps</a>
-  <span class="src">NRCS 1981–2010 avg. annual precipitation · TWDB</span>
+  <span class="src" id="src">PRISM rainfall</span>
   <div class="stats" id="stats"></div>
 </header>
 <aside>
-  <div class="intro">Where the data center boom lands on the rainfall map. Click a rainfall zone to see its projects, a county for its average, or a site for its water context.</div>
+  <div class="intro">Where the data center boom lands on the rainfall map: the 1991–2020 normal, or the last 12 months against it. Click a rainfall zone to see its projects, a county for its averages, or a site for its water context.</div>
   <div class="layers" id="layers"></div>
   <div class="side" id="side"></div>
 </aside>
@@ -37,7 +37,8 @@
 <script src="tx_water_map.js"></script>
 <script>
 const {esc,fmtMW,num,COL,LBL}=WM, $=id=>document.getElementById(id);
-const P=WM.projects, side=$('side'), BINS=WM.BINS.precip, LBLS=WM.BINLBL.precip;
+const P=WM.projects, side=$('side'), BINS=WM.BINS.precip, LBLS=WM.BINLBL.precip, RC=WM.water&&WM.water.recent;
+$('src').textContent='PRISM · '+(WM.water&&WM.water.precip.label?WM.water.precip.label.replace('PRISM ',''):'')+' normals'+(RC?' · 12 months to '+RC.label.split('–').pop().trim():'');
 const sumMW=list=>Math.round(list.reduce((t,s)=>t+(s.mw||0),0));
 const zoneOf=s=>WM.binOf(s.rain,BINS);
 const zones=LBLS.map((l,i)=>{const on=P.filter(s=>s.rain&&zoneOf(s)===i);return {i,l,on,mw:sumMW(on),hot:on.filter(s=>s.hot).length};});
@@ -45,7 +46,8 @@ const rains=P.filter(s=>s.rain).map(s=>s.rain).sort((a,b)=>a-b), median=rains[Ma
 const dry=P.filter(s=>s.rain&&s.rain<20);
 const byCounty={};P.forEach(s=>(byCounty[s.fips]=byCounty[s.fips]||[]).push(s));
 const stat=(v,l)=>`<div class="stat"><b>${v}</b><small>${l}</small></div>`;
-$('stats').innerHTML=stat(P.length,'projects')+stat(median+' in',"median rainfall at a project")+stat(dry.length,'projects under 20 in/yr')+stat(fmtMW(sumMW(dry)),'announced there');
+const dryNow=P.filter(s=>s.recent&&s.recent<70);
+$('stats').innerHTML=stat(P.length,'projects')+stat(median+' in',"median in/yr at a project")+stat(dry.length,'under 20 in/yr')+(RC?stat(dryNow.length,'below 70% of normal, 12 mo'):stat(fmtMW(sumMW(dry)),'announced there'));
 let ctx={mode:'list'};
 const zoneRow=z=>`<div class="row" data-zone="${z.i}" tabindex="0"><span class="sw" style="--c:${WM.ramp('precip')[z.i]};opacity:1"></span><div><div class="n">${z.l} in/yr</div><div class="m">${z.on.length} project${z.on.length===1?'':'s'}${z.hot?' · '+z.hot+' contested':''}</div></div><span class="v"><b>${z.mw?fmtMW(z.mw):'—'}</b><br>announced</span></div>`;
 const countyRow=f=>{const c=WM.cw.counties[f]||{},n=byCounty[f].length;return `<div class="row" data-county="${f}" tabindex="0"><span class="sw" style="--c:${WM.ramp('precip')[WM.binOf(c.r||0,BINS)]};opacity:1"></span><div><div class="n">${esc(c.n||WM.cname[f])} County</div><div class="m">${n} project${n===1?'':'s'} · ${fmtMW(sumMW(byCounty[f]))}</div></div><span class="v"><b>${c.r?c.r:'—'}</b><br>in/yr avg.</span></div>`;};
@@ -53,9 +55,10 @@ function renderList(){
   const driest=P.filter(s=>s.rain).sort((a,b)=>a.rain-b.rain||(b.mw||0)-(a.mw||0)).slice(0,12);
   const dryCounties=Object.keys(byCounty).filter(f=>WM.cw.counties[f]&&WM.cw.counties[f].r).sort((a,b)=>WM.cw.counties[a].r-WM.cw.counties[b].r).slice(0,12);
   side.innerHTML=`<div class="blk"><h3>Projects by rainfall zone <small>avg. annual, inches</small></h3>${zones.map(zoneRow).join('')}</div>
-    <div class="blk"><h3>Driest sites <small>lowest rainfall first</small></h3>${driest.map(s=>WM.siteRow(s,`<b>${s.rain}</b><br>in/yr`)).join('')}</div>
+    <div class="blk"><h3>Driest sites <small>lowest normal rainfall first</small></h3>${driest.map(s=>WM.siteRow(s,`<b>${s.rain}</b><br>in/yr`)).join('')}</div>
+    ${RC?`<div class="blk"><h3>Driest vs. normal <small>last 12 months · ${esc(RC.label)}</small></h3>${P.filter(s=>s.recent).sort((a,b)=>a.recent-b.recent||(b.mw||0)-(a.mw||0)).slice(0,12).map(s=>WM.siteRow(s,`<b>${s.recent}%</b><br>of normal`)).join('')}</div>`:''}
     <div class="blk"><h3>Driest counties with projects <small>county average</small></h3>${dryCounties.map(countyRow).join('')}</div>
-    <div class="note">Rainfall is the NRCS 1981–2010 average annual precipitation (1-inch bands) read at each pin; county figures average the same raster over the county. Counts exclude colocation facilities and withdrawn projects. Sites: Texas Data Center Watch.</div>`;
+    <div class="note">Rainfall is the PRISM 1991–2020 average annual precipitation (800 m grid) read at each pin; county figures average the same grid over the county. "Last 12 months" is PRISM's monthly totals for the window divided by the annual normal (4 km grid). Counts exclude colocation facilities and withdrawn projects. PRISM Climate Group, Oregon State University; sites from Texas Data Center Watch.</div>`;
 }
 function setHash(h){try{history.replaceState(null,'',location.pathname+location.search+(h?'#'+h:''));}catch(e){}}
 function showZone(i){
@@ -79,19 +82,20 @@ function showCounty(f){
   const c=WM.cw.counties[f]||{};const sites=(byCounty[f]||[]).slice().sort((a,b)=>(b.mw||0)-(a.mw||0));
   const rank=Object.values(WM.cw.counties).filter(x=>x.r).sort((a,b)=>a.r-b.r).findIndex(x=>x.n===c.n)+1;
   side.innerHTML=`<div class="detail"><button class="back" id="back">← Back to list</button><h2>${esc(WM.cname[f])} County</h2><div class="sub">${c.r?c.r+' in/yr average rainfall':'no rainfall value'}${rank?' · '+rank+(rank===1?'st':rank===2?'nd':rank===3?'rd':'th')+' driest of 254 counties':''}</div>
-    <dl class="kv"><dt>Projects</dt><dd>${sites.length}${sites.length?' · '+fmtMW(sumMW(sites))+' announced':''}</dd><dt>TWDB wells</dt><dd>${num(c.w)}</dd></dl></div>
+    <dl class="kv">${RC?`<dt>Last 12 months</dt><dd>${c.p?c.p+'% of normal':'—'}</dd>`:''}<dt>Projects</dt><dd>${sites.length}${sites.length?' · '+fmtMW(sumMW(sites))+' announced':''}</dd><dt>TWDB wells</dt><dd>${num(c.w)}${c.nw?' · '+num(c.nw)+' drilled since 2020':''}</dd></dl></div>
     <div class="blk"><h3>Sites in ${esc(WM.cname[f])} County</h3>${sites.length?sites.map(s=>WM.siteRow(s,`<b>${s.rain||'—'}</b><br>in/yr`)).join(''):'<div class="empty">No data center projects listed here.</div>'}</div>`;
   $('back').onclick=back;setHash('county='+f);
 }
 function back(){ctx={mode:'list'};WM.highlightCounty(null);WM.setFilter(null);WM.select(null);WM.fit();renderList();setHash('');}
 side.addEventListener('click',e=>{const r=e.target.closest('.row[data-zone],.row[data-site],.row[data-county]');if(!r)return;if(r.dataset.zone)showZone(+r.dataset.zone);else if(r.dataset.county)showCounty(r.dataset.county);else showSite(WM.byId[r.dataset.site]);WM.closeAside();});
 side.addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('.row');if(r)r.click();}});
-WM.init({major:false,minor:false,base:'precip',pins:true,colo:false,controls:['pins','colo','major','minor'],
+WM.init({major:false,minor:false,base:'precip',pins:true,colo:false,controls:['pins','colo','major','minor','base'],baseChoices:['precip','recent'],
   onSite:showSite,onCounty:showCounty,onAquifer:null,onBackground:()=>{if(ctx.mode!=='list')back();},
   onUpdate:()=>{if(ctx.mode==='list')renderList();},
-  legendNote:'NRCS 1981–2010 average annual precipitation in 1-inch bands, rasterized to ~2.5 km cells.'});
+  legendNote:'PRISM Climate Group, Oregon State University: 1991–2020 normals (800 m) and recent monthly grids (4 km), resampled to ~2.5 km cells.'});
 renderList();
 (function(){const h=decodeURIComponent(location.hash||'').replace(/^#/,'');let m;
+  if(/(?:^|&)shade=recent/.test(h)&&RC)WM.setLayers({base:'recent'});
   if((m=/(?:^|&)site=([^&]+)/.exec(h))&&WM.byId[m[1]])showSite(WM.byId[m[1]]);
   else if((m=/(?:^|&)zone=(\d)/.exec(h)))showZone(+m[1]);
   else if((m=/(?:^|&)county=(\d+)/.exec(h))&&WM.cname[m[1]])showCounty(m[1]);})();

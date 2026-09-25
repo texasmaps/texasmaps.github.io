@@ -24,26 +24,33 @@ function decRing(str){const v=varints(str),pts=[];let x=0,y=0;for(let i=0;i<v.le
 function ringsPath(rings){let d='';rings.forEach(r=>{r.forEach((p,i)=>{const [x,y]=px(p[0],p[1]);d+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);});d+='Z';});return d;}
 function inRings(a,lon,lat){if(lon<a.bb[0]||lon>a.bb[2]||lat<a.bb[1]||lat>a.bb[3])return false;let ins=false;for(const r of a.rings){for(let i=0,j=r.length-1;i<r.length;j=i++){const xi=r[i][0],yi=r[i][1],xj=r[j][0],yj=r[j][1];if((yi>lat)!==(yj>lat)&&lon<(xj-xi)*(lat-yi)/(yj-yi)+xi)ins=!ins;}}return ins;}
 ['major','minor'].forEach(k=>AQ[k].forEach(a=>{if(a.r){a.rings=a.r.map(decRing);delete a.r;}let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;a.rings.forEach(r=>r.forEach(p=>{if(p[0]<x0)x0=p[0];if(p[0]>x1)x1=p[0];if(p[1]<y0)y0=p[1];if(p[1]>y1)y1=p[1];}));a.bb=[x0,y0,x1,y1];a.kind=k;}));
-if(WATER){['precip','wells'].forEach(k=>{const g=WATER[k];if(g.a)return;const v=varints(g.d);const a=new Uint16Array(g.cols*g.rows);let p=0;for(let i=0;i<v.length;i+=2){a.fill(v[i],p,p+v[i+1]);p+=v[i+1];}g.a=a;});}
+if(WATER){Object.keys(WATER).forEach(k=>{const g=WATER[k];if(!g||!g.d||g.a)return;const v=varints(g.d);const a=new Uint16Array(g.cols*g.rows);let p=0;for(let i=0;i<v.length;i+=2){a.fill(v[i],p,p+v[i+1]);p+=v[i+1];}g.a=a;});}
 function gval(g,lon,lat){const c=Math.floor((lon-g.west)/g.res),r=Math.floor((g.north-lat)/g.res);return(c<0||r<0||c>=g.cols||r>=g.rows)?0:g.a[r*g.cols+c];}
-function wellsNear(lon,lat,km){if(!WATER)return 0;const g=WATER.wells,cl=Math.cos(lat*Math.PI/180);let n=0;const dc=Math.ceil(km/(111.32*cl*g.res)),dr=Math.ceil(km/(110.57*g.res));const c0=Math.floor((lon-g.west)/g.res),r0=Math.floor((g.north-lat)/g.res);
+function near(g,lon,lat,km){if(!g||!g.a)return 0;const cl=Math.cos(lat*Math.PI/180);let n=0;const dc=Math.ceil(km/(111.32*cl*g.res)),dr=Math.ceil(km/(110.57*g.res));const c0=Math.floor((lon-g.west)/g.res),r0=Math.floor((g.north-lat)/g.res);
   for(let r=r0-dr;r<=r0+dr;r++)for(let c=c0-dc;c<=c0+dc;c++){if(r<0||c<0||r>=g.rows||c>=g.cols)continue;const dx=(g.west+(c+.5)*g.res-lon)*111.32*cl,dy=(g.north-(r+.5)*g.res-lat)*110.57;if(dx*dx+dy*dy<=km*km)n+=g.a[r*g.cols+c];}return n;}
-function waterAt(lon,lat){const o={ma:AQ.major.filter(a=>inRings(a,lon,lat)).sort((a,b)=>(a.n===EBFZ?0:1)-(b.n===EBFZ?0:1)),mi:AQ.minor.filter(a=>inRings(a,lon,lat))};if(WATER){o.rain=gval(WATER.precip,lon,lat);o.wells=gval(WATER.wells,lon,lat);}return o;}
-Object.assign(WM,{waterAt,wellsNear,gval,inRings});
-SITES.forEach(s=>{const w=waterAt(s.lon,s.lat);s.aqMs=w.ma.map(a=>a.n);s.aqM=s.aqMs[0]||null;s.aqm=w.mi.map(a=>a.n);s.rain=w.rain||0;s.wellsCell=w.wells||0;s.wells10=wellsNear(s.lon,s.lat,10);});
+const wellsNear=(lon,lat,km)=>WATER?near(WATER.wells,lon,lat,km):0;
+function waterAt(lon,lat){const o={ma:AQ.major.filter(a=>inRings(a,lon,lat)).sort((a,b)=>(a.n===EBFZ?0:1)-(b.n===EBFZ?0:1)),mi:AQ.minor.filter(a=>inRings(a,lon,lat))};if(WATER){o.rain=gval(WATER.precip,lon,lat);o.wells=gval(WATER.wells,lon,lat);o.recent=WATER.recent?gval(WATER.recent,lon,lat):0;o.newwells=WATER.newwells?gval(WATER.newwells,lon,lat):0;}return o;}
+Object.assign(WM,{waterAt,wellsNear,near,gval,inRings});
+SITES.forEach(s=>{const w=waterAt(s.lon,s.lat);s.aqMs=w.ma.map(a=>a.n);s.aqM=s.aqMs[0]||null;s.aqm=w.mi.map(a=>a.n);s.rain=w.rain||0;s.recent=w.recent||0;s.wellsCell=w.wells||0;s.newwellsCell=w.newwells||0;s.wells10=wellsNear(s.lon,s.lat,10);s.newwells10=WATER&&WATER.newwells?near(WATER.newwells,s.lon,s.lat,10):0;});
 const byId={};SITES.forEach(s=>byId[s.id]=s);WM.byId=byId;
 WM.projects=SITES.filter(s=>s.kind!=='facility'&&s.status!=='withdrawn');
 
 // ---------- ramps / bins (same as the Data Center Watch map) ----------
+const ORANGE={light:['#f9d7cb','#efb19b','#e28969','#d45e2f','#af4517','#883008'],dark:['#883008','#af4517','#d45e2f','#e28969','#efb19b','#f9d7cb']};
 const RAMP={precip:{light:['#cde2fb','#9ec5f4','#6da7ec','#3987e5','#256abf','#184f95'],dark:['#184f95','#256abf','#3987e5','#6da7ec','#9ec5f4','#cde2fb']},
-            wells:{light:['#f9d7cb','#efb19b','#e28969','#d45e2f','#af4517','#883008'],dark:['#883008','#af4517','#d45e2f','#e28969','#efb19b','#f9d7cb']}};
-const BINS={precip:[12,20,28,36,48],wells:[3,6,11,21,41]};
-const BINLBL={precip:['under 12','12–20','20–28','28–36','36–48','48 and up'],wells:['1–2','3–5','6–10','11–20','21–40','41 and up']};
-const BINTITLE={precip:'Avg. annual rainfall, inches/yr (NRCS 1981–2010)',wells:'TWDB-recorded wells per ~10 sq mi cell'};
+            wells:ORANGE,newwells:ORANGE,
+            // diverging: dry (orange) <- neutral gray -> wet (blue); extremes are darkest in light mode, lightest in dark mode
+            recent:{light:['#883008','#d45e2f','#efb19b','#eceae4','#9ec5f4','#3987e5','#184f95'],dark:['#efb19b','#e28969','#d45e2f','#3a3f4a','#3987e5','#6da7ec','#9ec5f4']}};
+const BINS={precip:[12,20,28,36,48],wells:[3,6,11,21,41],newwells:[3,6,11,21,41],recent:[50,70,90,110,130,150]};
+const BINLBL={precip:['under 12','12–20','20–28','28–36','36–48','48 and up'],wells:['1–2','3–5','6–10','11–20','21–40','41 and up'],newwells:['1–2','3–5','6–10','11–20','21–40','41 and up'],
+              recent:['under 50% of normal','50–70%','70–90%','90–110% · near normal','110–130%','130–150%','over 150% of normal']};
+const BASEOPT={precip:'Shade: avg. annual rainfall',recent:'Shade: last 12 months vs. normal',wells:'Shade: all recorded wells',newwells:'Shade: water wells drilled since 2020'};
+function binTitle(k){const g=(WATER&&WATER[k])||{};return k==='precip'?`Avg. annual rainfall, inches/yr (${g.label||'normal'})`:k==='recent'?`Rainfall ${g.label||'last 12 months'} as % of the ${g.normal||'1991–2020'} normal`:k==='wells'?'TWDB-recorded wells per ~10 sq mi cell':`Water-supply wells drilled since ${(g.since||'2020').slice(0,4)} per ~10 sq mi cell`;}
+const BINTITLE={get precip(){return binTitle('precip');},get recent(){return binTitle('recent');},get wells(){return binTitle('wells');},get newwells(){return binTitle('newwells');}};
 function binOf(v,b){let i=0;while(i<b.length&&v>=b[i])i++;return i;}
 function isDark(){const t=document.documentElement.dataset.theme;return t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);}
 function ramp(kind){return RAMP[kind][isDark()?'dark':'light'];}
-Object.assign(WM,{RAMP,BINS,BINLBL,BINTITLE,binOf,isDark,ramp});
+Object.assign(WM,{RAMP,BINS,BINLBL,BINTITLE,BASEOPT,binTitle,binOf,isDark,ramp});
 const rasterCache={};
 function rasterURL(kind){const key=kind+(isDark()?'d':'l');if(rasterCache[key])return rasterCache[key];const g=WATER[kind],cv=document.createElement('canvas');cv.width=g.cols;cv.height=g.rows;const ctx=cv.getContext('2d'),img=ctx.createImageData(g.cols,g.rows);
   const rg=ramp(kind).map(h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]),b=BINS[kind];
@@ -80,7 +87,8 @@ Object.assign(WM,{fit,zoomTo,zoomAt,
   zoomSite:s=>{const [x,y]=px(s.lon,s.lat);zoomTo(x-25,y-25,50,50);}});
 
 WM.init=function(c){
-  cfg=Object.assign({major:false,minor:false,base:'',pins:true,colo:false,controls:['pins','colo','major','minor','base'],onSite:null,onCounty:null,onAquifer:null,onBackground:null,legendNote:''},c);
+  cfg=Object.assign({major:false,minor:false,base:'',pins:true,colo:false,controls:['pins','colo','major','minor','base'],baseChoices:null,onSite:null,onCounty:null,onAquifer:null,onBackground:null,legendNote:''},c);
+  if(!cfg.baseChoices)cfg.baseChoices=Object.keys(BASEOPT).filter(k=>WATER&&WATER[k]);
   Object.assign(state,{major:cfg.major,minor:cfg.minor,base:WATER?cfg.base:'',pins:cfg.pins,colo:cfg.colo});
   svg=$('map');tip=$('tip');
   svg.innerHTML='<defs><pattern id="hatch-mi" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5"/></pattern><pattern id="hatch-aq" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5"/></pattern></defs><g id="view"><image id="wraster" preserveAspectRatio="none" style="display:none"></image><g id="counties"></g><g id="aq-minor"></g><g id="aq-major"></g><g id="clabels"></g><g id="aq-labels"></g><g id="pins"></g></g>';
@@ -113,12 +121,12 @@ function click(e,t){
   if(t.classList.contains('county')){if(cfg.onCounty)cfg.onCounty(t.dataset.fips);return;}
   if(cfg.onBackground)cfg.onBackground();
 }
-function siteTip(s){const p=[];if(state.major)p.push(s.aqMs.length?s.aqMs.map(esc).join(' + ')+' aquifer':'no major aquifer');if(state.minor&&s.aqm.length)p.push(s.aqm.map(esc).join(', ')+' (minor)');if(WATER){p.push(s.rain?s.rain+' in/yr rain':'');p.push(num(s.wells10)+' wells within 6 mi');}
+function siteTip(s){const p=[];if(state.major)p.push(s.aqMs.length?s.aqMs.map(esc).join(' + ')+' aquifer':'no major aquifer');if(state.minor&&s.aqm.length)p.push(s.aqm.map(esc).join(', ')+' (minor)');if(WATER){p.push(state.base==='recent'?(s.recent?s.recent+'% of normal, last 12 mo':''):(s.rain?s.rain+' in/yr rain':''));p.push(state.base==='newwells'?num(s.newwells10)+' wells drilled since 2020 within 6 mi':num(s.wells10)+' wells within 6 mi');}
   return `<b>${esc(s.name)}</b><small>${esc(s.operator||'')} · ${LBL[s.status]}${s.mw?' · '+fmtMW(s.mw):''}</small><small>${esc(s.city||'')}, ${esc(s.county)} County</small><small>${p.filter(Boolean).join(' · ')}</small>`;}
 function countyTip(f,e){const c=CW.counties[f]||{};const n=SITES.filter(s=>s.fips===f&&visible(s)).length;const [lon,lat]=cursorLonLat(e);const w=waterAt(lon,lat);const p=[];
   if(state.major)p.push(w.ma.length?w.ma.map(a=>esc(a.n)).join(' + ')+' aquifer':'no major aquifer here');if(state.minor&&w.mi.length)p.push(w.mi.map(a=>esc(a.n)).join(', ')+' (minor)');
-  if(state.base==='precip'&&w.rain)p.push(w.rain+' in/yr here');if(state.base==='wells')p.push(w.wells+' well'+(w.wells===1?'':'s')+' in this cell');
-  return `<b>${esc(cname[f])} County</b><small>${c.r?'avg. rainfall '+c.r+' in/yr · ':''}${num(c.w)} TWDB wells · ${n} data center site${n===1?'':'s'} shown</small>${p.length?`<small>${p.join(' · ')}</small>`:''}`;}
+  if(state.base==='precip'&&w.rain)p.push(w.rain+' in/yr here');if(state.base==='recent'&&w.recent)p.push(w.recent+'% of normal here');if(state.base==='wells')p.push(w.wells+' well'+(w.wells===1?'':'s')+' in this cell');if(state.base==='newwells')p.push(w.newwells+' well'+(w.newwells===1?'':'s')+' drilled since 2020 in this cell');
+  return `<b>${esc(cname[f])} County</b><small>${c.r?'avg. rainfall '+c.r+' in/yr · ':''}${c.p?'last 12 mo '+c.p+'% of normal · ':''}${num(c.w)} TWDB wells${c.nw?' · '+num(c.nw)+' drilled since 2020':''} · ${n} data center site${n===1?'':'s'} shown</small>${p.length?`<small>${p.join(' · ')}</small>`:''}`;}
 function showTip(e){const t=e.target;const r=svg.getBoundingClientRect();
   if(t.classList.contains('pin'))tip.innerHTML=siteTip(byId[t.dataset.id]);
   else if(t.classList.contains('county'))tip.innerHTML=countyTip(t.dataset.fips,e);
@@ -129,7 +137,7 @@ function buildControls(){const L=$('layers');if(!L)return;const parts=[];
   if(cfg.controls.includes('colo'))parts.push(`<label><input type="checkbox" id="c-colo"${state.colo?' checked':''}> Colocation facilities</label>`);
   if(cfg.controls.includes('major'))parts.push(`<label><input type="checkbox" id="c-major"${state.major?' checked':''}> Major aquifers</label>`);
   if(cfg.controls.includes('minor'))parts.push(`<label><input type="checkbox" id="c-minor"${state.minor?' checked':''}> Minor aquifers</label>`);
-  if(cfg.controls.includes('base')&&WATER)parts.push(`<select id="c-base" aria-label="Base shading"><option value="">No base shading</option><option value="precip"${state.base==='precip'?' selected':''}>Shade: avg. annual rainfall</option><option value="wells"${state.base==='wells'?' selected':''}>Shade: groundwater well density</option></select>`);
+  if(cfg.controls.includes('base')&&WATER)parts.push(`<select id="c-base" aria-label="Base shading"><option value="">No base shading</option>${cfg.baseChoices.filter(k=>WATER[k]).map(k=>`<option value="${k}"${state.base===k?' selected':''}>${BASEOPT[k]}</option>`).join('')}</select>`);
   L.innerHTML=parts.join('');
   const on=(id,fn)=>{const el=$(id);if(el)el.onchange=e=>{fn(e.target);WM.update();};};
   on('c-pins',el=>state.pins=el.checked);on('c-colo',el=>state.colo=el.checked);on('c-major',el=>state.major=el.checked);on('c-minor',el=>state.minor=el.checked);on('c-base',el=>state.base=el.value);}
@@ -155,7 +163,7 @@ function legend(){const L=$('legend');if(!L)return;let h='';
   if(state.pins)h+='<b>Data center sites</b>'+['operating','under_construction','proposed'].map(k=>`<div class="r"><i style="background:${COL[k]}"></i>${LBL[k]}</div>`).join('')+'<div class="r"><i class="ring"></i>Contested (opposition, lawsuit, water/air fight)</div>';
   if(state.major)h+='<b>Major aquifers (TWDB)</b>'+AQ.major.map(a=>`<div class="r"><i class="aqsw${a.n==='Seymour'?' hsw':''}" style="--c:var(${AQVAR[a.n]})"></i>${esc(a.n)}</div>`).join('');
   if(state.minor)h+='<b>Minor aquifers (TWDB)</b><div class="r"><i class="misw"></i>22 minor aquifers — hover or zoom in for names</div>';
-  if(state.base&&WATER){const rg=ramp(state.base);h+=`<b>${BINTITLE[state.base]}</b>`+BINLBL[state.base].map((l,i)=>`<div class="r"><i class="ramp" style="background:${rg[i]}"></i>${l}</div>`).join('');}
+  if(state.base&&WATER){const rg=ramp(state.base);h+=`<b>${binTitle(state.base)}</b>`+BINLBL[state.base].map((l,i)=>`<div class="r"><i class="ramp" style="background:${rg[i]}"></i>${l}</div>`).join('');}
   if(cfg.legendNote)h+=`<div class="foot">${cfg.legendNote}</div>`;
   L.innerHTML=`<button class="lgt" type="button" aria-label="Show or hide the legend">Legend ▾</button><div class="lgbody">${h}</div>`;
   L.querySelector('.lgt').onclick=()=>L.classList.toggle('open');}
@@ -163,9 +171,9 @@ function legend(){const L=$('legend');if(!L)return;let h='';
 // ---------- shared HTML fragments ----------
 WM.siteHTML=function(s,extra=''){const prec=s.precision==='site'?'the reported site':s.precision==='city'?'the city-center pin (exact parcel not published)':'the county-center pin (only the county is known)';
   return `<div class="detail"><span class="status"><i style="background:${COL[s.status]}"></i>${LBL[s.status]}${s.kind==='facility'?' · colocation':''}</span>${s.hot?'<span class="hotflag">Contested</span>':''}<h2>${esc(s.name)}</h2><div class="sub">${esc(s.operator||'')}${s.operator?' · ':''}${esc(s.city||'')}, ${esc(s.county)} County</div>
-  <dl class="kv">${s.mw?`<dt>Capacity</dt><dd>${fmtMW(s.mw)}</dd>`:''}<dt>Major aquifer${s.aqMs.length>1?'s':''}</dt><dd>${s.aqMs.length?esc(s.aqMs.join(' + '))+(s.aqMs.length>1?' <span class="empty" style="padding:0">(stacked)</span>':''):'<span class="empty" style="padding:0">none mapped at this point</span>'}</dd><dt>Minor aquifer</dt><dd>${s.aqm.length?esc(s.aqm.join(', ')):'<span class="empty" style="padding:0">none</span>'}</dd>${WATER?`<dt>Rainfall</dt><dd>${s.rain?s.rain+' in/yr average (1981–2010)':'—'}</dd><dt>Wells nearby</dt><dd>${num(s.wells10)} TWDB-recorded wells within ~6 mi</dd>`:''}</dl>${extra}
+  <dl class="kv">${s.mw?`<dt>Capacity</dt><dd>${fmtMW(s.mw)}</dd>`:''}<dt>Major aquifer${s.aqMs.length>1?'s':''}</dt><dd>${s.aqMs.length?esc(s.aqMs.join(' + '))+(s.aqMs.length>1?' <span class="empty" style="padding:0">(stacked)</span>':''):'<span class="empty" style="padding:0">none mapped at this point</span>'}</dd><dt>Minor aquifer</dt><dd>${s.aqm.length?esc(s.aqm.join(', ')):'<span class="empty" style="padding:0">none</span>'}</dd>${WATER?`<dt>Rainfall</dt><dd>${s.rain?s.rain+' in/yr average ('+esc(WATER.precip.label||'normal')+')':'—'}</dd>${WATER.recent?`<dt>Last 12 months</dt><dd>${s.recent?s.recent+'% of normal ('+esc(WATER.recent.label||'')+')':'—'}</dd>`:''}<dt>Wells nearby</dt><dd>${num(s.wells10)} TWDB-recorded wells within ~6 mi${WATER.newwells?'<br>'+num(s.newwells10)+' water wells drilled since 2020 within ~6 mi':''}</dd>`:''}</dl>${extra}
   <div class="actions"><a class="primary" href="texas_data_center_map.html" title="Opens the Data Center Watch map; search the site name there">Data Center Watch ↗</a><a href="https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lon}" target="_blank" rel="noopener">Map ↗</a></div>
-  <div class="note" style="padding:8px 0 0">Read at ${prec}. TWDB aquifer outlines, NRCS rainfall and TWDB well records; a well count says nothing about volumes pumped.</div></div>`;};
+  <div class="note" style="padding:8px 0 0">Read at ${prec}. TWDB aquifer outlines and well records; rainfall from PRISM (Oregon State University). A well count says nothing about volumes pumped.</div></div>`;};
 WM.siteRow=function(s,val){return `<div class="row" data-site="${esc(s.id)}" tabindex="0"><span class="sw dot${s.hot?' hot':''}" style="background:${COL[s.status]}"></span><div><div class="n">${esc(s.name)}</div><div class="m">${esc(s.operator||'')}${s.operator?' · ':''}${esc(s.city||'')}, ${esc(s.county)}</div></div><span class="v">${val??(s.mw?fmtMW(s.mw):'')}</span></div>`;};
 WM.useBars=function(u,total){const order=['Irrigation','Domestic','Livestock','Public supply','Industrial','Unused','Other','Unknown'];const t=total||Object.values(u).reduce((a,b)=>a+b,0);if(!t)return '<div class="empty">No TWDB wells recorded.</div>';
   return order.filter(k=>u[k]).map(k=>`<div class="row" style="cursor:default;grid-template-columns:1fr auto"><div><div class="m" style="color:var(--ink)">${k}</div><div class="bar"><i style="width:${(100*u[k]/t).toFixed(1)}%"></i></div></div><span class="v"><b>${num(u[k])}</b><br>${(100*u[k]/t).toFixed(0)}%</span></div>`).join('');};
