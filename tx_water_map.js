@@ -157,7 +157,8 @@ function legend(){const L=$('legend');if(!L)return;let h='';
   if(state.minor)h+='<b>Minor aquifers (TWDB)</b><div class="r"><i class="misw"></i>22 minor aquifers — hover or zoom in for names</div>';
   if(state.base&&WATER){const rg=ramp(state.base);h+=`<b>${BINTITLE[state.base]}</b>`+BINLBL[state.base].map((l,i)=>`<div class="r"><i class="ramp" style="background:${rg[i]}"></i>${l}</div>`).join('');}
   if(cfg.legendNote)h+=`<div class="foot">${cfg.legendNote}</div>`;
-  L.innerHTML=h;}
+  L.innerHTML=`<button class="lgt" type="button" aria-label="Show or hide the legend">Legend ▾</button><div class="lgbody">${h}</div>`;
+  L.querySelector('.lgt').onclick=()=>L.classList.toggle('open');}
 
 // ---------- shared HTML fragments ----------
 WM.siteHTML=function(s,extra=''){const prec=s.precision==='site'?'the reported site':s.precision==='city'?'the city-center pin (exact parcel not published)':'the county-center pin (only the county is known)';
