@@ -128,7 +128,7 @@ const fstate={status:new Set(),hot:false,sort:'metric'};CM.fstate=fstate;
 const listable=p=>fstate.status.has(p.status)&&(!fstate.hot||p.hot);
 const visible=p=>state.pins&&listable(p)&&(!state.filter||state.filter(p));
 CM.visible=visible;
-function apply(){view.setAttribute('transform',`translate(${tx} ${ty}) scale(${sc})`);const k=1/sc;scaleDistricts(k);
+function apply(){view.setAttribute('transform',`translate(${tx} ${ty}) scale(${sc})`);const k=1/sc;scaleDistricts(k);if(cfg.onView)cfg.onView({sc,tx,ty,W,H});
   PINS.forEach(p=>{if(p.el)p.el.setAttribute('r',rad(p)*Math.sqrt(k));});
   gL.style.display=sc>(cfg.labelsAt||2.2)?'':'none';gL.querySelectorAll('text').forEach(t=>t.setAttribute('font-size',9*k*1.3));
   if(gAqL)gAqL.querySelectorAll('text').forEach(t=>{const ma=t.dataset.k==='major';t.setAttribute('font-size',(ma?11:8.5)*k*1.25);t.setAttribute('stroke-width',3*k);t.style.display=(ma?state.aquifers:(state.minor&&sc>1.8))?'':'none';});
@@ -136,6 +136,7 @@ function apply(){view.setAttribute('transform',`translate(${tx} ${ty}) scale(${s
 function fit(){const r=svg.getBoundingClientRect();sc=Math.min(r.width/W,r.height/H)*.96;tx=(r.width-W*sc)/2;ty=(r.height-H*sc)/2;apply();}
 function zoomTo(bx,by,bw,bh){const r=svg.getBoundingClientRect();sc=Math.min(r.width/(bw*1.6),r.height/(bh*1.6),40);tx=r.width/2-(bx+bw/2)*sc;ty=r.height/2-(by+bh/2)*sc;apply();}
 function zoomAt(f,cx,cy){const r=svg.getBoundingClientRect();cx=cx??r.width/2;cy=cy??r.height/2;const ns=Math.max(.5,Math.min(60,sc*f));tx=cx-(cx-tx)*ns/sc;ty=cy-(cy-ty)*ns/sc;sc=ns;apply();}
+CM.cursorLonLat=e=>cursorLonLat(e);CM.view=()=>({sc,tx,ty,W,H});
 function cursorLonLat(e){const r=svg.getBoundingClientRect();return [((e.clientX-r.left-tx)/sc)/(K*100)-107,37-((e.clientY-r.top-ty)/sc)/100];}
 Object.assign(CM,{fit,zoomTo,zoomAt,
   zoomLonLat:(lon,lat,span=50)=>{const [x,y]=px(lon,lat);zoomTo(x-span/2,y-span/2,span,span);},

@@ -4,55 +4,57 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Texas County Deep Dive</title>
-<meta name="description" content="A guided county command center: search a Texas county or city, read what changed in plain English with the numbers underneath, compare counties, and prepare a roundtable brief. Overview, Elections, Money, Community, Districts, Water, Data Centers.">
+<meta name="description" content="A county command center for Texas: search a county or city, read what changed in plain English with the numbers underneath, color the map by one measure at a time, compare counties, and prepare a roundtable brief. Overview, Elections, Ballot, Money, Districts, Community, Water, Data Centers.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="tx_county_map.css?v=20260928-9">
-<link rel="stylesheet" href="tx_deep_dive.css?v=20260928-9">
-<style>.loading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:var(--ink3);font-size:13px}@media (max-width:1600px){.mapnav{display:none}}</style>
+<link rel="stylesheet" href="tx_county_map.css?v=20260928-10">
+<link rel="stylesheet" href="tx_deep_dive.css?v=20260928-10">
+<style>.loading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:var(--ink3);font-size:13px}</style>
 </head>
-<body>
-<div class="app">
+<body class="pro">
+<div class="app pro">
 <header>
-  <button id="menubtn" aria-label="Show the list">☰ List</button>
-  <h1 id="h1">Texas <span>County</span> Deep Dive</h1>
-  <div class="ccbar">
-    <div class="ccsearch"><span class="mag">⌕</span><input id="q" type="search" placeholder="Search a county or city…" autocomplete="off" aria-label="Search a county or city"><div class="sg" id="sg"></div></div>
+  <div class="rb-top">
+    <h1 id="h1">Texas <span>County</span> Deep Dive</h1>
     <div class="tabs" id="tabs"></div>
+    <div class="ccsearch"><span class="mag">⌕</span><input id="q" type="search" placeholder="Search a county or city…" autocomplete="off" aria-label="Search a county or city"><div class="sg" id="sg"></div></div>
+    <button id="layersbtn" class="phoneonly" type="button" aria-label="Show the map layers">Layers</button>
+    <button id="menubtn" type="button" aria-label="Show the county panel">County</button>
+    <a class="allmaps" href="index.html">All maps</a>
   </div>
-  <a class="allmaps" href="index.html">All maps</a>
-  <div class="stats" id="stats"></div>
+  <div class="rb-body" id="ribbon"></div>
 </header>
+<div class="contents" id="contents"></div>
+<main>
+  <svg id="map" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div class="ctrl zoom"><button id="zin" title="Zoom in">+</button><button id="zout" title="Zoom out">−</button><button id="zfit" title="Whole state">⌂</button></div>
+  <div class="legend" id="legend"></div>
+  <div class="tip" id="tip"></div>
+  <div class="statusbar" id="statusbar"><span class="sb-cur" id="sb-cur">Move over the map to read a county</span><span class="sb-scale" id="sb-scale"></span><span class="stats" id="stats"></span></div>
+  <div class="loading" id="loading">Loading the map…</div>
+</main>
 <aside>
   <div class="tabs" id="tabs2"></div>
   <div class="side" id="side"></div>
 </aside>
-<main>
-  <svg id="map" xmlns="http://www.w3.org/2000/svg"></svg>
-  <div class="ccmap" id="ccmap"></div>
-  <div class="ctrl zoom"><button id="zin" title="Zoom in">+</button><button id="zout" title="Zoom out">−</button><button id="zfit" title="Reset view">⌂</button></div>
-  <div class="legend" id="legend"></div>
-  <div class="tip" id="tip"></div>
-  <div class="tray closed" id="tray"></div>
-  <div class="loading" id="loading">Loading the map…</div>
-</main>
+<div class="tray closed" id="tray"></div>
 </div>
-<script src="tx_counties.js?v=20260928-9"></script>
-<script src="tx_surface_water.js?v=20260928-9"></script>
-<script src="tx_aquifers.js?v=20260928-9"></script>
-<script src="tx_districts.js?v=20260928-9"></script>
-<script src="tx_district_crosswalk.js?v=20260928-9"></script>
-<script src="tx_county_map.js?v=20260928-9"></script>
-<script src="tx_county_demographics.js?v=20260928-9"></script>
-<script src="tx_county_elections.js?v=20260928-9"></script>
-<script src="tx_district_results.js?v=20260928-9"></script>
-<script src="tx_county_ballot.js?v=20260928-9"></script>
-<script src="tx_county_contribs.js?v=20260928-9"></script>
-<script src="tx_county_orgs.js?v=20260928-9"></script>
-<script src="tx_county_water.js?v=20260928-9"></script>
-<script src="tx_county_aquifers.js?v=20260928-9"></script>
-<script src="tx_dc_sites.js?v=20260928-9"></script>
-<script src="tx_places.js?v=20260928-9"></script>
-<script src="tx_regions.js?v=20260928-9"></script>
-<script src="tx_deep_dive.js?v=20260928-9"></script>
+<script src="tx_counties.js?v=20260928-10"></script>
+<script src="tx_surface_water.js?v=20260928-10"></script>
+<script src="tx_aquifers.js?v=20260928-10"></script>
+<script src="tx_districts.js?v=20260928-10"></script>
+<script src="tx_district_crosswalk.js?v=20260928-10"></script>
+<script src="tx_county_map.js?v=20260928-10"></script>
+<script src="tx_county_demographics.js?v=20260928-10"></script>
+<script src="tx_county_elections.js?v=20260928-10"></script>
+<script src="tx_district_results.js?v=20260928-10"></script>
+<script src="tx_county_ballot.js?v=20260928-10"></script>
+<script src="tx_county_contribs.js?v=20260928-10"></script>
+<script src="tx_county_orgs.js?v=20260928-10"></script>
+<script src="tx_county_water.js?v=20260928-10"></script>
+<script src="tx_county_aquifers.js?v=20260928-10"></script>
+<script src="tx_dc_sites.js?v=20260928-10"></script>
+<script src="tx_places.js?v=20260928-10"></script>
+<script src="tx_regions.js?v=20260928-10"></script>
+<script src="tx_deep_dive.js?v=20260928-10"></script>
 </body>
 </html>
