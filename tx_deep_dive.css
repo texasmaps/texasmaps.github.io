@@ -45,8 +45,9 @@
 /* ---- contents pane (layers and their symbology) ---- */
 .contents{grid-area:contents;background:#fff;border-right:1px solid var(--pro-line);overflow:auto;min-height:0;font-size:12.5px}
 .app.pro.no-contents .contents .lyr,.app.pro.no-contents .contents .ph span{display:none}
-.contents .ph{display:flex;align-items:center;justify-content:space-between;padding:6px 8px 6px 10px;border-bottom:1px solid var(--pro-line);background:var(--pro-bg2);position:sticky;top:0}
-.contents .ph span,.side .ph span{font:600 11px "Segoe UI",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--pro-ink3)}
+.app.pro.no-contents .contents .ph,.app.pro.no-side aside .ph{justify-content:center;padding:6px 2px}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:6px 8px 6px 10px;border-bottom:1px solid var(--pro-line);background:var(--pro-bg2);position:sticky;top:0;flex:none}
+.ph span{font:600 11px "Segoe UI",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--pro-ink3)}
 .collapse{border:1px solid transparent;background:none;color:var(--pro-ink3);cursor:pointer;font-size:14px;padding:0 5px;border-radius:3px;line-height:18px}
 .collapse:hover{border-color:var(--pro-line);background:#fff}
 .contents .lyr{padding:6px 10px 6px 10px;border-bottom:1px solid #ececec}
@@ -84,7 +85,7 @@
 svg .pin.dim{display:none}
 /* ---- county pane ---- */
 .app.pro aside{grid-area:side;border-right:0;border-left:1px solid var(--pro-line);background:#fff;display:flex;flex-direction:column;min-height:0}
-.app.pro.no-side aside .side,.app.pro.no-side aside .tabs{display:none}
+.app.pro.no-side aside .side,.app.pro.no-side aside .tabs,.app.pro.no-side aside .ph span{display:none}
 .app.pro .side{overflow:auto;flex:1;min-height:0;padding:0 12px 30px}
 .app.pro aside .tabs{display:none}
 .app.pro .detail{padding-top:8px}
