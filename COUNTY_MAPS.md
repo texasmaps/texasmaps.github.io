@@ -20,6 +20,31 @@ panel (top right) with one *Color the map by* menu plus rivers and river-basin o
 Deep links work on every topic: `#shade=<metric key>|none`, `#layers=rivers,basins`, `#county=<fips or name>`, `#pin=<id>`,
 and `#region=<id>` on the regions topic. Example: `texas_county_maps.html?topic=rainfall#shade=rain&county=Travis`.
 
+## What is on the branch (for reviewers)
+
+Everything below is new; no pre-existing file on `main` is touched. Open `texas_county_maps.html` (or the raw.githack preview of the
+branch) and switch topics with the menu or `?topic=`. Each topic loads only its own data files.
+
+| File | What it is | Used by |
+|---|---|---|
+| `texas_county_maps.html` | the app page (header, sidebar, county / district / pin cards, deep links) | everything |
+| `tx_county_map.js`, `tx_county_map.css` | the county-map engine and styles (shading, pins, overlays, districts, legend, search, About) | all pages |
+| `tx_topics.js` | the topic registry: data-centers, rainfall, wells, regions, demographics, elections, turnout, districts, deep-dive | the app page |
+| `tx_districts.js`, `tx_district_crosswalk.js` | district outlines for 5 TLC plans; county x district residents and shares | every topic (District lines menu), districts, deep-dive |
+| `tx_district_results.js` | Red-206 results by district 2012-2024 | districts, deep-dive |
+| `tx_county_elections.js` | county results 2006-2024 (shares, margins, changes, vote counts), registration, turnout, 2014-2018 primaries | elections, turnout, deep-dive |
+| `tx_county_demographics.js` | TDC 2025 population + ACS 2020-24 (39 fields) + the State of Texas row | demographics, deep-dive |
+| `tx_county_ballot.js` | certified 2026 ballot by county, Democratic county chairs, TEC and FEC fundraising | deep-dive |
+| `tx_county_orgs.js` | community organizations / brokers by county (1,821 rows) | deep-dive |
+| `tx_regions.js` | campaign regions | regions, deep-dive |
+| `county_map_template.html` | standalone-page example on the same engine | reviewers copying the pattern |
+| `tools/csv_to_js.py` | CSV to `tx_*.js` converter | adding a topic |
+| `COUNTY_MAPS.md` | this document | reviewers |
+
+Reused as they are from `main`: `tx_counties.js`, `tx_surface_water.js`, `tx_dc_sites.js`, `tx_county_water.js`. Deep links to try:
+`?topic=deep-dive#county=48303`, `?topic=districts#shade=PLANC2333_pres_margin_2024`, `?topic=elections#districts=PLANC2333`,
+`?topic=districts#district=PLANC2333:15`. The workbook and the raw source folders stay on the Edith drive (not in the repo).
+
 ## Files (all new; nothing pre-existing was changed)
 
 | File | Role |
