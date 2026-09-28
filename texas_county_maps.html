@@ -6,7 +6,7 @@
 <title>Texas County Maps</title>
 <meta name="description" content="One map, many topics: every Texas county colored by the dataset you pick, with ranked lists, search, county details and district overlays. Add ?topic=elections, turnout, districts, demographics, rainfall, wells, regions or data-centers.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="tx_county_map.css?v=20260928-1">
+<link rel="stylesheet" href="tx_county_map.css?v=20260928-2">
 <style>
 .topic{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2);white-space:nowrap}
 .topic select{border:1px solid var(--rule);background:var(--paper);border-radius:6px;padding:5px 6px;font-size:12px;cursor:pointer;color:var(--ink);max-width:150px}
@@ -39,14 +39,14 @@ aside .topic select{flex:1;max-width:none}
 </main>
 </div>
 <!-- shared: the county layer, the rivers/basins overlay, the engine and the topic registry. Each topic loads its own data file on demand. -->
-<script src="tx_counties.js?v=20260928-1"></script>
-<script src="tx_surface_water.js?v=20260928-1"></script>
-<script src="tx_districts.js?v=20260928-1"></script>
-<script src="tx_district_crosswalk.js?v=20260928-1"></script>
-<script src="tx_county_map.js?v=20260928-1"></script>
-<script src="tx_topics.js?v=20260928-1"></script>
+<script src="tx_counties.js?v=20260928-2"></script>
+<script src="tx_surface_water.js?v=20260928-2"></script>
+<script src="tx_districts.js?v=20260928-2"></script>
+<script src="tx_district_crosswalk.js?v=20260928-2"></script>
+<script src="tx_county_map.js?v=20260928-2"></script>
+<script src="tx_topics.js?v=20260928-2"></script>
 <script>
-const V='20260928-1',PAGE='texas_county_maps.html';
+const V='20260928-2',PAGE='texas_county_maps.html';
 const {esc,num,cname}=CM,$=id=>document.getElementById(id);
 const TOPICS=window.TX_TOPICS||{},keys=Object.keys(TOPICS);
 const want=new URLSearchParams(location.search).get('topic'),key=TOPICS[want]?want:keys[0],T=TOPICS[key];
@@ -66,7 +66,7 @@ function renderList(){side.innerHTML=CM.glance(t.facts||[])+(t.pins?CM.pinList()
 function showCounty(f){ctx={mode:'county',fips:f};CM.select(null);CM.setFilter(null);CM.highlightCounty(f);CM.zoomCounty(f);
   const kv=CM.metrics().filter(m=>!m.plan).map(m=>{const rk=!m.cat&&CM.rankOf(m.key,f);return `<dt>${esc(m.label)}</dt><dd>${CM.fmtValue(m.key,f,esc(m.noneLabel||'none'))}${rk?` <span class="empty" style="padding:0;font-size:12px">(${rk.rank} of ${rk.of})</span>`:''}</dd>`;}).join('');
   const here=t.pins?t.pins.filter(p=>p.fips===f).sort((a,b)=>(b.size||0)-(a.size||0)):[];
-  side.innerHTML=`<div class="detail"><button class="back" id="back">← All counties</button><h2>${esc(cname[f])} County</h2>${t.pins?`<div class="sub">${here.length} ${here.length===1?esc(t.pinSingular):esc(t.pinPlural)}</div>`:''}<dl class="kv">${kv}</dl>${t.countyExtra?t.countyExtra(f):''}</div>`
+  side.innerHTML=`<div class="detail"><button class="back" id="back">← All counties</button><h2>${esc(cname[f])} County</h2>${t.countySub?`<div class="sub">${t.countySub(f)}</div>`:''}${t.pins?`<div class="sub">${here.length} ${here.length===1?esc(t.pinSingular):esc(t.pinPlural)}</div>`:''}${t.countyKv===false?'':`<dl class="kv">${kv}</dl>`}${t.countyExtra?t.countyExtra(f):''}</div>`
     +(t.pins?`<div class="blk"><h3>${esc(t.pinPlural.charAt(0).toUpperCase()+t.pinPlural.slice(1))} in ${esc(cname[f])} County</h3>${here.length?here.map(p=>CM.pinRow(p,t.pinValue?t.pinValue(p):'')).join(''):'<div class="empty">None listed here.</div>'}</div>`:'');
   $('back').onclick=back;CM.setHash('county='+f);}
 function showDistrict(plan,n){const pl=CM.plan(plan);if(!pl)return;ctx={mode:'district',plan,n};CM.select(null);CM.setFilter(null);CM.highlightCounty(null);

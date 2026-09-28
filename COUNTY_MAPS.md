@@ -34,11 +34,13 @@ and `#region=<id>` on the regions topic. Example: `texas_county_maps.html?topic=
 | `tx_districts.js` | district outlines for five TLC plans (PLANC2333 = Congress 2026, PLANC2193 = Congress 2024, PLANH2316 House, PLANS2168 Senate, PLANE2106 SBOE), generalized, same ring encoding as `tx_surface_water.js` |
 | `tx_district_crosswalk.js` | county × district: 2020 residents and shares for every plan, plus each county's share of residents whose congressional district number changed from the 2024 map to the 2026 map |
 | `tx_district_results.js` | TLC Red-206 results by district, 2012-2024 (President, Governor, U.S. Senate: shares, margin, votes; registered voters; ballots) for all five plans |
+| `tx_county_ballot.js` | the certified 2026 ballot by county (3,821 candidates, 710 offices), Democratic county chairs and TEC fundraising, exported from the verified workbook |
+| `tx_county_orgs.js` | community organizations / brokers by county (1,300+ rows: Farm Bureau offices, teacher locals, labor councils, chambers, hospitals, colleges, Realtor associations), each row with its source URL, pull date, coverage type and evidence type |
 | `county_map_template.html` | standalone-page example on the same engine (data center projects per county) |
 | `tools/csv_to_js.py` | turns any CSV with a county or FIPS column into a `tx_*.js` data file |
 
 Reused as they are: `tx_counties.js` (county outlines), `tx_surface_water.js` (rivers, lakes, basins), `tx_dc_sites.js` (data center pins),
-`tx_county_water.js` (county rainfall and well counts). The version tag on every local script and stylesheet link is `?v=20260928-1`;
+`tx_county_water.js` (county rainfall and well counts). The version tag on every local script and stylesheet link is `?v=20260928-2`;
 bump it in the page whenever the engine, the registry or a data file changes (GitHub Pages caches files for 10 minutes).
 
 ## Adding a topic
@@ -56,6 +58,19 @@ bump it in the page whenever the engine, the registry or a data file changes (Gi
          about:'<p>…</p>',sources:'<ul><li>…</li></ul>',caveats:'<ul><li>…</li></ul>'};}};
    ```
 3. Bump the version tag in `texas_county_maps.html`. That is all: the page, the engine and the hub need no changes.
+
+## The County Deep Dive topic (`?topic=deep-dive`)
+
+A statewide county-level political intelligence view: demographics, turnout, political change, the 2026 districts and ballot,
+and community organizations in one county card, each figure next to the Texas figure (`window.TX_DEMOGRAPHICS_STATE` in
+`tx_county_demographics.js` holds the state row) with a **Compare with** menu that adds any second county. The list view has a
+Regions block (click a campaign region to highlight it and get votes-weighted summaries), a sortable table of all 254 counties
+(`window.TX_DD.sortBy`), and ranked lists. The topic sets `countyKv:false` (the page skips the generic metric list) and
+`countySub(fips)` (the line under the county name); the card is re-rendered in place by `window.TX_DD.render()`.
+Community organizations are grouped by broker category (Agriculture, Teachers, Labor, Business, Health, Faith, Veterans, Higher ed,
+Civic, Parents/families, Industry-specific) and show leader, public contact, coverage type, evidence type and source; the
+definition and caution text come from `tx_county_orgs.js`. Raw pulls and the CSV live in `Gina For Texas/Community Organizations/`
+on the Edith drive (`raw_2026-09-28/SOURCES.txt` lists every URL); rebuild with `build_scripts/build_orgs.py` + `write_orgs_js.py`.
 
 ## Districts (overlay on every topic, plus the Redistricting topic)
 
@@ -107,6 +122,8 @@ folder. Copy it, replace its DATA block and its words, and load `tx_county_map.j
 - Data center projects: Texas Data Center Watch (`tx_dc_sites.js`, copied out of `texas_data_center_map.html`).
 - Rainfall: PRISM Climate Group, Oregon State University (1991–2020 normals; monthly grids for Sep 2025 – Aug 2026); county means built by `tools/build_county_water.py` on 2026-09-25.
 - Wells: Texas Water Development Board Groundwater Database (all wells on record, copy of 2026-09-25) and Submitted Driller's Reports (water-supply wells drilled 2020-01-01 through 2026-09-24).
+- Ballot, chairs, fundraising: SOS ballot certification of 2026-08-28, Texas Democratic Party county chair directory, Texas Ethics Commission bulk export as of 2026-09-26 (via the verified workbook).
+- Community organizations: NCES IPEDS HD2023; CMS Hospital General Information; Texas Chamber of Commerce Executives directory; Texas AFT locals; TSTA local associations; Texas AFL-CIO central labor councils; Texas REALTORS local associations by county (2026-06-23); Texas Farm Bureau county locator data; Census 2020 ZCTA-county relationship file.
 - Districts: Texas Legislative Council plan datasets on data.capitol.texas.gov (PLANC2333, PLANC2193, PLANH2316, PLANS2168, PLANE2106: shapefiles, block-equivalency files, Red-100 and Red-206 reports; bundles dated 2026-09-11) and the 2020 Census PL 94-171 Texas block file.
 - Regions: `tx_counties_by_region.csv` in this repository.
 - Elections and turnout: Texas Secretary of State official canvass, county pages for 2006-2018 statewide races (https://elections.sos.state.tx.us/); SOS voter registration figures by county, November 2008-2024 (https://www.sos.state.tx.us/elections/historical/vrfig.shtml); Texas Legislative Council Red-211 Election Analysis with County Subtotals for PLANC2333, 2012-2024 (https://data.capitol.texas.gov/dataset/planc2333), used for 2020-2024 results and 2012-2024 ballots cast. Built 2026-09-28; margins = R minus D in points; changes = later minus earlier in points.
