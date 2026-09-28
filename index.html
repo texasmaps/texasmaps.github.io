@@ -46,7 +46,7 @@ body.phone #launch{display:flex;flex:1}
   <header>
     <div class="row1">
       <h1>🗺 Texas County Maps</h1>
-      <span class="sub">Eleven interactive maps · one workspace · 254 counties · Central Texas demographics & turnout · districts · data centers · water</span>
+      <span class="sub">Twelve interactive maps · one workspace · 254 counties · Central Texas demographics & turnout · districts · data centers · water</span>
     </div>
     <nav id="tabs"></nav>
   </header>
@@ -58,6 +58,7 @@ body.phone #launch{display:flex;flex:1}
 </div>
 <script>
   const MAPS=[
+    {label:'Texas dashboard',  file:'texas_county_deep_dive.html',        color:'#0f6cbd'},
     {label:'G4T Texas Regional Campaigns', file:'tx_region_builder.html',   color:'#6366f1'},
     {label:'Legislative Districts', file:'tx_districts_map.html',           color:'#6d28d9'},
     {label:'Race & Ethnicity', file:'texas_race_map.html',                 color:'#1f78b4'},
@@ -70,7 +71,7 @@ body.phone #launch{display:flex;flex:1}
     {label:'Rainfall & Data Centers', file:'texas_rainfall_map.html',       color:'#2a78d6'},
     {label:'Wells & Data Centers',    file:'texas_wells_map.html',          color:'#c54e1c'}
   ];
-  const DESC={'tx_region_builder.html':'Regional campaign map · officials & candidates','tx_districts_map.html':'Congress, House, Senate, SBOE · county precincts · cities','texas_race_map.html':'Race & ethnicity by county · largest cities','texas_families_households_map.html':'Families & households','texas_rural_ses_map.html':'Rural–urban & socioeconomic','texas_elections_map.html':'2022 · 2024 · 2026 primary results','texas_central_deepdive.html':'30 Central TX counties · turnout trends · top-3 cities','texas_data_center_map.html':'Data center projects & opposition (large page)','texas_aquifers_map.html':'Which aquifers sit under the data center boom · TWDB','texas_rainfall_map.html':'Rainfall normals & the last 12 months vs. normal · PRISM','texas_wells_map.html':'Groundwater wells, recorded & drilled since 2020 · TWDB'};
+  const DESC={'texas_county_deep_dive.html':'County command center · who lives, votes and gives here · 2026 ballot · districts · community brokers · water · data centers','tx_region_builder.html':'Regional campaign map · officials & candidates','tx_districts_map.html':'Congress, House, Senate, SBOE · county precincts · cities','texas_race_map.html':'Race & ethnicity by county · largest cities','texas_families_households_map.html':'Families & households','texas_rural_ses_map.html':'Rural–urban & socioeconomic','texas_elections_map.html':'2022 · 2024 · 2026 primary results','texas_central_deepdive.html':'30 Central TX counties · turnout trends · top-3 cities','texas_data_center_map.html':'Data center projects & opposition (large page)','texas_aquifers_map.html':'Which aquifers sit under the data center boom · TWDB','texas_rainfall_map.html':'Rainfall normals & the last 12 months vs. normal · PRISM','texas_wells_map.html':'Groundwater wells, recorded & drilled since 2020 · TWDB'};
   const PHONE=window.matchMedia('(max-width:760px)').matches;
   if(PHONE){
     document.body.classList.add('phone');
