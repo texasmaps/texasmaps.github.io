@@ -36,7 +36,7 @@ bump it in the page whenever the engine, the registry or a data file changes (Gi
 
 1. Make the data file. From a CSV with a county-name or FIPS column:
    `python3 tools/csv_to_js.py mydata.csv --var TX_MYTOPIC --out tx_mytopic.js`
-   (matches "Bexar", "Bexar County", "DeWitt"/"De Witt" or 48029/029; lists unmatched rows; sums duplicate counties).
+   (matches "Bexar", "Bexar County", "DeWitt"/"De Witt", or a FIPS code such as 48029 or 029 in either column; lists unmatched rows; sums duplicate counties).
 2. Add an entry to `tx_topics.js`:
    ```js
    T['mytopic']={label:'My topic',title:['Texas','My Topic','by County'],intro:'One sentence for the top of the sidebar.',
@@ -55,6 +55,13 @@ bump it in the page whenever the engine, the registry or a data file changes (Gi
 `pinLabel`, `pinSingular`, `pinPlural`, `hotLabel`, `hotChip`, `hotFlag`, `pinSizeNote`, `sizeLabel`, `listMetric(p)->{html,key}`, `listSortLabel`, `pinValue(p)`.
 **Other:** `stats:[[value,label]]`, `facts:[html]`, `lists:[{metric,n,title,sub,desc,fmt}]` or `[{html,title,sub}]`, `note`, `countyExtra(fips)->html`,
 `about`, `sources`, `caveats`, `legendNote`, `welcomeTitle`, `welcomeTips`, `openSections`.
+
+## Optional hub hook (not applied; index.html is a pre-existing file, so this is its own pull request)
+
+To list the app on the "All maps" hub, add to the `MAPS` array in `index.html`:
+`{label:'County Maps (many topics)', file:'texas_county_maps.html', color:'#6B8E23'}`
+and to `DESC`: `'texas_county_maps.html':'One map, many topics · data centers · rainfall · wells · campaign regions'`.
+The hub uses `file` for the tab's iframe and its bookmark hash, so leave the `?topic=` off; the app opens on its first topic.
 
 ## Standalone pages
 

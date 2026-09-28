@@ -7,7 +7,8 @@
 Writes   window.TX_PRISONS={"48029":{"beds":1200,"facilities":3,...},...};
 one object per county keyed by 5-digit FIPS. The county is found from a FIPS column
 (fips / geoid / county_fips, 5 or 3 digits) or a name column (county / county_name / name;
-"Bexar", "Bexar County", "DeWitt" and "De Witt" all match). Numbers become numbers
+"Bexar", "Bexar County", "DeWitt" and "De Witt" all match; a bare FIPS code in the
+name column works too). Numbers become numbers
 ($ , % stripped), blanks become null, text stays text. Rows whose county cannot be matched
 are listed on stderr and skipped. If a county appears more than once, numeric columns are summed.
 Pure Python 3, no packages.
@@ -45,6 +46,7 @@ def main():
     ap.add_argument('--keep', help='comma-separated columns to keep (default: all except the county/fips column)')
     a = ap.parse_args()
     by_name = load_counties(a.counties)
+    known = set(by_name.values())
     rows = list(csv.DictReader(open(a.csv, encoding='utf-8-sig')))
     if not rows: sys.exit('empty CSV')
     cols = list(rows[0].keys())
@@ -56,12 +58,15 @@ def main():
     out, bad, dup = {}, [], 0
     for r in rows:
         fips = None
-        if fcol and r.get(fcol):
-            t = re.sub(r'\D', '', str(r[fcol]))
+        def as_fips(v):
+            t = re.sub(r'\D', '', str(v))
+            if t != str(v).strip(): return None          # not a bare code
             if len(t) == 3: t = '48' + t
-            if len(t) == 5 and t.startswith('48'): fips = t
+            return t if t in known else None
+        if fcol and r.get(fcol):
+            fips = as_fips(r[fcol])
         if not fips and ccol and r.get(ccol):
-            fips = by_name.get(norm(r[ccol]))
+            fips = as_fips(r[ccol]) or by_name.get(norm(r[ccol]))
         if not fips:
             bad.append(r.get(ccol) or r.get(fcol) or '?'); continue
         rec = {c: coerce(r.get(c)) for c in keep}
