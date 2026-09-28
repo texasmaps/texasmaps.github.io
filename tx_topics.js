@@ -162,4 +162,96 @@ T['demographics']={label:'Demographics',title:['Texas','Demographics','by County
    about:'<p>This map opens on population change since the 2020 Census, using the Texas Demographic Center\'s preliminary July 1, 2025 estimates. The <b>Color the map by</b> menu switches to any of 14 measures: population, age, race and ethnicity, income, poverty, unemployment, education and housing.</p>',
    sources:'<ul><li><b>Population, July 1 2025, and change since 2020</b>: Texas Demographic Center, preliminary Vintage 2025 county estimates (final due October 2026), <a href="https://demographics.texas.gov/Estimates/2025/" target="_blank" rel="noopener">demographics.texas.gov/Estimates/2025</a>.</li><li><b>All other measures</b>: U.S. Census Bureau, American Community Survey 2020-2024 5-year estimates, tables B01001, B01002, B03002, B15003, B17001, B19013, B23025, B25003, B25064, B25077 (<a href="https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/data/5YRData/" target="_blank" rel="noopener">bulk summary files</a>).</li></ul>',
    caveats:'<ul><li>ACS 5-year figures are averages over 2020-2024 and carry wide margins of error in counties with a few thousand people; treat single small-county values with care.</li><li>The Texas Demographic Center advises against mixing its estimates with Census counts across years; the growth figure here compares its 2025 estimate with the 2020 Census as the TDC itself does.</li><li>Race shares are single-race non-Hispanic groups plus Hispanic of any race; the remainder (multiracial and other) is not shown.</li></ul>'};}};
+// ---------------------------------------------------------------- shared helpers for the election topics
+const POL=['#1b4fa6','#5b8fd9','#b9cff0','#eceae4','#f3b3a6','#e05a4e','#a91b1b'];   // Democratic blue -> neutral -> Republican red
+const PTS=v=>(v>0?'+':'')+(v*100).toFixed(1)+' pts',PCT=v=>(v*100).toFixed(1)+'%',PCT0=v=>Math.round(v*100)+'%';
+const CHG_BINS=[-0.05,-0.02,-0.005,0.005,0.02,0.05],CHG_LBL=['5+ pts more Democratic','2-5 pts more Democratic','0.5-2 pts more Democratic','about the same (within 0.5 pt)','0.5-2 pts more Republican','2-5 pts more Republican','5+ pts more Republican'];
+const MARG_BINS=[-0.3,-0.1,-0.02,0.02,0.1,0.3],MARG_LBL=['Democratic by 30+ pts','Democratic by 10-30 pts','Democratic by 2-10 pts','within 2 pts','Republican by 2-10 pts','Republican by 10-30 pts','Republican by 30+ pts'];
+const TCHG_BINS=[-0.10,-0.05,-0.02,0.02,0.05,0.10],TCHG_LBL=['fell 10+ pts','fell 5-10 pts','fell 2-5 pts','about the same (within 2 pts)','rose 2-5 pts','rose 5-10 pts','rose 10+ pts'];
+const TURN_RAMP=['#fde7c8','#f7c27f','#eea04a','#dd7a1f','#b85a0a','#7a3a03'];
+const table=(rows,head)=>`<table style="width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 4px"><tr>${head.map((h,i)=>`<th style="text-align:${i?'right':'left'};font-weight:600;color:var(--ink3);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:2px 4px;border-bottom:1px solid var(--rule)">${h}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map((c,i)=>`<td style="text-align:${i?'right':'left'};padding:3px 4px;border-bottom:1px dashed var(--rule);font-variant-numeric:tabular-nums">${c}</td>`).join('')}</tr>`).join('')}</table>`;
+const col=(E,k)=>{const o={};Object.keys(E.counties).forEach(f=>{const v=E.counties[f][k];if(v!=null)o[f]=v;});return o;};
+
+// ---------------------------------------------------------------- election movement (President, Governor, U.S. Senate)
+T['elections']={label:'Election movement',title:['Texas','Election Movement','by County'],
+ intro:'How each county voted for President, Governor and U.S. Senate since 2006, and how far it has moved. Opens on the shift from Trump 2020 to Trump 2024.',
+ data:['tx_county_elections.js'],
+ build(){const {cname}=CM;const E=window.TX_COUNTY_ELECTIONS||{state:{},counties:{}};const S=E.state;const F=Object.keys(E.counties);
+  const g=k=>col(E,k);const by=(k,d)=>F.slice().sort((a,b)=>d?E.counties[b][k]-E.counties[a][k]:E.counties[a][k]-E.counties[b][k]);
+  const upR=by('pres_R_change_2020_2024',1)[0],upD=by('pres_R_change_2020_2024',0)[0];
+  const flipR=F.filter(f=>E.counties[f].pres_margin_2020<0&&E.counties[f].pres_margin_2024>0),flipD=F.filter(f=>E.counties[f].pres_margin_2020>0&&E.counties[f].pres_margin_2024<0);
+  const movedR=F.filter(f=>E.counties[f].pres_R_change_2020_2024>0).length;
+  const M=(key,label,group,extra)=>Object.assign({key,label,group,values:g(key),skipZero:false,ramp:POL},extra);
+  const chg=(key,label,group,legend,cap)=>M(key,label,group,{fmt:PTS,bins:CHG_BINS,binLabels:CHG_LBL,legendTitle:legend,caption:cap});
+  const marg=(key,label,group,legend,cap)=>M(key,label,group,{fmt:PTS,bins:MARG_BINS,binLabels:MARG_LBL,legendTitle:legend,caption:cap});
+  return {
+   metrics:[
+    chg('pres_R_change_2020_2024','Trump 2020 to 2024','Presidential shift',"Change in Trump's share, 2020 to 2024 (points)",'Trump 2024 share minus Trump 2020 share. Red = moved toward Republicans, blue = toward Democrats.'),
+    chg('pres_R_change_2016_2020','Trump 2016 to 2020','Presidential shift',"Change in Trump's share, 2016 to 2020 (points)",'Trump 2020 share minus Trump 2016 share.'),
+    chg('pres_R_change_2016_2024','Trump 2016 to 2024','Presidential shift',"Change in Trump's share, 2016 to 2024 (points)",'Trump 2024 share minus Trump 2016 share.'),
+    chg('pres_R_change_2012_2016','Romney 2012 to Trump 2016','Presidential shift','Change in the Republican share, 2012 to 2016 (points)','Trump 2016 share minus Romney 2012 share.'),
+    marg('pres_margin_2024','President 2024 margin','Presidential results','President 2024: Republican minus Democratic share (points)','Trump share minus Harris share in the county.'),
+    marg('pres_margin_2020','President 2020 margin','Presidential results','President 2020: Republican minus Democratic share (points)','Trump share minus Biden share.'),
+    marg('pres_margin_2016','President 2016 margin','Presidential results','President 2016: Republican minus Democratic share (points)','Trump share minus Clinton share.'),
+    marg('pres_margin_2012','President 2012 margin','Presidential results','President 2012: Republican minus Democratic share (points)','Romney share minus Obama share.'),
+    marg('pres_margin_2008','President 2008 margin','Presidential results','President 2008: Republican minus Democratic share (points)','McCain share minus Obama share.'),
+    marg('gov_margin_2022','Governor 2022 margin','Governor','Governor 2022: Republican minus Democratic share (points)','Abbott share minus O\'Rourke share.'),
+    marg('gov_margin_2018','Governor 2018 margin','Governor','Governor 2018: Republican minus Democratic share (points)','Abbott share minus Valdez share.'),
+    marg('gov_margin_2014','Governor 2014 margin','Governor','Governor 2014: Republican minus Democratic share (points)','Abbott share minus Davis share.'),
+    chg('gov_margin_change_2018_2022','Governor swing 2018 to 2022','Governor','Change in the governor margin, 2018 to 2022 (points)','2022 margin minus 2018 margin: the midterm swing, separate from turnout.'),
+    chg('gov_margin_change_2014_2018','Governor swing 2014 to 2018','Governor','Change in the governor margin, 2014 to 2018 (points)','2018 margin minus 2014 margin.'),
+    marg('sen_margin_2024','U.S. Senate 2024 margin','U.S. Senate','U.S. Senate 2024: Republican minus Democratic share (points)','Cruz share minus Allred share.'),
+    marg('sen_margin_2020','U.S. Senate 2020 margin','U.S. Senate','U.S. Senate 2020: Republican minus Democratic share (points)','Cornyn share minus Hegar share.'),
+    marg('sen_margin_2018','U.S. Senate 2018 margin','U.S. Senate','U.S. Senate 2018: Republican minus Democratic share (points)','Cruz share minus O\'Rourke share.')],
+   base:'pres_R_change_2020_2024',
+   stats:[[PCT(S.pres_R_2024),'Trump 2024, statewide'],[PTS(S.pres_R_change_2020_2024),'Trump shift 2020 to 2024, statewide'],[movedR,'counties moved toward Trump']],
+   facts:[`Statewide, Trump went from <b>${PCT(S.pres_R_2020)}</b> in 2020 to <b>${PCT(S.pres_R_2024)}</b> in 2024 (${PTS(S.pres_R_change_2020_2024)}); ${movedR} of 254 counties moved his way.`,
+          `<b>${esc(cname[upR])} County</b> moved furthest toward Trump (${PTS(E.counties[upR].pres_R_change_2020_2024)}); <b>${esc(cname[upD])} County</b> furthest away (${PTS(E.counties[upD].pres_R_change_2020_2024)}).`,
+          `${flipR.length} count${flipR.length===1?'y':'ies'} flipped from Biden 2020 to Trump 2024${flipR.length?': '+flipR.map(f=>esc(cname[f])).join(', '):''}; ${flipD.length} went the other way${flipD.length?': '+flipD.map(f=>esc(cname[f])).join(', '):''}.`,
+          `Governor: Abbott's statewide margin was <b>${PTS(S.gov_margin_2018)}</b> in 2018 and <b>${PTS(S.gov_margin_2022)}</b> in 2022 (${PTS(S.gov_margin_change_2018_2022)} swing).`],
+   lists:[{metric:'pres_R_change_2020_2024',n:15,title:'Biggest shifts toward Trump, 2020 to 2024',sub:'points'},{metric:'pres_R_change_2020_2024',n:15,title:'Biggest shifts toward Democrats, 2020 to 2024',sub:'points',desc:false},
+          {metric:'pres_margin_2024',n:15,title:'Strongest Democratic counties, 2024',sub:'President',desc:false},{metric:'pres_margin_2024',n:15,title:'Strongest Republican counties, 2024',sub:'President'},
+          {metric:'gov_margin_change_2018_2022',n:15,title:'Governor: biggest swing toward Republicans, 2018 to 2022'},{metric:'gov_margin_change_2018_2022',n:15,title:'Governor: biggest swing toward Democrats, 2018 to 2022',desc:false}],
+   countyExtra:f=>{const c=E.counties[f];const yrs=[2008,2012,2016,2020,2024];
+     return `<h3 style="font:700 11px Archivo,sans-serif;font-stretch:85%;letter-spacing:.12em;text-transform:uppercase;color:var(--maroon);margin:10px 0 0">President, this county vs. Texas</h3>`+
+       table(yrs.map(y=>[y,PCT(c['pres_R_'+y]),PCT(c['pres_D_'+y]),PTS(c['pres_margin_'+y]),PTS(c['pres_margin_'+y]-S['pres_margin_'+y])]),['Year','Rep.','Dem.','Margin','vs. Texas'])+
+       `<h3 style="font:700 11px Archivo,sans-serif;font-stretch:85%;letter-spacing:.12em;text-transform:uppercase;color:var(--maroon);margin:10px 0 0">Governor and U.S. Senate margins</h3>`+
+       table([[2022,'Governor',PTS(c.gov_margin_2022),PTS(c.gov_margin_2022-S.gov_margin_2022)],[2018,'Governor',PTS(c.gov_margin_2018),PTS(c.gov_margin_2018-S.gov_margin_2018)],[2014,'Governor',PTS(c.gov_margin_2014),PTS(c.gov_margin_2014-S.gov_margin_2014)],[2024,'U.S. Senate',PTS(c.sen_margin_2024),PTS(c.sen_margin_2024-S.sen_margin_2024)],[2020,'U.S. Senate',PTS(c.sen_margin_2020),PTS(c.sen_margin_2020-S.sen_margin_2020)],[2018,'U.S. Senate',PTS(c.sen_margin_2018),PTS(c.sen_margin_2018-S.sen_margin_2018)]],['Year','Race','Margin','vs. Texas']);},
+   note:'Margins are Republican minus Democratic share, in points; changes are later minus earlier, in points. 2006-2018 from the official SOS canvass, 2020-2024 from the Texas Legislative Council\'s county subtotals.',
+   welcomeTitle:'How Texas counties moved',
+   about:'<p>This map opens on how much each county shifted between Trump\'s 2020 and 2024 results. The <b>Color the map by</b> menu switches to margins and shifts for every presidential, governor and U.S. Senate race since 2008. Click a county for its full history next to the statewide figure.</p>',
+   sources:'<ul><li><b>2006-2018</b>: Texas Secretary of State official canvass, county results for every statewide race (<a href="https://elections.sos.state.tx.us/" target="_blank" rel="noopener">elections.sos.state.tx.us</a>).</li><li><b>2020-2024</b>: Texas Legislative Council, Red-211 Election Analysis with County Subtotals for PLANC2333, county parts summed (<a href="https://data.capitol.texas.gov/dataset/planc2333" target="_blank" rel="noopener">data.capitol.texas.gov</a>). TLC notes small technical variances from the official canvass.</li></ul>',
+   caveats:'<ul><li>Shares are of all votes in that race, including third parties and write-ins, so Republican and Democratic shares do not sum to 100%.</li><li>Small counties can swing many points on a few hundred votes.</li></ul>'};}};
+
+// ---------------------------------------------------------------- turnout and registration
+T['turnout']={label:'Turnout',title:['Texas','Turnout','by County'],
+ intro:'Who shows up: registered voters, ballots cast and turnout in every general election since 2006, and how it changed. Opens on 2024 turnout.',
+ data:['tx_county_elections.js'],
+ build(){const {cname}=CM;const E=window.TX_COUNTY_ELECTIONS||{state:{},counties:{}};const S=E.state;const F=Object.keys(E.counties);
+  const g=k=>col(E,k);const by=(k,d)=>F.slice().sort((a,b)=>d?E.counties[b][k]-E.counties[a][k]:E.counties[a][k]-E.counties[b][k]);
+  const hi=by('turnout_2024',1)[0],lo=by('turnout_2024',0)[0],drop=by('turnout_change_2020_2024',0)[0],gain=by('registration_growth_2016_2024',1)[0];
+  const tm=(y,extra)=>Object.assign({key:'turnout_'+y,label:'Turnout '+y,group:'Turnout',values:g('turnout_'+y),fmt:PCT,ramp:TURN_RAMP,bins:[0.45,0.52,0.58,0.63,0.68],legendTitle:'Turnout, '+y+' general election (ballots cast / registered voters)',caption:'Ballots cast as a share of registered voters. Darker = higher turnout.'},extra||{});
+  const tc=(a,b)=>({key:`turnout_change_${a}_${b}`,label:`Turnout change ${a} to ${b}`,group:'Turnout change',values:g(`turnout_change_${a}_${b}`),fmt:PTS,skipZero:false,ramp:'diverging',bins:TCHG_BINS,binLabels:TCHG_LBL,legendTitle:`Turnout ${b} minus turnout ${a} (points)`,caption:`Orange = turnout fell, blue = rose. ${a} and ${b} are compared like for like (${a%4===0?'presidential':'midterm'} years).`});
+  return {
+   metrics:[tm(2024),tm(2022,{bins:[0.35,0.42,0.48,0.54,0.60]}),tm(2020),tm(2018,{bins:[0.35,0.42,0.48,0.54,0.60]}),tm(2016),tm(2014,{bins:[0.22,0.28,0.33,0.38,0.45]}),tm(2012),tm(2010,{bins:[0.22,0.28,0.33,0.38,0.45],caption:'Ballots = votes in the governor race (total ballots not published for 2010).'}),tm(2008,{caption:'Ballots = votes in the presidential race (total ballots not published for 2008).'}),
+    tc(2020,2024),tc(2018,2022),tc(2016,2020),tc(2014,2018),
+    {key:'registered_2024',label:'Registered voters, Nov. 2024',group:'Registration',values:g('registered_2024'),ramp:'purple',bins:[5000,15000,40000,100000,500000],legendTitle:'Registered voters, November 2024',caption:'Texas Secretary of State registration figures for the 2024 general election.'},
+    {key:'registration_growth_2020_2024',label:'Registration growth 2020 to 2024',group:'Registration',values:g('registration_growth_2020_2024'),fmt:v=>(v>0?'+':'')+PCT(v),skipZero:false,ramp:'diverging',bins:[-0.05,-0.02,0,0.05,0.10,0.20],binLabels:['fell 5%+','fell 2-5%','fell up to 2%','grew up to 5%','grew 5-10%','grew 10-20%','grew 20%+'],legendTitle:'Change in registered voters, Nov. 2020 to Nov. 2024',caption:'Percent change in the number of registered voters.'},
+    {key:'registration_growth_2016_2024',label:'Registration growth 2016 to 2024',group:'Registration',values:g('registration_growth_2016_2024'),fmt:v=>(v>0?'+':'')+PCT(v),skipZero:false,ramp:'diverging',bins:[-0.05,0,0.10,0.20,0.35,0.50],binLabels:['fell 5%+','fell up to 5%','grew up to 10%','grew 10-20%','grew 20-35%','grew 35-50%','grew 50%+'],legendTitle:'Change in registered voters, Nov. 2016 to Nov. 2024',caption:'Percent change in the number of registered voters over two presidential cycles.'}],
+   base:'turnout_2024',
+   stats:[[PCT(S.turnout_2024),'turnout 2024, statewide'],[PCT(S.turnout_2020),'turnout 2020'],[num(Math.round(S.registered_2024/1e6*10)/10)+'M','registered, Nov. 2024']],
+   facts:[`Statewide turnout was <b>${PCT(S.turnout_2024)}</b> in 2024, down from <b>${PCT(S.turnout_2020)}</b> in 2020 (${PTS(S.turnout_change_2020_2024)}); the 2022 midterm drew ${PCT(S.turnout_2022)} against ${PCT(S.turnout_2018)} in 2018.`,
+          `<b>${esc(cname[hi])} County</b> had the highest 2024 turnout (${PCT(E.counties[hi].turnout_2024)}); <b>${esc(cname[lo])} County</b> the lowest (${PCT(E.counties[lo].turnout_2024)}).`,
+          `<b>${esc(cname[drop])} County</b> saw the biggest turnout drop from 2020 to 2024 (${PTS(E.counties[drop].turnout_change_2020_2024)}).`,
+          `Texas had <b>${num(S.registered_2024)}</b> registered voters in November 2024, ${(S.registration_growth_2016_2024*100).toFixed(0)}% more than in 2016; <b>${esc(cname[gain])} County</b> grew fastest (${(E.counties[gain].registration_growth_2016_2024*100).toFixed(0)}%).`],
+   lists:[{metric:'turnout_2024',n:15,title:'Highest turnout, 2024'},{metric:'turnout_2024',n:15,title:'Lowest turnout, 2024',desc:false},{metric:'turnout_change_2020_2024',n:15,title:'Biggest turnout drops, 2020 to 2024',desc:false},{metric:'turnout_change_2020_2024',n:15,title:'Turnout gains, 2020 to 2024'},
+          {metric:'turnout_change_2018_2022',n:15,title:'Midterm turnout change, 2018 to 2022: biggest drops',desc:false},{metric:'registration_growth_2016_2024',n:15,title:'Fastest registration growth, 2016 to 2024'}],
+   countyExtra:f=>{const c=E.counties[f];const yrs=[2024,2022,2020,2018,2016,2014,2012,2010,2008,2006];
+     return `<h3 style="font:700 11px Archivo,sans-serif;font-stretch:85%;letter-spacing:.12em;text-transform:uppercase;color:var(--maroon);margin:10px 0 0">Turnout history, this county vs. Texas</h3>`+
+       table(yrs.filter(y=>c['turnout_'+y]!=null).map(y=>[y,num(c['registered_'+y]),num(c['ballots_'+y]),PCT(c['turnout_'+y]),PTS(c['turnout_'+y]-S['turnout_'+y])]),['Year','Registered','Ballots','Turnout','vs. Texas'])+'<div class="note" style="padding:4px 0 0">2006-2010 ballots are votes in the top race.</div>';},
+   note:'Turnout = ballots cast divided by registered voters at that election. Registered voters are the Secretary of State\'s November figures; ballots cast 2012-2024 are the Texas Legislative Council\'s counts, and for 2006-2010 the votes in the top race stand in.',
+   welcomeTitle:'Texas turnout, county by county',
+   about:'<p>This map opens on 2024 turnout. <b>Color the map by</b> switches to any general election since 2008, to the change between like-for-like elections (presidential to presidential, midterm to midterm), and to registration counts and growth. Click a county for its whole history against the statewide rate.</p>',
+   sources:'<ul><li><b>Registered voters</b>: Texas Secretary of State, voter registration figures by county for November of each election year (<a href="https://www.sos.state.tx.us/elections/historical/vrfig.shtml" target="_blank" rel="noopener">sos.state.tx.us</a>); 2006 from the canvass.</li><li><b>Ballots cast 2012-2024</b>: Texas Legislative Council Red-211 turnout for PLANC2333, county parts summed. <b>2006-2010</b>: votes in the governor or presidential race from the SOS canvass.</li></ul>',
+   caveats:'<ul><li>Registration counts include voters on the suspense list, so turnout among active voters is a little higher than shown.</li><li>Compare presidential years with presidential years and midterms with midterms.</li></ul>'};}};
 })(window.TX_TOPICS);
