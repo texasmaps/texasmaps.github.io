@@ -12,7 +12,9 @@
 .topic select{border:1px solid var(--rule);background:var(--paper);border-radius:6px;padding:5px 6px;font-size:12px;cursor:pointer;color:var(--ink);max-width:150px}
 .loading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:var(--ink3);font-size:13px}
 @media (max-width:1600px){.mapnav{display:none}}   /* the Topic menu does the nav's job; the pills only fit on very wide screens */
-@media (max-width:800px){.topic{font-size:0}.topic select{font-size:12px;max-width:120px}}
+/* on phones the Topic menu moves into the sidebar (see placeTopic), so the header keeps the title, All maps and About */
+aside .topic{padding:10px 14px 0;font-size:12px}
+aside .topic select{flex:1;max-width:none}
 </style>
 </head>
 <body>
@@ -49,6 +51,9 @@ const want=new URLSearchParams(location.search).get('topic'),key=TOPICS[want]?wa
 document.title=T.title.join(' ');$('h1').innerHTML=`${esc(T.title[0])} <span>${esc(T.title[1])}</span> ${esc(T.title[2])}`;$('intro').textContent=T.intro;
 const sel=$('topic');sel.innerHTML=keys.map(k=>`<option value="${esc(k)}"${k===key?' selected':''}>${esc(TOPICS[k].label)}</option>`).join('');
 sel.onchange=()=>{location.href=PAGE+'?topic='+encodeURIComponent(sel.value);};
+const topicBox=sel.parentElement,asideEl=document.querySelector('aside'),hdr=document.querySelector('header');
+function placeTopic(){const phone=window.innerWidth<=800;if(phone&&topicBox.parentElement!==asideEl)asideEl.insertBefore(topicBox,asideEl.firstChild);else if(!phone&&topicBox.parentElement!==hdr)hdr.insertBefore(topicBox,$('h1').nextSibling);}
+placeTopic();window.addEventListener('resize',placeTopic);
 function loadScripts(files){return files.reduce((p,f)=>p.then(()=>new Promise((ok,bad)=>{const s=document.createElement('script');s.src=f+'?v='+V;s.onload=ok;s.onerror=()=>bad(new Error('could not load '+f));document.head.appendChild(s);})),Promise.resolve());}
 
 // ---- the sidebar: one generic list view, county view, pin view and category view for every topic ----
