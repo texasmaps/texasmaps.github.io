@@ -74,7 +74,15 @@ svg .pin.dim{display:none}
 .tray th:first-child{text-align:left}
 .tray td{padding:3px 6px;border-bottom:1px solid var(--rule);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .tray td:first-child{text-align:left;color:var(--ink2);white-space:normal}
-.legend{bottom:auto;top:auto}
+/* legend for the colored map: bottom-left, always just above the compare tray (--tray-h is kept current by tx_deep_dive.js) */
+.legend{top:auto;bottom:calc(var(--tray-h,44px) + 20px);z-index:5;max-height:calc(100% - var(--tray-h,44px) - 230px)}
+/* compact legend: two columns, foldable on every screen size (starts open on desktop, folded on phones) */
+.legend{max-width:360px}
+.legend .lgt{display:block}
+.legend:not(.open){padding:8px 12px}
+.legend:not(.open) .lgbody{display:none}
+.legend.open .lgbody{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:14px;align-items:center;margin-top:4px}
+.legend .lgbody>b,.legend .lgbody>.foot{grid-column:1/-1}
 @media (max-width:800px){header .ccbar{flex-wrap:wrap}header .ccsearch{max-width:none;flex-basis:100%}.tabs{display:none}aside .tabs{display:flex}.ccmap .chips{max-width:100%}.tray{max-height:52%}}
 @media (min-width:801px){aside .tabs{display:none}}
 /* header grows with the search row and tabs */

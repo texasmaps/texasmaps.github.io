@@ -1,6 +1,6 @@
 /* tx_deep_dive.js — the county command center (texas_county_deep_dive.html) on the tx_county_map.js engine.
    Search a place → What to know (statements with the numbers underneath) → tabs (Overview, Elections, Money, Community, Districts, Water, Data Centers)
-   → Compare tray (up to three counties) → Prepare roundtable (a one-page brief with source links). Version 20260928-4. */
+   → Compare tray (up to three counties) → Prepare roundtable (a one-page brief with source links). Version 20260928-5. */
 (function(){
 const {esc,num,cname}=CM,$=id=>document.getElementById(id);
 const DM=window.TX_COUNTY_DEMOGRAPHICS||{},TXD=window.TX_DEMOGRAPHICS_STATE||{},E=window.TX_COUNTY_ELECTIONS||{state:{},counties:{}},S=E.state,X=window.TX_DISTRICT_XW||{counties:{},changed:{},county_pop:{},plans:{}},R=window.TX_DISTRICT_RESULTS||{},B=window.TX_COUNTY_BALLOT||{offices:[],cands:[],counties:{}},O=window.TX_COUNTY_ORGS||{orgs:[],waves:[]},WD=window.TX_COUNTY_WATER||{counties:{}},W=WD.counties||{},AQ=window.TX_COUNTY_AQUIFERS||{},DC=(window.TX_DC_SITES||[]).filter(s=>s.kind==='project'),PL=window.TX_PLACES||[],RG=window.TX_REGIONS||{};
@@ -94,6 +94,9 @@ $('tray').addEventListener('click',ev=>{const rm=ev.target.closest('[data-rm]');
   const ad=ev.target.closest('[data-add]');if(ad){addCompare(ad.dataset.add);return;}
   if(ev.target.closest('#tray-h')){$('tray').classList.toggle('closed');renderTray();}});
 function addCompare(f){if(!ST.cmp.includes(f)&&ST.cmp.length<3){ST.cmp.push(f);saveCmp();}$('tray').classList.remove('closed');renderTray();renderPanel();setHash();}
+// keep the map legend just above the compare tray: main gets --tray-h = the tray's current height (see tx_deep_dive.css)
+function fitLegend(){const t=$('tray'),m=document.querySelector('main');if(t&&m)m.style.setProperty('--tray-h',t.offsetHeight+'px');}
+if(window.ResizeObserver)new ResizeObserver(fitLegend).observe($('tray'));window.addEventListener('resize',fitLegend);fitLegend();if(window.innerWidth>800)$('legend').classList.add('open');
 // ---- statements: What to know ----
 function know(f){const c=E.counties[f]||{},v=V[f]||{};const out=[];const st=(t,ev)=>out.push({t,ev});
   if(v.regSince22!=null)st(`Voter registration ${v.regSince22>=0?'increased':'decreased'} since the 2022 midterm`,[['Nov. 2022',num(c.registered_2022)],['Nov. 2024',num(c.registered_2024)],['Change',SPCT(v.regSince22),1],['Texas',SPCT(TEXAS.reg_since_2022)]]);
