@@ -38,13 +38,11 @@ aside .tabs{padding:8px 12px 0;border-bottom:1px solid var(--rule);padding-botto
 .cctab .pair button.on{background:var(--ink);color:var(--paper2);border-color:var(--ink)}
 .cctab .org{font-size:12px;padding:5px 0;border-bottom:1px solid var(--rule)}
 .cctab .org small{color:var(--ink3)}
+.cctab .org small.fromc{color:var(--ink2)}
+.cctab .race{font-size:12.5px;margin:8px 0 1px;padding-top:4px}.cctab .race small{color:var(--ink3);font-weight:400}
 .cctab .cat{font:700 11px "Archivo",sans-serif;font-stretch:85%;letter-spacing:.08em;text-transform:uppercase;color:var(--maroon);margin:10px 0 2px}
 .cctab details summary{cursor:pointer;font-size:12px;font-weight:600;padding:4px 0}
 .ccnote{font-size:11.5px;color:var(--ink3);line-height:1.45;padding:4px 0}
-.landing{padding:14px 16px;font-size:13.5px;line-height:1.55}
-.landing h2{font:700 20px "Archivo",sans-serif;font-stretch:85%;margin:0 0 6px}
-.landing .try{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
-.landing .try button{font:600 12px "IBM Plex Sans",sans-serif;padding:5px 9px;border-radius:999px;border:1px solid var(--rule);background:var(--paper2);color:var(--ink);cursor:pointer}
 /* map toolbar: color chips + district lines */
 .ccmap{position:absolute;left:12px;right:12px;top:12px;display:flex;gap:8px;align-items:flex-start;pointer-events:none;z-index:5;flex-wrap:wrap}
 .ccmap .chips{display:flex;gap:4px;flex-wrap:wrap;pointer-events:auto;background:var(--paper2);border:1px solid var(--rule);border-radius:10px;padding:6px;box-shadow:0 2px 10px rgba(0,0,0,.08);max-width:calc(100% - 300px)}

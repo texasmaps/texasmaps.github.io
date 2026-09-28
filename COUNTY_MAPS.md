@@ -27,7 +27,7 @@ Everything below is new; no pre-existing file on `main` is touched. Start with `
 
 | File | What it is | Used by |
 |---|---|---|
-| `texas_county_deep_dive.html`, `tx_deep_dive.js`, `tx_deep_dive.css` | **the county command center**: search a county or city, "What to know" statements with the numbers underneath, tabs (Overview, Elections, Money, Community, Districts, Water, Data Centers), one-at-a-time map coloring with congressional lines on top, a compare tray for up to three counties, and a "Prepare roundtable" one-page brief with source links | the team's main entry point |
+| `texas_county_deep_dive.html`, `tx_deep_dive.js`, `tx_deep_dive.css` | **the county command center**: opens on a Texas page (statewide findings, ranked lists, the statewide ballot); search a county or city, "What to know" statements with the numbers underneath, tabs (Overview, Elections, Money, Ballot, Community, Districts, Water, Data Centers), one-at-a-time map coloring with congressional lines on top, a compare tray for up to three counties, and a "Prepare roundtable" one-page brief with source links | the team's main entry point |
 | `tx_places.js` | 1,855 Texas cities, towns and CDPs with their county (Census 2024 Gazetteer) | the command center's search box |
 | `tx_county_aquifers.js` | which TWDB major and minor aquifers lie under each county, with the share of county area | Water tab, briefs |
 | `texas_county_maps.html` | the topic app (header, sidebar, county / district / pin cards, deep links) | the single-topic maps |
@@ -38,6 +38,7 @@ Everything below is new; no pre-existing file on `main` is touched. Start with `
 | `tx_county_elections.js` | county results 2006-2024 (shares, margins, changes, vote counts), registration, turnout, 2014-2018 primaries | elections, turnout, deep-dive |
 | `tx_county_demographics.js` | TDC 2025 population + ACS 2020-24 (39 fields) + the State of Texas row | demographics, deep-dive |
 | `tx_county_ballot.js` | certified 2026 ballot by county, Democratic county chairs, TEC and FEC fundraising | deep-dive |
+| `tx_county_contribs.js` | itemized contributions to every 2026 state candidate (and linked committees) by the donor's county: dollars and gifts, 2026 YTD and since 2025 (TEC bulk export) | command center: Money and Ballot tabs, three Fundraising colorings, tray, brief |
 | `tx_county_orgs.js` | community organizations / brokers by county (1,821 rows) | deep-dive |
 | `tx_regions.js` | campaign regions | regions, deep-dive |
 | `county_map_template.html` | standalone-page example on the same engine | reviewers copying the pattern |
@@ -65,6 +66,7 @@ Reused as they are from `main`: `tx_counties.js`, `tx_surface_water.js`, `tx_dc_
 | `tx_district_crosswalk.js` | county × district: 2020 residents and shares for every plan, plus each county's share of residents whose congressional district number changed from the 2024 map to the 2026 map |
 | `tx_district_results.js` | TLC Red-206 results by district, 2012-2024 (President, Governor, U.S. Senate: shares, margin, votes; registered voters; ballots) for all five plans |
 | `tx_county_ballot.js` | the certified 2026 ballot by county (3,821 candidates, 710 offices), Democratic county chairs, TEC fundraising for state candidates and FEC 2025-26 cycle totals for U.S. House and Senate candidates (77 of 87), exported from the verified workbook |
+| `tx_county_contribs.js` | `cands[candidate index][county FIPS or OUT or UNK] = [dollars 2026 YTD, gifts, dollars since 2025-01-01, gifts]` for 741 candidate accounts, plus `spacs` for the 10 candidates with linked support committees; donor placed by ZIP (Census ZCTA to county) or city; 483,046 itemized rows since 2025 from the TEC export as of 2026-09-26 |
 | `tx_county_orgs.js` | community organizations / brokers by county (1,800+ rows: Farm Bureau offices, teacher locals, labor councils with officers, chambers with 85 auto-extracted executives, hospitals, colleges, Realtor associations, American Legion posts), each row with its source URL, pull date, coverage type and evidence type |
 | `county_map_template.html` | standalone-page example on the same engine (data center projects per county) |
 | `tools/csv_to_js.py` | turns any CSV with a county or FIPS column into a `tx_*.js` data file |
@@ -155,6 +157,8 @@ The same engine also runs a page of its own, if a topic deserves its own address
 folder. Copy it, replace its DATA block and its words, and load `tx_county_map.js`/`.css` next to it.
 
 ## Sources
+
+- **Itemized contributions by county** (`tx_county_contribs.js`): Texas Ethics Commission bulk export (contribs_##.csv, cont_ss.csv, cont_t.csv) as of 2026-09-26, Schedule A rows dated 2025-01-01 or later for each ballot candidate's filer account and linked SPACs; originals of corrected reports and daily pre-election reports skipped; contributor placed by ZIP (Census 2020 ZCTA-to-county relationship, largest land area) or by city (Census 2024 Gazetteer place). Built by `Texas Deep Dive Sources/build_scripts/build_contribs_by_county.py`; long CSV in `built/contribs_by_candidate_county_2025-26.csv`. Itemized 2026 sums equal the cover-sheet totals for the largest accounts (Hinojosa $7,428,074 vs $7,428,124).
 - Data center projects: Texas Data Center Watch (`tx_dc_sites.js`, copied out of `texas_data_center_map.html`).
 - Rainfall: PRISM Climate Group, Oregon State University (1991–2020 normals; monthly grids for Sep 2025 – Aug 2026); county means built by `tools/build_county_water.py` on 2026-09-25.
 - Wells: Texas Water Development Board Groundwater Database (all wells on record, copy of 2026-09-25) and Submitted Driller's Reports (water-supply wells drilled 2020-01-01 through 2026-09-24).
