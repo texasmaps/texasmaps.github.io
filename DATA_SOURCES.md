@@ -17,9 +17,11 @@ County results for 2006-2018 come from the Secretary of State's official canvass
 | Dataset | Publisher and link | What was taken | Feeds |
 | --- | --- | --- | --- |
 | Official county results, 2006-2018 general elections (84 race pages) | [Texas SOS Historical Election Results](https://elections.sos.state.tx.us/) (`elchist{id}_race{raceId}.htm`; election ids 127, 141, 154, 164, 175, 319, 331) | votes and shares for every candidate in every statewide race (President, Governor, U.S. Senate and the rest), all 254 counties | `tx_county_elections.js`; workbook *Election Results*, *Turnout History*, *County Elections Summary*; `built/county_election_results_2006-2024_long.csv` |
+| Down-ballot statewide races 2006-2024 (Lieutenant Governor, Attorney General, Comptroller, Land and Agriculture Commissioner, Railroad Commissioner, Chief Justice, Presiding Judge), from the same SOS and TLC sources | as above | Republican and Democratic votes (each party's top vote-getter statewide) and all votes per county and race-year; candidate surnames | `tx_county_downballot.js`; `built/county_downballot_statewide_2006-2024.csv` |
 | Red-211 Election Analysis with County Subtotals, 2012-2024 (PLANC2333 bundle, report dated 2025-08-18) | [Texas Legislative Council, data.capitol.texas.gov](https://data.capitol.texas.gov/dataset/planc2333) | county parts ("Bowie (76%)") summed across districts give the county total for every statewide race, 2020, 2022, 2024; 2012-2018 used as a cross-check against the canvass | same files, 2020-2024 rows |
 | Voter registration figures by county, every January, March and November 2008-2026 (44 pages) | [Texas SOS registration figures](https://www.sos.state.tx.us/elections/historical/vrfig.shtml) | registered voters at each election (November) and March of each primary year | `registered_<year>`, `registered_march_<year>`; workbook *Turnout History*, *Primary Turnout* |
 | March 2026 voter registration figures (as of the March 3, 2026 primary) with suspense-list counts, and November 2025 | [Texas SOS registration figures](https://www.sos.state.tx.us/elections/historical/vrfig.shtml) (`mar2026.shtml`, `nov2025.shtml`) | registered voters, suspense and non-suspense voters for every county; statewide 18,657,918 registered, 1,228,918 on the suspense list; growth since Nov. 2024 | `tx_county_elections.js` (`registered_march_2026`, `suspense_march_2026`, `registered_2025`, `registration_growth_2024_2026`); `built/county_registration_2025-2026.csv`; workbook sheet *Registration 2026* |
+| Registration history: every SOS registration page 2008-2026 (44 pages) with suspense-list counts | [Texas SOS registration figures](https://www.sos.state.tx.us/elections/historical/vrfig.shtml) | registered and suspense-list voters by county for each page; statewide sums | `tx_county_registration.js`; `built/county_registration_history_2008-2026.csv`; workbook sheet *Registration History* |
 | Turnout and registration, 1970-current (statewide) | [Texas SOS turnout page](https://www.sos.state.tx.us/elections/historical/70-92.shtml) | statewide check of every year's registration and top-race votes | audit only |
 | County race summaries, 2014, 2016 and 2018 Democratic and Republican primaries (1,524 county pages, 6 state summaries) | [Texas SOS Historical Election Results](https://elections.sos.state.tx.us/) (`elchist{324,325,233,273,170,169}_county{n}.htm`) | votes in every statewide primary race by county; each party's top race gives primary turnout | `primary_*` fields in `tx_county_elections.js`; workbook *Primary Turnout*; `built/county_primary_turnout_2014-2018.csv` |
 
@@ -97,6 +99,14 @@ Water figures are the water maps' county data (PRISM rainfall, TWDB wells and aq
 
 Incentives, local decisions and timelines are not in the Data Center Watch extract; each project's news links are on the data center map.
 
+## Property tax, incentives and donor links
+
+| Dataset | Publisher and link | What was taken | Feeds |
+| --- | --- | --- | --- |
+| Total tax rates and levies by taxing unit, 2021-2025 (`20YY-total-rates-levies.xlsx` in `Projected Property Tax/`) | [Texas Comptroller, Property Tax Assistance Division](https://comptroller.texas.gov/taxes/property-tax/rates/index.php) | every taxing unit's total rate per $100; the county government's own rate, the average school-district rate and the unit count per county; the 2025 file lists units without county columns, so its ISD averages use each district's home county | `tx_county_proptax.js`; `built/county_property_tax_rates_2021-2024.csv`; workbook sheet *Property Tax* |
+| Local incentive deals (6,477: Ch.380 city grants, Ch.312 abatements, Ch.313 value limitations, Ch.381 county grants, Ch.403 JETI) and county grid-burden table (`ERCOT/classifiers/deals_with_urban_tier.csv`, `ERCOT/working/county_grid_burden.csv`, `county_ercot_zone.csv`) | the incentives project on this drive, built from [Comptroller registries](https://comptroller.texas.gov/economy/local/) and agreements plus ERCOT GIS reports (see `ERCOT/FULL_PIPELINE.md`) | deals placed in a county (6,266 of 6,477), counts by program, reported dollar value where given, the twelve largest per county; ERCOT queue projects and MW, subsidized power deals | `tx_county_incentives.js`; `built/county_incentive_deals_top.csv`; workbook sheet *Incentive Deals* |
+| Data-center projects linked to Abbott donors (`TX_DataCenters_Every_Abbott_Donor_Link_CELL_AUDITED_FINAL.csv`, 71 projects in 20 counties) | audited donor-link file on this drive (TEC contributions 2013 to 2026-06-30; each row cites its project and TEC sources) | project, status, years, size, owner, link tier, counted donors, lifetime and announcement-year giving, tax-break status | `tx_county_incentives.js` (`links`) |
+
 ## Places and regions
 
 | Dataset | Publisher and link | What was taken | Feeds |
@@ -115,6 +125,10 @@ Incentives, local decisions and timelines are not in the Data Center Watch extra
 - **Results on the 2026 lines** are the Texas Legislative Council's re-tabulations of actual precinct votes onto those lines, not elections held under them.
 - **Money**: TEC figures are 2026 year to date through each candidate's latest report (with corrected reports replacing originals); FEC figures are 2025-2026 cycle totals; "down-ballot money on the ballot" counts a district race in full for every county the district touches; a race is called higher-funded when its total is in the top quarter of State House, Senate and SBOE race totals statewide.
 - **From county donors** = itemized contributions (TEC Schedule A) whose contributor address falls in the county: ZIP to county by the Census ZCTA relationship (largest land area), city as fallback; addresses outside Texas are "out of state"; rows with no address cannot be placed. Republican and Democratic dollars sum the county's gifts to candidates of each party for state office. Two windows: 2026 year to date (matches the raised totals) and since 2025-01-01. Linked support committees (for example Texans for Greg Abbott) are counted with their candidate.
+- **Down-ballot margins** use the same rule as the top races: the Republican candidate's share minus the Democratic candidate's share of all votes in that race, shown with the winner's name (Paxton +9.7 statewide in 2022).
+- **Suspense list** = registered voters whose address the county could not confirm; they remain registered, can vote after confirming an address, and are removed after two federal general elections without contact.
+- **Property tax rate** = the taxing unit's total rate per $100 of taxable value; the county figure is the county government's own rate, not the sum of all units a resident pays.
+- **Incentive deal value** = the largest dollar figure reported for the deal (incentive value, tax benefit, grant or Ch.313 gross tax savings); many deals report none. Donor links are conservative relationship matches and not proof of causation.
 - **Coverage type** (county, multicounty, regional, statewide) and **evidence type** (membership, chapter leadership, formal constituency, unknown) are observable indicators recorded for each organization; no strength score is assigned.
 - **Plan ids** are always spelled out: PLANC2333 is the 2026 congressional map, PLANC2193 the 2024 map.
 
@@ -126,7 +140,7 @@ Incentives, local decisions and timelines are not in the Data Center Watch extra
 - Leader names are missing where directories do not publish them (hospitals, Farm Bureaus, TSTA locals); 85 chamber executives were auto-extracted from chamber websites and are flagged to verify.
 - Organizations not yet collected: VFW, Texas Veterans Commission county service officers, DAV, Rotary, Lions, Kiwanis, League of Women Voters, PTA councils, ministerial alliances; three counties (Borden, Garza, King) have no rows.
 - Unitemized contributions (under the itemization threshold) carry no address, so a county's dollars are the itemized part only; federal candidates' donors (FEC) are not placed by county.
-- Data-center incentives, local decisions and timelines are not in the Data Center Watch extract.
+- Data-center incentives now come from the incentives project's deal registry (county-level, where a county is reported) and the audited donor-link file; individual local decisions and project timelines beyond those files are still not tracked.
 - Aquifer shares are approximate: grid sampling of generalized outlines, shares under 2% dropped.
 
 ## Dataset-to-file map
@@ -140,6 +154,10 @@ Incentives, local decisions and timelines are not in the Data Center Watch extra
 | `tx_district_results.js` | TLC Red-206 workbooks, 35 files | *District Results* | `build_district_results_all.py`, `r206lib.py`, `write_district_js.py` |
 | `tx_county_ballot.js` | SOS ballot certification, TDP chair directory, TEC bulk export, FEC bulk files | *County Ballot & Chairs*, *County Chairs*, *Candidate Fundraising* | `write_ballot_js.py`, `match_fec.py`, `populate_fec_xlsx.py` (TEC population scripts from the earlier workbook build) |
 | `tx_county_contribs.js` | TEC export contributions x ZCTA-to-county and Gazetteer places; candidate filer ids from the workbook | *Contributions by County* | `build_contribs_by_county.py` |
+| `tx_county_downballot.js` | parsed SOS/TLC results, down-ballot statewide races | *Election Results* (already there) | `build_downballot.py` |
+| `tx_county_registration.js` | SOS registration pages 2008-2026 | *Registration History* | `build_registration_history.py` |
+| `tx_county_proptax.js` | Comptroller rates and levies 2021-2025 | *Property Tax* | `build_proptax.py` |
+| `tx_county_incentives.js` | incentives project tables + audited donor-link file | *Incentive Deals* | `build_incentives.py` |
 | `tx_county_orgs.js` | IPEDS, CMS, TCCE, Texas AFT, TSTA, Texas AFL-CIO, Texas REALTORS, Texas Farm Bureau, American Legion, ZCTA file | *Community Organizations* | `build_orgs.py`, `parse_legion.py`, `write_orgs_js.py`, `write_orgs_xlsx.py` |
 | `tx_county_aquifers.js` | TWDB aquifer outlines (`tx_aquifers.js`) x county outlines | (none) | `build_county_aquifers.py` |
 | `tx_places.js` | Census 2024 Gazetteer, Texas places | (none) | `build_places.py` |
