@@ -226,6 +226,7 @@ svg.dfill .dlabel{fill:var(--ink);stroke:var(--paper2)}
 /* aquifer overlay (TWDB outlines from tx_aquifers.js): translucent fills for the major aquifers, faint dashed fill for minor ones */
 .aq{pointer-events:none;fill-rule:evenodd;fill-opacity:.42;stroke-width:1.1;vector-effect:non-scaling-stroke;stroke-linejoin:round}
 .aq.minor{fill:var(--ink2);fill-opacity:.10;stroke:var(--ink2);stroke-width:.8;stroke-dasharray:3 2}
-.aqlabel{font-family:"Archivo",sans-serif;font-weight:700;font-stretch:85%;letter-spacing:.06em;text-transform:uppercase;fill:#3b2f1f;paint-order:stroke;stroke:#fff;stroke-linejoin:round;pointer-events:none;text-anchor:middle}
+.aqlabel{font-family:"Archivo",sans-serif;font-weight:700;font-stretch:85%;letter-spacing:.06em;text-transform:uppercase;fill:#3b2f1f;paint-order:stroke;stroke:#fff;stroke-linejoin:round;pointer-events:auto;cursor:pointer;text-anchor:middle}
+.aq.dim{fill-opacity:.1}.aq.hl{fill-opacity:.6;stroke-width:2.4}
 .aqlabel.mi{font-family:"IBM Plex Sans",sans-serif;font-weight:600;font-style:italic;text-transform:none;letter-spacing:0;fill:var(--ink2)}
 .legend .r i.aqmisw{border-radius:2px;background:repeating-linear-gradient(45deg,var(--ink2) 0 1px,transparent 1px 4px);border:1px dashed var(--ink2)}

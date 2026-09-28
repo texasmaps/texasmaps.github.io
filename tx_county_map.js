@@ -59,7 +59,12 @@ Object.assign(CM,{sw:SW,nearestRiver,nearestReservoir,basinOf,inRings,mi});
 const AQ=window.TX_AQUIFERS||null;const AQCOL={'Ogallala':'#eda100','Edwards-Trinity (Plateau)':'#2a78d6','Pecos Valley':'#1baf7a','Trinity':'#008300','Edwards (Balcones Fault Zone)':'#e87ba4','Carrizo-Wilcox':'#4a3aa7','Gulf Coast':'#eb6834','Hueco-Mesilla Bolson':'#e34948','Seymour':'#8c6d3f'};
 if(AQ){['major','minor'].forEach(k=>AQ[k].forEach(a=>{if(a.r){a.rings=a.r.map(decRing);delete a.r;}a.bb=bbOf(a.rings);a.kind=k;}));}
 const aquifersAt=(lon,lat,minor)=>AQ?AQ.major.filter(a=>inRings(a,lon,lat)).map(a=>a.n).concat(minor?AQ.minor.filter(a=>inRings(a,lon,lat)).map(a=>a.n+' (minor)'):[]):[];
-let gAqMa,gAqMi,gAqL;Object.assign(CM,{aq:AQ,aqColor:n=>AQCOL[n]||'',aquifersAt});
+let gAqMa,gAqMi,gAqL;
+CM.aquifer=n=>AQ?AQ.major.concat(AQ.minor).find(a=>a.n===n)||null:null;
+CM.pinsInAquifer=n=>{const a=CM.aquifer(n);return a?PINS.filter(p=>p.lon!=null&&inRings(a,p.lon,p.lat)):[];};
+CM.highlightAquifer=n=>{[gAqMa,gAqMi].forEach(g=>{if(g)g.querySelectorAll('path').forEach(p=>{p.classList.toggle('hl',!!n&&p.dataset.n===n);p.classList.toggle('dim',!!n&&p.dataset.n!==n);});});};
+CM.zoomAquifer=n=>{const a=CM.aquifer(n);if(!a)return;const [x0,y1]=px(a.bb[0],a.bb[1]),[x1,y0]=px(a.bb[2],a.bb[3]);zoomTo(x0,y0,x1-x0,y1-y0);};
+Object.assign(CM,{aq:AQ,aqColor:n=>AQCOL[n]||'',aquifersAt});
 
 // ---------- county geometry ----------
 const cname={},cpath={},ccent={},cbbox={},cgeo={},fipsByName={};
@@ -177,7 +182,7 @@ CM.init=function(c){
   svg.innerHTML='<g id="view"><g id="counties"></g><g id="aq-minor"></g><g id="aq-major"></g><g id="districts"></g><g id="basins"></g><g id="reservoirs"></g><g id="rivers"></g><g id="clabels"></g><g id="sw-labels"></g><g id="aq-labels"></g><g id="dlabels"></g><g id="pins"></g></g>';
   view=$('view');gC=$('counties');gL=$('clabels');gP=$('pins');gBas=$('basins');gRes=$('reservoirs');gRiv=$('rivers');gSWL=$('sw-labels');gD=$('districts');gDL=$('dlabels');gAqMa=$('aq-major');gAqMi=$('aq-minor');gAqL=$('aq-labels');buildDistricts();
   if(AQ){[['major',gAqMa],['minor',gAqMi]].forEach(([k,g])=>AQ[k].forEach(a=>{const p=svgEl('path');p.setAttribute('d',ringsPath(a.rings));p.setAttribute('class','aq '+k);p.dataset.n=a.n;if(k==='major'){p.style.fill=AQCOL[a.n]||'#999';p.style.stroke=AQCOL[a.n]||'#777';}g.appendChild(p);
-    const t=svgEl('text');t.setAttribute('class','aqlabel '+(k==='major'?'ma':'mi'));const [lx,ly]=px(a.c[0],a.c[1]);t.setAttribute('x',lx);t.setAttribute('y',ly);t.textContent=a.n;t.dataset.k=k;gAqL.appendChild(t);}));}
+    const t=svgEl('text');t.setAttribute('class','aqlabel '+(k==='major'?'ma':'mi'));const [lx,ly]=px(a.c[0],a.c[1]);t.setAttribute('x',lx);t.setAttribute('y',ly);t.textContent=a.n;t.dataset.k=k;t.dataset.n=a.n;gAqL.appendChild(t);}));}
   if(SW){
     const linesPath=ls=>{let d='';ls.forEach(l=>l.forEach((p,i)=>{d+=(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1);}));return d;};
     SW.basins.forEach(b=>{const p=svgEl('path');p.setAttribute('d',ringsPath(b.rings));p.setAttribute('class','basin');p.dataset.n=b.n;gBas.appendChild(p);
@@ -279,6 +284,7 @@ CM.pinHTML=function(p,extra=''){const st=STATUS[p.status]||{label:p.status};cons
 
 // ---------- clicks, tooltips, controls, legend ----------
 function click(e,t){
+  if(t.classList.contains('aqlabel')){if(cfg.onAquifer)cfg.onAquifer(t.dataset.n,t.dataset.k);return;}
   if(t.classList.contains('pin')){if(cfg.onPin)cfg.onPin(byId[t.dataset.id]);return;}
   if(t.classList.contains('district')){if(cfg.onDistrict)cfg.onDistrict(t.dataset.plan,+t.dataset.n);return;}
   if(t.classList.contains('county')){if(cfg.onCounty)cfg.onCounty(t.dataset.fips);return;}

@@ -92,7 +92,7 @@ svg .pin.dim{display:none}
 .app.pro .detail h2{font:600 18px "Segoe UI",system-ui,sans-serif;margin:2px 0 2px;letter-spacing:0;text-transform:none}
 .app.pro .detail .sub{font-size:12px;color:var(--pro-ink3);line-height:1.4}
 .app.pro .back{font:12px "Segoe UI",system-ui,sans-serif;border:0;background:none;color:var(--pro-blue);cursor:pointer;padding:0;margin:6px 0 2px}
-.app.pro .status{font-size:11px;color:var(--pro-ink3);text-transform:uppercase;letter-spacing:.05em}
+.app.pro .status{display:block;font-size:11px;color:var(--pro-ink3);text-transform:uppercase;letter-spacing:.05em;margin:8px 0 2px}
 .acts{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
 .acts button,.acts a{font:12px "Segoe UI",system-ui,sans-serif;padding:4px 9px;border-radius:3px;border:1px solid var(--pro-line);background:#fff;color:var(--pro-ink);cursor:pointer;text-decoration:none}
 .acts button.primary{background:var(--pro-blue);border-color:var(--pro-blue);color:#fff}
