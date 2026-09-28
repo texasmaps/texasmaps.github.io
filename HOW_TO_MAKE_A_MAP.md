@@ -58,7 +58,7 @@ Labels: `pinLabel` ("Prisons"), `pinSingular`, `pinPlural`, `hotLabel`, `hotChip
 **Callbacks:** `onCounty(fips)`, `onPin(pin)`, `onDistrict(plan,n)`, `onBackground()`, `countyTip(fips) -> extra tooltip lines`, `districtTip(plan,n) -> lines`, `pinTip(pin) -> html`, `onUpdate()`.
 **List:** `listMetric: p => ({html, key})` turns on the "All <pins>" list with chips and sorting; `listSortLabel` names its default sort.
 **Words:** `pages: [[file,label],...]` (header links), `countyKv:false` and `countySub(fips)` (app page only: hide the generic metric list on a county card, add a subtitle), `about`, `sources`, `caveats`, `aboutFine`, `legendNote`, `welcomeTitle`, `welcomeTips`, `noWelcome`, `searchPlaceholder`.
-**Layers:** `base` (metric shown at load), `rivers`, `basins`, `plan` (district lines shown at load, e.g. `'PLANC2333'`; needs `tx_districts.js` and `tx_district_crosswalk.js` loaded before the engine), `controls: ['pins','rivers','basins','districts','base']`.
+**Layers:** `base` (metric shown at load), `rivers`, `basins`, `aquifers` and `minor` (TWDB aquifer overlay; needs `tx_aquifers.js` loaded before the engine), `plan` (district lines shown at load, e.g. `'PLANC2333'`; needs `tx_districts.js` and `tx_district_crosswalk.js` loaded before the engine), `controls: ['pins','rivers','basins','aquifers','districts','base']`.
 **District metrics:** a metric with `plan:'PLANC2333'` and `values` keyed by district number shades that plan's districts instead of counties.
 
 **Helpers for the sidebar:** `CM.stat(v,l)`, `CM.glance([facts])`, `CM.note(text)`, `CM.countyList({metric,n,title,sub,fmt,row})`,
@@ -67,7 +67,7 @@ Labels: `pinLabel` ("Prisons"), `pinSingular`, `pinPlural`, `hotLabel`, `hotChip
 **Map helpers:** `CM.zoomCounty(f)`, `CM.zoomCounties([f..])`, `CM.zoomPin(p)`, `CM.fit()`, `CM.highlightCounty(f)`, `CM.select(id)`, `CM.setFilter(fn)`, `CM.setBase(key)`, `CM.setHash(h)`, `CM.openHash()`.
 **District helpers:** `CM.plans()`, `CM.plan(id)`, `CM.districtName(plan,n)`, `CM.districtsOf(plan,fips)`, `CM.districtCounties(plan,n)`, `CM.districtRow(plan,n,val,sub)`, `CM.setPlan(id)`, `CM.highlightDistrict(plan,n)`, `CM.zoomDistrict(plan,n)`, `CM.activePlan()`.
 
-**Deep links** on every page: `#shade=<key>|none`, `#layers=rivers,basins`, `#districts=<plan id>`, `#county=<fips or name>`, `#pin=<id>`; the app page also opens `#district=<plan>:<n>`.
+**Deep links** on every page: `#shade=<key>|none`, `#layers=rivers,basins,aquifers,minor`, `#districts=<plan id>`, `#county=<fips or name>`, `#pin=<id>`; the app page also opens `#district=<plan>:<n>`.
 
 ## House rules (from the water maps)
 - Plain English everywhere a reader sees it; jargon and method notes go in the About panel.

@@ -27,11 +27,11 @@ Everything below is new; no pre-existing file on `main` is touched. Start with `
 
 | File | What it is | Used by |
 |---|---|---|
-| `texas_county_deep_dive.html`, `tx_deep_dive.js`, `tx_deep_dive.css` | **the county command center**: opens on a Texas page (statewide findings, ranked lists, the statewide ballot); search a county or city, "What to know" statements with the numbers underneath, tabs (Overview, Elections, Money, Ballot, Community, Districts, Water, Data Centers), one-at-a-time map coloring with congressional lines on top, a compare tray for up to three counties, and a "Prepare roundtable" one-page brief with source links | the team's main entry point |
+| `texas_county_deep_dive.html`, `tx_deep_dive.js`, `tx_deep_dive.css` | **the county command center**: opens on a Texas page (statewide findings, ranked lists, the statewide ballot); search a county or city, "What to know" statements with the numbers underneath, tabs (Overview, Elections, Money, Ballot, Community, Districts, Water, Data Centers), one-at-a-time map coloring (turnout, registration, election change, Republican and Democratic dollars per county, districts, population, demographics, water incl. the main aquifer, data centers) with congressional lines and the TWDB aquifer outlines on top, a compare tray for up to three counties, and a "Prepare roundtable" one-page brief with source links | the team's main entry point |
 | `tx_places.js` | 1,855 Texas cities, towns and CDPs with their county (Census 2024 Gazetteer) | the command center's search box |
 | `tx_county_aquifers.js` | which TWDB major and minor aquifers lie under each county, with the share of county area | Water tab, briefs |
 | `texas_county_maps.html` | the topic app (header, sidebar, county / district / pin cards, deep links) | the single-topic maps |
-| `tx_county_map.js`, `tx_county_map.css` | the county-map engine and styles (shading, pins, overlays, districts, legend, search, About) | all pages |
+| `tx_county_map.js`, `tx_county_map.css` | the county-map engine and styles (shading, pins, rivers/basins and aquifer overlays, districts, legend, search, About) | all pages |
 | `tx_topics.js` | the topic registry: data-centers, rainfall, wells, regions, demographics, elections, turnout, districts, deep-dive | the app page |
 | `tx_districts.js`, `tx_district_crosswalk.js` | district outlines for 5 TLC plans; county x district residents and shares | every topic (District lines menu), districts, deep-dive |
 | `tx_district_results.js` | Red-206 results by district 2012-2024 | districts, deep-dive |
@@ -109,6 +109,10 @@ Community organizations are grouped by broker category (Agriculture, Teachers, L
 Civic, Parents/families, Industry-specific) and show leader, public contact, coverage type, evidence type and source; the
 definition and caution text come from `tx_county_orgs.js`. Raw pulls and the CSV live in `Gina For Texas/Community Organizations/`
 on the Edith drive (`raw_2026-09-28/SOURCES.txt` lists every URL); rebuild with `build_scripts/build_orgs.py` + `write_orgs_js.py`.
+
+## Aquifers (overlay on the command center)
+
+With `tx_aquifers.js` (the water maps' TWDB outlines, already on main) loaded before the engine, `controls` may include `'aquifers'`: the overlays panel gets **Major aquifers** and **Minor aquifers** checkboxes, the command center's toolbar has Major / Minor buttons and the Water tab has Show/Hide buttons. Major aquifers are translucent fills, one color each (`CM.aqColor(name)`), with labels; minor aquifers a faint dashed fill with labels when zoomed in. The legend lists them, the county tooltip names the aquifers under the cursor, and `#layers=aquifers,minor` deep-links the state. The Water coloring **Main aquifer under the county** (from `tx_county_aquifers.js`) uses the same colors.
 
 ## Districts (overlay on every topic, plus the Redistricting topic)
 

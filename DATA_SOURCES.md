@@ -143,6 +143,6 @@ Incentives, local decisions and timelines are not in the Data Center Watch extra
 | `tx_county_aquifers.js` | TWDB aquifer outlines (`tx_aquifers.js`) x county outlines | (none) | `build_county_aquifers.py` |
 | `tx_places.js` | Census 2024 Gazetteer, Texas places | (none) | `build_places.py` |
 | `tx_regions.js` | `tx_counties_by_region.csv` | *County Summary* (region column) | `tools/csv_to_js.py` |
-| `tx_county_water.js`, `tx_dc_sites.js`, `tx_surface_water.js`, `tx_counties.js` | repository files reused unchanged (PRISM, TWDB, Data Center Watch, county outlines) | (none) | repository `tools/build_county_water.py`, `build_surface_water.py`, `build_water_layers.py` |
+| `tx_county_water.js`, `tx_dc_sites.js`, `tx_surface_water.js`, `tx_aquifers.js`, `tx_counties.js` | repository files reused unchanged (PRISM, TWDB, Data Center Watch, county outlines) | (none) | repository `tools/build_county_water.py`, `build_surface_water.py`, `build_water_layers.py` |
 
 All audit scripts (`build_scripts/audit/`) recompute the figures in these files from the raw sources; the report is `Texas Deep Dive Sources/AUDIT_2026-09-28.md` and the complete file inventory is `FILE_STRUCTURE_2026-09-28.md`.
