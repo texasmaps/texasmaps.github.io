@@ -8,6 +8,7 @@
 | `texas_county_maps.html?topic=rainfall` | the last 12 months vs. normal, and average yearly rainfall (PRISM) |
 | `texas_county_maps.html?topic=wells` | water-supply wells drilled since 2020, and all wells on record (TWDB) |
 | `texas_county_maps.html?topic=regions` | the six campaign regions (from tx_counties_by_region.csv) |
+| `texas_county_maps.html?topic=demographics` | 14 county measures: population and growth (Texas Demographic Center, preliminary 2025), age, race/ethnicity, income, poverty, unemployment, education, housing (ACS 2020-24) |
 
 A **Topic** menu in the header switches between them. Every topic has the same layout as the water maps: a search box, an
 *At a glance* section of headline facts computed from the data, ranked county lists ("interesting facts"), a **Map overlays**
@@ -26,6 +27,8 @@ and `#region=<id>` on the regions topic. Example: `texas_county_maps.html?topic=
 | `tx_county_map.js` | the county-map engine (projection, county outlines, shading, pins, sidebar, search, overlays, legend, welcome, About) |
 | `tx_county_map.css` | the styles, copied from `tx_water_map.css` with the aquifer rules removed and county-shading rules added |
 | `tx_regions.js` | county → campaign region, built from `tx_counties_by_region.csv` by `tools/csv_to_js.py` |
+| `tx_county_demographics.js` | 38 fields per county: TDC preliminary Vintage 2025 population + ACS 2020-24 5-year (see the file header for tables); percent fields are fractions |
+| `county_map_template.html` | standalone-page example on the same engine (data center projects per county) |
 | `tools/csv_to_js.py` | turns any CSV with a county or FIPS column into a `tx_*.js` data file |
 
 Reused as they are: `tx_counties.js` (county outlines), `tx_surface_water.js` (rivers, lakes, basins), `tx_dc_sites.js` (data center pins),
@@ -73,4 +76,5 @@ folder. Copy it, replace its DATA block and its words, and load `tx_county_map.j
 - Rainfall: PRISM Climate Group, Oregon State University (1991–2020 normals; monthly grids for Sep 2025 – Aug 2026); county means built by `tools/build_county_water.py` on 2026-09-25.
 - Wells: Texas Water Development Board Groundwater Database (all wells on record, copy of 2026-09-25) and Submitted Driller's Reports (water-supply wells drilled 2020-01-01 through 2026-09-24).
 - Regions: `tx_counties_by_region.csv` in this repository.
+- Demographics: Texas Demographic Center preliminary Vintage 2025 county estimates (https://demographics.texas.gov/Resources/TPEPP/Estimates/2025/2025_txpopest_county.zip) and U.S. Census Bureau ACS 2020-2024 5-year table-based summary files (https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/data/5YRData/), tables B01001 B01002 B01003 B03002 B15003 B17001 B19013 B19301 B23025 B25003 B25064 B25077 C24030; built 2026-09-28.
 - County outlines: the COUNTIES layer shared with Data Center Watch (`tx_counties.js`).

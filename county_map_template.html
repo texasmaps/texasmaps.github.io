@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Texas Data Centers by County</title>
+<meta name="description" content="Template for the county-level Texas maps: every county colored by a number, with optional pins. This copy shows data center projects per county.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tx_county_map.css?v=20260927-1">
+</head>
+<body>
+<div class="app">
+<header>
+  <button id="menubtn" aria-label="Show the list">☰ List</button>
+  <h1>Texas <span>Data Centers</span> by County</h1>
+  <a class="allmaps" href="index.html">All maps</a>
+  <div class="stats" id="stats"></div>
+</header>
+<aside>
+  <div class="intro">Where the data center boom lands, county by county. Hover a county for its count, click it for the list of projects there.</div>
+  <div class="side" id="side"></div>
+</aside>
+<main>
+  <svg id="map" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div class="ctrl"><button id="zin" title="Zoom in">+</button><button id="zout" title="Zoom out">−</button><button id="zfit" title="Reset view">⌂</button></div>
+  <div class="legend" id="legend"></div>
+  <div class="tip" id="tip"></div>
+</main>
+</div>
+<!-- the county layer and the optional rivers/basins overlay come from the water-map base; the last file is this map's own data -->
+<script src="tx_counties.js?v=20260927-1"></script>
+<script src="tx_surface_water.js?v=20260927-1"></script>
+<script src="tx_dc_sites.js?v=20260927-1"></script>
+<script src="tx_county_map.js?v=20260927-1"></script>
+<script>
+// ============================================================================================
+// 1. DATA — turn this map's data file into (a) numbers per county and (b) pins.
+//    For a new map, replace this block. County numbers are objects keyed by 5-digit FIPS
+//    ('48029' = Bexar); CM.fipsOf('Bexar') looks a FIPS up by name. Pins need id, name, lon, lat.
+// ============================================================================================
+const {esc,num,cname}=CM, $=id=>document.getElementById(id);
+const P=(window.TX_DC_SITES||[]).filter(s=>s.kind==='project'&&s.status!=='withdrawn');   // the same set Data Center Watch counts
+const count={},mw={};
+P.forEach(s=>{count[s.fips]=(count[s.fips]||0)+1;if(s.mw)mw[s.fips]=(mw[s.fips]||0)+s.mw;});
+const fmtMW=m=>m>=1000?(m/1000).toFixed(m%1000?1:0)+' GW':Math.round(m)+' MW';
+const pins=P.map(s=>({id:s.id,name:s.name,lon:s.lon,lat:s.lat,fips:s.fips,county:s.county,city:s.city,
+  status:s.status,size:s.mw,hot:s.hot,sub:s.operator,
+  details:{'Capacity':s.mw?fmtMW(s.mw):'not announced','Operator':esc(s.operator||'—'),
+           'Pin placed at':s.precision==='site'?'the reported site':s.precision==='city'?'the city center (exact parcel not published)':'the county center (only the county is known)'},
+  url:'texas_data_center_map.html',urlLabel:'Data Center Watch'}));
+const totalMW=Math.round(P.reduce((t,s)=>t+(s.mw||0),0));
+
+// ============================================================================================
+// 2. SIDEBAR — the list view, a county view and a pin view. Words here are this map's copy.
+// ============================================================================================
+const side=$('side');let ctx={mode:'list'};
+function renderList(){
+  const top=CM.rank('count',1)[0],topMW=CM.rank('mw',1)[0],n1=Object.keys(count).length;
+  const facts=[`<b>${esc(cname[top])} County</b> has the most projects: ${num(count[top])} of the ${num(P.length)} statewide.`,
+    `<b>${esc(cname[topMW])} County</b> leads on announced power, with ${fmtMW(mw[topMW])}.`,
+    `<b>${n1} of 254 counties</b> have at least one data center project; ${254-n1} have none.`,
+    `<b>${P.filter(s=>s.hot).length} projects</b> face local opposition or a lawsuit (the red rings).`];
+  side.innerHTML=CM.glance(facts)
+    +CM.pinList()
+    +CM.countyList({metric:'count',n:15,title:'Counties with the most projects',sub:'click one to zoom'})
+    +CM.countyList({metric:'mw',n:15,title:'Counties by announced power',sub:'MW announced',fmt:v=>fmtMW(v)})
+    +CM.note('Counts leave out small colocation sites and withdrawn projects; a county with no color has none.');
+  CM.renderRows();CM.collapseAfter(2);
+}
+function showCounty(f){
+  ctx={mode:'county',fips:f};CM.select(null);CM.setFilter(null);CM.highlightCounty(f);CM.zoomCounty(f);
+  const list=pins.filter(p=>p.fips===f).sort((a,b)=>(b.size||0)-(a.size||0));const rk=CM.rankOf('count',f);
+  side.innerHTML=`<div class="detail"><button class="back" id="back">← All counties</button><h2>${esc(cname[f])} County</h2><div class="sub">${list.length} data center project${list.length===1?'':'s'}</div>
+    <dl class="kv"><dt>Projects</dt><dd>${CM.fmtValue('count',f,'none')}</dd><dt>Announced power</dt><dd>${mw[f]?fmtMW(mw[f]):'—'}</dd><dt>Rank</dt><dd>${rk?`${rk.rank} of ${rk.of} counties with projects`:'—'}</dd></dl></div>
+    <div class="blk"><h3>Projects in ${esc(cname[f])} County <small>largest first</small></h3>${list.length?list.map(p=>CM.pinRow(p,p.size?fmtMW(p.size):'')).join(''):'<div class="empty">No data center projects listed here.</div>'}</div>`;
+  $('back').onclick=back;CM.setHash('county='+f);
+}
+function showPin(p){
+  CM.select(p.id);CM.zoomPin(p);
+  side.innerHTML=`<div class="detail" style="padding-bottom:0"><button class="back" id="back">← Back</button></div>`+CM.pinHTML(p);
+  $('back').onclick=()=>{CM.select(null);if(ctx.mode==='county')showCounty(ctx.fips);else back();};CM.setHash('pin='+encodeURIComponent(p.id));
+}
+function back(){ctx={mode:'list'};CM.highlightCounty(null);CM.setFilter(null);CM.select(null);CM.fit();renderList();CM.setHash('');}
+
+// ============================================================================================
+// 3. INIT — header numbers, then the engine config (metrics = the "Color the map by" choices).
+// ============================================================================================
+$('stats').innerHTML=CM.stat(num(P.length),'data center projects')+CM.stat(Object.keys(count).length,'counties with at least one')+CM.stat(fmtMW(totalMW),'announced power');
+CM.init({
+  metrics:[
+    {key:'count',label:'Data center projects',values:count,unit:'projects',ramp:'orange',bins:[2,3,5,10,20],
+     legendTitle:'Data center projects per county',caption:'Announced, under construction and operating projects per county. Darker = more.'},
+    {key:'mw',label:'Announced power',values:mw,ramp:'blue',fmt:fmtMW,bins:[100,300,1000,3000,10000],
+     binLabels:['under 100 MW','100–300 MW','300 MW–1 GW','1–3 GW','3–10 GW','10 GW and up'],
+     legendTitle:'Announced power per county',caption:'Total announced electric load of the projects in each county. Many projects have not announced a figure.'}],
+  base:'count',                                   // the shading shown at load
+  pins,pinLabel:'Data center sites',pinSingular:'data center project',pinPlural:'data center projects',
+  pinStatuses:{operating:{label:'Operating',color:'#3B5B8C'},under_construction:{label:'Under construction',color:'#C8842A'},proposed:{label:'Proposed',color:'#A3262A'}},
+  hotLabel:'Red ring: local opposition or a lawsuit',hotChip:'Contested only',hotFlag:'Contested',
+  pinSizeNote:'Bigger dots are bigger projects (announced power).',sizeLabel:'largest (MW)',
+  listMetric:p=>({html:`<b>${num(count[p.fips]||0)}</b> in county`,key:count[p.fips]||0}),listSortLabel:'county count',
+  onCounty:showCounty,onPin:showPin,onBackground:()=>{if(ctx.mode!=='list')back();},
+  pages:[['county_map_template.html','Data centers by county'],['texas_data_center_map.html','Data Center Watch']],
+  welcomeTitle:'Texas data centers, county by county',
+  about:'<p>This map colors every Texas county by the number of data center projects announced, under construction or operating there, with each project as a dot. Switch the coloring to announced power in <b>Map overlays</b> to see where the biggest electric loads are planned.</p>',
+  sources:'<ul><li><b>Data center projects</b>: Texas Data Center Watch, which tracks announced projects across the state. A dot sits at the reported site when it is known, otherwise at the city or county center; each project card says which.</li><li><b>County outlines</b>: U.S. Census Bureau, simplified for a statewide map.</li></ul>',
+  caveats:'<ul><li>Announced power is what a developer has said publicly; many projects give no figure, so county totals understate the real load.</li><li>Small colocation facilities and withdrawn projects are not counted.</li></ul>',
+  legendNote:'Counts leave out small colocation sites and withdrawn projects.'});
+renderList();
+CM.openHash();   // #county=48113 or #pin=<id> opens that view
+</script>
+</body>
+</html>
