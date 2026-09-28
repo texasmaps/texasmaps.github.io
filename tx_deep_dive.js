@@ -216,5 +216,5 @@ renderTabs();renderToolbar();renderTray();$('loading').remove();
 $('stats').innerHTML=[[num(S.registered_2024),'registered voters, Nov. 2024'],[RM(S.pres_margin_2024),'2024 presidential margin'],[PTS(S.turnout_change_2018_2022),'midterm turnout change 2018 to 2022']].map(([v,l])=>CM.stat(v,l)).join('');
 if(hv('county')&&DM[hv('county')])showCounty(hv('county'));else renderPanel();
 if(hv('district')){const m=/^([A-Za-z0-9]+):(\d+)$/.exec(hv('district'));if(m)showDistrict(m[1],+m[2]);}
-window.TX_DEEP_DIVE={ST,showCounty,addCompare,openBrief,know};
+window.TX_DEEP_DIVE={ST,showCounty,addCompare,openBrief,know,briefHTML};
 })();
