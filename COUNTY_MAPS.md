@@ -43,6 +43,7 @@ Everything below is new; no pre-existing file on `main` is touched. Start with `
 | `county_map_template.html` | standalone-page example on the same engine | reviewers copying the pattern |
 | `tools/csv_to_js.py` | CSV to `tx_*.js` converter | adding a topic |
 | `COUNTY_MAPS.md` | this document | reviewers |
+| `HOW_TO_MAKE_A_MAP.md` | the recipe for a new map or topic and the full `CM.init` config reference (metrics, pins, callbacks, layers, helpers, deep links) | anyone adding a map |
 | `DATA_SOURCES.md` | where every number comes from: each dataset with its publisher link, what was taken, the file it feeds, definitions, known gaps, and the dataset-to-file map | reviewers checking a figure |
 
 Reused as they are from `main`: `tx_counties.js`, `tx_surface_water.js`, `tx_dc_sites.js`, `tx_county_water.js`. Deep links to try:
