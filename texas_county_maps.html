@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Texas County Maps</title>
+<meta name="description" content="One map, many topics: every Texas county colored by the dataset you pick, with ranked lists, search, county details and district overlays. Add ?topic=elections, turnout, districts, demographics, rainfall, wells, regions or data-centers.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tx_county_map.css?v=20260928-14">
+<style>
+.topic{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2);white-space:nowrap}
+.topic select{border:1px solid var(--rule);background:var(--paper);border-radius:6px;padding:5px 6px;font-size:12px;cursor:pointer;color:var(--ink);max-width:150px}
+.loading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:var(--ink3);font-size:13px}
+@media (max-width:1600px){.mapnav{display:none}}   /* the Topic menu does the nav's job; the pills only fit on very wide screens */
+/* on phones the Topic menu moves into the sidebar (see placeTopic), so the header keeps the title, All maps and About */
+aside .topic{padding:10px 14px 0;font-size:12px}
+aside .topic select{flex:1;max-width:none}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <button id="menubtn" aria-label="Show the list">☰ List</button>
+  <h1 id="h1">Texas <span>County</span> Maps</h1>
+  <label class="topic">Topic <select id="topic" aria-label="Choose a topic"></select></label>
+  <a class="allmaps" href="index.html">All maps</a>
+  <div class="stats" id="stats"></div>
+</header>
+<aside>
+  <div class="intro" id="intro"></div>
+  <div class="side" id="side"></div>
+</aside>
+<main>
+  <svg id="map" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div class="ctrl"><button id="zin" title="Zoom in">+</button><button id="zout" title="Zoom out">−</button><button id="zfit" title="Reset view">⌂</button></div>
+  <div class="legend" id="legend"></div>
+  <div class="tip" id="tip"></div>
+  <div class="loading" id="loading">Loading the map…</div>
+</main>
+</div>
+<!-- shared: the county layer, the rivers/basins overlay, the engine and the topic registry. Each topic loads its own data file on demand. -->
+<script src="tx_counties.js?v=20260928-14"></script>
+<script src="tx_surface_water.js?v=20260928-14"></script>
+<script src="tx_districts.js?v=20260928-14"></script>
+<script src="tx_district_crosswalk.js?v=20260928-14"></script>
+<script src="tx_county_map.js?v=20260928-14"></script>
+<script src="tx_topics.js?v=20260928-14"></script>
+<script>
+const V='20260928-14',PAGE='texas_county_maps.html';
+const {esc,num,cname}=CM,$=id=>document.getElementById(id);
+const TOPICS=window.TX_TOPICS||{},keys=Object.keys(TOPICS);
+const want=new URLSearchParams(location.search).get('topic'),key=TOPICS[want]?want:keys[0],T=TOPICS[key];
+document.title=T.title.join(' ');$('h1').innerHTML=`${esc(T.title[0])} <span>${esc(T.title[1])}</span> ${esc(T.title[2])}`;$('intro').textContent=T.intro;
+const sel=$('topic');sel.innerHTML=keys.map(k=>`<option value="${esc(k)}"${k===key?' selected':''}>${esc(TOPICS[k].label)}</option>`).join('');
+sel.onchange=()=>{location.href=PAGE+'?topic='+encodeURIComponent(sel.value);};
+const topicBox=sel.parentElement,asideEl=document.querySelector('aside'),hdr=document.querySelector('header');
+function placeTopic(){const phone=window.innerWidth<=800;if(phone&&topicBox.parentElement!==asideEl)asideEl.insertBefore(topicBox,asideEl.firstChild);else if(!phone&&topicBox.parentElement!==hdr)hdr.insertBefore(topicBox,$('h1').nextSibling);}
+placeTopic();window.addEventListener('resize',placeTopic);
+function loadScripts(files){return files.reduce((p,f)=>p.then(()=>new Promise((ok,bad)=>{const s=document.createElement('script');s.src=f+'?v='+V;s.onload=ok;s.onerror=()=>bad(new Error('could not load '+f));document.head.appendChild(s);})),Promise.resolve());}
+
+// ---- the sidebar: one generic list view, county view, pin view and category view for every topic ----
+const side=$('side');let t,ctx={mode:'list'};
+function renderList(){side.innerHTML=CM.glance(t.facts||[])+(t.pins?CM.pinList():'')
+  +(t.lists||[]).map(l=>l.html!=null?`<div class="blk"><h3>${esc(l.title)}${l.sub?` <small>${esc(l.sub)}</small>`:''}</h3>${l.html}</div>`:CM.countyList(l)).join('')
+  +(t.note?CM.note(t.note):'');CM.renderRows();CM.collapseAfter(t.openSections||2);}
+function showCounty(f){ctx={mode:'county',fips:f};CM.select(null);CM.setFilter(null);CM.highlightCounty(f);CM.zoomCounty(f);
+  const kv=CM.metrics().filter(m=>!m.plan).map(m=>{const rk=!m.cat&&CM.rankOf(m.key,f);return `<dt>${esc(m.label)}</dt><dd>${CM.fmtValue(m.key,f,esc(m.noneLabel||'none'))}${rk?` <span class="empty" style="padding:0;font-size:12px">(${rk.rank} of ${rk.of})</span>`:''}</dd>`;}).join('');
+  const here=t.pins?t.pins.filter(p=>p.fips===f).sort((a,b)=>(b.size||0)-(a.size||0)):[];
+  side.innerHTML=`<div class="detail"><button class="back" id="back">← All counties</button><h2>${esc(cname[f])} County</h2>${t.countySub?`<div class="sub">${t.countySub(f)}</div>`:''}${t.pins?`<div class="sub">${here.length} ${here.length===1?esc(t.pinSingular):esc(t.pinPlural)}</div>`:''}${t.countyKv===false?'':`<dl class="kv">${kv}</dl>`}${t.countyExtra?t.countyExtra(f):''}</div>`
+    +(t.pins?`<div class="blk"><h3>${esc(t.pinPlural.charAt(0).toUpperCase()+t.pinPlural.slice(1))} in ${esc(cname[f])} County</h3>${here.length?here.map(p=>CM.pinRow(p,t.pinValue?t.pinValue(p):'')).join(''):'<div class="empty">None listed here.</div>'}</div>`:'');
+  $('back').onclick=back;CM.setHash('county='+f);}
+function showDistrict(plan,n){const pl=CM.plan(plan);if(!pl)return;ctx={mode:'district',plan,n};CM.select(null);CM.setFilter(null);CM.highlightCounty(null);
+  const cur=CM.metric(CM.state.base);if(cur&&cur.plan&&cur.plan!==plan)CM.setBase('');if(CM.activePlan()!==plan)CM.setPlan(plan);CM.highlightDistrict(plan,n);CM.zoomDistrict(plan,n);
+  const cs=CM.districtCounties(plan,n);
+  const kv=CM.metrics().filter(m=>m.plan===plan).map(m=>{const rk=!m.cat&&CM.rankOf(m.key,String(n));return `<dt>${esc(m.label)}</dt><dd>${CM.fmtValue(m.key,String(n),esc(m.noneLabel||'none'))}${rk?` <span class="empty" style="padding:0;font-size:12px">(${rk.rank} of ${rk.of})</span>`:''}</dd>`;}).join('');
+  side.innerHTML=`<div class="detail"><button class="back" id="back">← Back</button><span class="status">${esc(pl.label)}</span><h2>${esc(CM.districtName(plan,n))}</h2><div class="sub">${cs.length} ${cs.length===1?'county':'counties'}</div>${kv?`<dl class="kv">${kv}</dl>`:''}${t.districtExtra?t.districtExtra(plan,n):''}</div>
+    <div class="blk"><h3>Counties in this district <small>share of its 2020 residents</small></h3>${cs.map(c=>CM.countyRow(c[0],Math.round(c[2]*100)+'%',c[2]<0.995?'part of the county':'')).join('')||'<div class="empty">No crosswalk loaded.</div>'}</div>`;
+  $('back').onclick=back;CM.setHash('district='+plan+':'+n);}
+function showPin(p){CM.select(p.id);CM.zoomPin(p);
+  side.innerHTML=`<div class="detail" style="padding-bottom:0"><button class="back" id="back">← Back</button></div>`+CM.pinHTML(p);
+  $('back').onclick=()=>{CM.select(null);if(ctx.mode==='county')showCounty(ctx.fips);else if(ctx.mode==='cat')showCategory(ctx.mk,ctx.v);else if(ctx.mode==='district')showDistrict(ctx.plan,ctx.n);else back();};CM.setHash('pin='+encodeURIComponent(p.id));}
+function showCategory(mk,v){const m=CM.metric(mk);if(!m)return;const list=CM.categoryCounties(mk,v);ctx={mode:'cat',mk,v};CM.select(null);CM.setFilter(null);CM.highlightCounties(list);CM.zoomCounties(list);
+  const c=m.categories[v]||{label:v,color:'var(--county-line)'};const sorted=list.slice().sort((a,b)=>cname[a].localeCompare(cname[b]));
+  side.innerHTML=`<div class="detail"><button class="back" id="back">← Back</button><span class="status"><i style="background:${c.color};box-shadow:0 0 0 1px var(--county-line)"></i>${esc(m.label)}</span><h2>${esc(c.label)}</h2><div class="sub">${list.length} counties</div></div>
+    <div class="blk"><h3>Counties in ${esc(c.label)} <small>A–Z</small></h3>${sorted.map(f=>CM.countyRow(f,'')).join('')}</div>`;
+  $('back').onclick=back;CM.setHash(mk+'='+encodeURIComponent(v));}
+function back(){ctx={mode:'list'};CM.highlightCounty(null);CM.highlightDistrict(null);CM.setFilter(null);CM.select(null);CM.fit();renderList();CM.setHash('');}
+side.addEventListener('click',e=>{const r=e.target.closest('.row[data-cat]');if(r){showCategory(r.dataset.metric,r.dataset.cat);CM.closeAside();}});
+side.addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('.row[data-cat]');if(r)r.click();}});
+
+// ---- load this topic's data, build it, start the engine ----
+loadScripts(T.data||[]).then(()=>{t=T.build();
+  $('stats').innerHTML=(t.stats||[]).map(([v,l])=>CM.stat(v,l)).join('');
+  CM.init(Object.assign({},t,{pages:keys.map(k=>[PAGE+'?topic='+k,TOPICS[k].label]),here:PAGE+'?topic='+key,welcomeKey:'txmaps_welcome_'+key,
+    onCounty:showCounty,onPin:showPin,onDistrict:showDistrict,onBackground:()=>{if(ctx.mode!=='list')back();}}));
+  $('loading').remove();renderList();CM.openHash();
+  const h=decodeURIComponent(location.hash||'').replace(/^#/,'');CM.metrics().filter(m=>m.cat).forEach(m=>{const x=new RegExp('(?:^|&)'+m.key+'=([^&]+)').exec(h);if(x)showCategory(m.key,x[1]);});
+  const dh=/(?:^|&)district=([A-Za-z0-9]+):(\d+)/.exec(h);if(dh)showDistrict(dh[1],+dh[2]);
+}).catch(err=>{$('loading').textContent='This map could not load its data ('+err.message+').';console.error(err);});
+</script>
+</body>
+</html>

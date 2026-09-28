@@ -1,0 +1,168 @@
+/* tx_deep_dive.css — the county command center (texas_county_deep_dive.html). Loads after tx_county_map.css.
+   Layout and chrome follow a desktop GIS application: a ribbon (tabs + the tools for the active tab), a Contents pane
+   (layers with their symbology), the map with a status bar, a county pane on the right, and a docked table at the bottom. */
+.app.pro{--pro-bg:#f3f3f3;--pro-bg2:#fafafa;--pro-line:#d4d4d4;--pro-blue:#0f6cbd;--pro-sel:#d6e8f7;--pro-ink:#242424;--pro-ink2:#484848;--pro-ink3:#707070;
+  --paper2:#ffffff;--paper:#f7f7f7;--rule:#d4d4d4;--cream:#eef4fa;--ink:#242424;--ink2:#484848;--ink3:#707070;--maroon:#0f6cbd;
+  font-family:"Segoe UI",-apple-system,system-ui,"Helvetica Neue",Arial,sans-serif;font-size:12.5px;color:var(--pro-ink);
+  display:grid;grid-template-columns:272px minmax(0,1fr) 400px;grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"hdr hdr hdr" "contents map side" "tray tray tray";height:100vh;background:var(--pro-bg)}
+.app.pro.no-contents{grid-template-columns:34px minmax(0,1fr) 400px}
+.app.pro.no-side{grid-template-columns:272px minmax(0,1fr) 34px}
+.app.pro.no-contents.no-side{grid-template-columns:34px minmax(0,1fr) 34px}
+.app.pro *{box-sizing:border-box}
+/* ---- ribbon ---- */
+.app.pro header{grid-area:hdr;display:block;padding:0;height:auto;min-height:0;background:#fff;border-bottom:1px solid var(--pro-line)}
+.app.pro .rb-top{display:flex;align-items:center;gap:10px;padding:4px 10px 0;min-height:38px;flex-wrap:wrap}
+.app.pro header h1{font:700 15px/1 "Segoe UI",system-ui,sans-serif;letter-spacing:0;text-transform:none;margin:0 8px 0 0;color:var(--pro-ink)}
+.app.pro header h1 span{color:var(--pro-blue)}
+.app.pro .tabs{display:flex;gap:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;align-self:flex-end}
+.app.pro .tabs button{font:500 12.5px "Segoe UI",system-ui,sans-serif;letter-spacing:0;text-transform:none;padding:8px 11px 6px;border:0;border-bottom:3px solid transparent;border-radius:0;background:none;color:var(--pro-ink2);cursor:pointer;white-space:nowrap}
+.app.pro .tabs button:hover{background:var(--pro-bg);color:var(--pro-ink)}
+.app.pro .tabs button.on{color:var(--pro-blue);border-bottom-color:var(--pro-blue);font-weight:600;background:none}
+.app.pro .ccsearch{position:relative;flex:1 1 220px;min-width:200px;max-width:340px;margin-left:auto}
+.app.pro .ccsearch input{width:100%;font:13px "Segoe UI",system-ui,sans-serif;padding:5px 10px 5px 28px;border:1px solid var(--pro-line);border-radius:3px;background:#fff;color:var(--pro-ink);outline:none;height:28px}
+.app.pro .ccsearch input:focus{border-color:var(--pro-blue);box-shadow:0 0 0 1px var(--pro-blue)}
+.app.pro .ccsearch .mag{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--pro-ink3);font-size:13px;pointer-events:none}
+.app.pro .ccsearch .sg{position:absolute;left:0;right:0;top:calc(100% + 2px);background:#fff;border:1px solid var(--pro-line);box-shadow:0 6px 18px rgba(0,0,0,.16);max-height:320px;overflow:auto;z-index:60;display:none}
+.app.pro .ccsearch .sg div{padding:5px 10px;cursor:pointer;font-size:12.5px;display:flex;justify-content:space-between;gap:8px}
+.app.pro .ccsearch .sg div:hover,.app.pro .ccsearch .sg div.on{background:var(--pro-sel)}
+.app.pro .ccsearch .sg small{color:var(--pro-ink3)}
+.app.pro .allmaps,.app.pro .aboutbtn{font:12px "Segoe UI",system-ui,sans-serif;padding:5px 9px;border:1px solid var(--pro-line);border-radius:3px;background:#fff;color:var(--pro-ink2);text-decoration:none;cursor:pointer;height:28px;line-height:16px}
+.app.pro .mapnav{display:none}
+.app.pro #menubtn,.app.pro #layersbtn{display:none;font:12px "Segoe UI",system-ui,sans-serif;padding:5px 9px;border:1px solid var(--pro-line);border-radius:3px;background:#fff;color:var(--pro-ink2);cursor:pointer;height:28px}
+.app.pro .rb-body{display:flex;align-items:stretch;gap:0;padding:4px 8px 3px;background:var(--pro-bg);border-top:1px solid var(--pro-line);overflow-x:auto;scrollbar-width:thin;min-height:64px}
+.rg{display:flex;flex-direction:column;justify-content:space-between;padding:2px 10px 0;border-right:1px solid var(--pro-line);min-width:0}
+.rg:last-child{border-right:0}
+.rgi{display:flex;flex-wrap:wrap;gap:3px;align-items:center;max-width:560px}
+.rgc{font-size:10.5px;color:var(--pro-ink3);text-align:center;padding:3px 0 0;white-space:nowrap}
+.rgi button{font:12px "Segoe UI",system-ui,sans-serif;padding:3px 8px;border:1px solid var(--pro-line);border-radius:3px;background:#fff;color:var(--pro-ink);cursor:pointer;line-height:16px;white-space:nowrap}
+.rgi button:hover:not(:disabled){border-color:var(--pro-blue);background:var(--pro-bg2)}
+.rgi button.on{background:var(--pro-sel);border-color:var(--pro-blue);color:var(--pro-ink);font-weight:600}
+.rgi button:disabled{opacity:.45;cursor:default}
+.rgi button.primary{background:var(--pro-blue);border-color:var(--pro-blue);color:#fff}
+.rgi .rbnote{font-size:12px;color:var(--pro-ink2);padding:3px 4px}
+.rgi select{font:12px "Segoe UI",system-ui,sans-serif;padding:3px 6px;border:1px solid var(--pro-line);border-radius:3px;background:#fff;color:var(--pro-ink);max-width:230px;height:24px}
+.rgi select.on{background:var(--pro-sel);border-color:var(--pro-blue);font-weight:600}
+/* ---- contents pane (layers and their symbology) ---- */
+.contents{grid-area:contents;background:#fff;border-right:1px solid var(--pro-line);overflow:auto;min-height:0;font-size:12.5px}
+.app.pro.no-contents .contents .lyr,.app.pro.no-contents .contents .ph span{display:none}
+.app.pro.no-contents .contents .ph,.app.pro.no-side aside .ph{justify-content:center;padding:6px 2px}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:6px 8px 6px 10px;border-bottom:1px solid var(--pro-line);background:var(--pro-bg2);position:sticky;top:0;flex:none}
+.ph span{font:600 11px "Segoe UI",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--pro-ink3)}
+.collapse{border:1px solid transparent;background:none;color:var(--pro-ink3);cursor:pointer;font-size:14px;padding:0 5px;border-radius:3px;line-height:18px}
+.collapse:hover{border-color:var(--pro-line);background:#fff}
+.contents .lyr{padding:6px 10px 6px 10px;border-bottom:1px solid #ececec}
+.contents .lyr label{display:flex;align-items:center;gap:7px;cursor:pointer}
+.contents .lyr label b{font-weight:600;color:var(--pro-ink)}
+.contents .lyr input[type=checkbox]{accent-color:var(--pro-blue);margin:0;width:14px;height:14px}
+.contents .lsub{font-size:11.5px;color:var(--pro-ink3);margin:2px 0 0 21px}
+.contents .lyr select{display:block;margin:4px 0 0 21px;font:12px "Segoe UI",system-ui,sans-serif;padding:2px 4px;border:1px solid var(--pro-line);border-radius:3px;background:#fff;color:var(--pro-ink);max-width:calc(100% - 21px)}
+.contents .lrows{margin:4px 0 0 21px}
+.contents .r{display:flex;align-items:center;gap:7px;margin:2px 0;font-size:11.5px;color:var(--pro-ink2)}
+.contents .r i{width:12px;height:12px;border-radius:50%;flex:none;display:inline-block}
+.contents .r i.ramp{border-radius:2px}
+.contents .r i.ramp.none{background:var(--county);border:1px solid var(--county-line)}
+.contents .r i.ring{background:#fff;box-shadow:0 0 0 2px var(--hot)}
+.contents .r i.rivsw{width:16px;height:3px;border-radius:2px;background:var(--river);box-shadow:0 0 0 1px var(--river-case)}
+.contents .r i.ressw{border-radius:2px;background:var(--river);opacity:.9}
+.contents .r i.bassw{border-radius:2px;background:none;border:1.5px dashed var(--basin)}
+.contents .r i.distsw{width:18px;height:0;border-radius:0;border-top:2.5px solid var(--dist)}
+.contents .foot{font-size:11px;color:var(--pro-ink3);margin-top:4px}
+.contents .lyr.off .lrows{display:none}
+/* ---- map ---- */
+.app.pro main{grid-area:map;position:relative;min-height:0;border:1px solid var(--pro-line);border-top:0;border-bottom:0}
+.app.pro .legend{display:none}
+.app.pro .lpanel{display:none}
+.app.pro .ctrl.zoom{top:10px;left:10px}
+.app.pro .ctrl button{width:28px;height:28px;border-radius:3px;font-size:15px;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.app.pro .statusbar{position:absolute;left:0;right:0;bottom:0;height:24px;display:flex;align-items:center;gap:14px;padding:0 10px;background:rgba(243,243,243,.94);border-top:1px solid var(--pro-line);font-size:11.5px;color:var(--pro-ink2);white-space:nowrap;overflow:hidden;z-index:5}
+.app.pro .sb-cur{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.app.pro .sb-scale{display:flex;align-items:center;gap:6px;flex:none}
+.app.pro .sb-scale i{display:inline-block;height:6px;border:1px solid var(--pro-ink2);border-top:0;background:linear-gradient(90deg,var(--pro-ink2) 0 50%,transparent 50%)}
+.app.pro .stats{margin-left:auto;gap:12px;flex:none}
+.app.pro .stat{flex-direction:row;gap:4px;align-items:baseline}
+.app.pro .stat b{font:600 11.5px "Segoe UI",system-ui,sans-serif}
+.app.pro .stat small{font-size:11px}
+svg .pin.dim{display:none}
+/* ---- county pane ---- */
+.app.pro aside{grid-area:side;border-right:0;border-left:1px solid var(--pro-line);background:#fff;display:flex;flex-direction:column;min-height:0}
+.app.pro.no-side aside .side,.app.pro.no-side aside .tabs,.app.pro.no-side aside .ph span{display:none}
+.app.pro .side{overflow:auto;flex:1;min-height:0;padding:0 12px 30px}
+.app.pro aside .tabs{display:none}
+.app.pro .detail{padding-top:8px}
+.app.pro .detail h2{font:600 18px "Segoe UI",system-ui,sans-serif;margin:2px 0 2px;letter-spacing:0;text-transform:none}
+.app.pro .detail .sub{font-size:12px;color:var(--pro-ink3);line-height:1.4}
+.app.pro .back{font:12px "Segoe UI",system-ui,sans-serif;border:0;background:none;color:var(--pro-blue);cursor:pointer;padding:0;margin:6px 0 2px}
+.app.pro .status{display:block;font-size:11px;color:var(--pro-ink3);text-transform:uppercase;letter-spacing:.05em;margin:8px 0 2px}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.acts button,.acts a{font:12px "Segoe UI",system-ui,sans-serif;padding:4px 9px;border-radius:3px;border:1px solid var(--pro-line);background:#fff;color:var(--pro-ink);cursor:pointer;text-decoration:none}
+.acts button.primary{background:var(--pro-blue);border-color:var(--pro-blue);color:#fff}
+.acts button:disabled{opacity:.5;cursor:default}
+.acts.phone{display:none}
+.know{margin:8px 0 4px}
+.know .kt,.knowfold summary{font:600 11px "Segoe UI",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--pro-ink3);margin:10px 0 4px}
+.knowfold{margin:8px 0 2px}.knowfold summary{cursor:pointer;padding:6px 0;color:var(--pro-blue)}.knowfold .know .kt{display:none}
+.know .st{border-left:3px solid var(--pro-blue);padding:6px 10px;margin:6px 0;background:var(--pro-bg2)}
+.know .st b{display:block;font-size:13px;line-height:1.35;margin-bottom:3px;color:var(--pro-ink)}
+.know .st .ev{font-size:12px;color:var(--pro-ink2);line-height:1.5;font-variant-numeric:tabular-nums}
+.know .st .ev span{display:inline-block;margin-right:12px}
+.know .st .ev .chg{font-weight:700;color:var(--pro-ink)}
+.cctab{padding:4px 0 12px}
+.cctab .h3,.cctab .cat{font:600 11px "Segoe UI",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--pro-ink3);margin:12px 0 2px}
+.cctab .cat{margin:10px 0 2px;color:var(--pro-blue)}
+.cctab table.cmp{width:100%;border-collapse:collapse;font-size:12px;margin:6px 0 4px}
+.cctab table.cmp th{text-align:right;vertical-align:bottom;white-space:nowrap;font-weight:600;color:var(--pro-ink3);font-size:10.5px;padding:2px 4px;border-bottom:1px solid var(--pro-line)}
+.cctab table.cmp th:first-child{text-align:left}
+.cctab table.cmp td{padding:3px 4px;border-bottom:1px solid #ececec;text-align:right;font-variant-numeric:tabular-nums}
+.cctab table.cmp td:first-child{text-align:left;color:var(--pro-ink2)}
+.cctab table.cmp td.me{font-weight:600;color:var(--pro-ink)}
+.cctab .box{font-size:12px;line-height:1.55;padding:6px 10px;margin:6px 0;background:var(--pro-bg2);border:1px solid var(--pro-line);border-radius:3px}
+.cctab .pair{display:none}
+.cctab .org{font-size:12px;padding:5px 0;border-bottom:1px solid #ececec}
+.cctab .org small{color:var(--pro-ink3)}
+.cctab .org small.fromc{color:var(--pro-ink2)}
+.cctab .race{font-size:12.5px;margin:8px 0 1px;padding-top:4px}.cctab .race small{color:var(--pro-ink3);font-weight:400}
+.cctab details summary{cursor:pointer;font-size:12px;font-weight:600;padding:4px 0;color:var(--pro-blue)}
+.ccnote{font-size:11.5px;color:var(--pro-ink3);line-height:1.45;padding:4px 0}
+.app.pro .row{border-bottom:1px solid #ececec}
+.app.pro .row .n{font-weight:600}
+/* ---- docked table (compare) ---- */
+.app.pro .tray{grid-area:tray;position:static;background:#fff;border-top:1px solid var(--pro-line);border-radius:0;box-shadow:none;max-height:40vh;display:flex;flex-direction:column;z-index:6}
+.app.pro .tray.closed .tbody{display:none}
+.app.pro .tray .th{display:flex;align-items:center;gap:8px;padding:5px 12px;cursor:pointer;flex-wrap:wrap;background:var(--pro-bg2);border-bottom:1px solid var(--pro-line)}
+.app.pro .tray .th b{font:600 11px "Segoe UI",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--pro-ink3)}
+.app.pro .tray .chip{font:12px "Segoe UI",system-ui,sans-serif;padding:2px 8px;border-radius:3px;background:#fff;border:1px solid var(--pro-line);display:inline-flex;gap:6px;align-items:center}
+.app.pro .tray .chip i{font-style:normal;cursor:pointer;color:var(--pro-ink3)}
+.app.pro .tray .th .hint{font-size:12px;color:var(--pro-ink3)}
+.app.pro .tray .th .chev{margin-left:auto;color:var(--pro-ink3)}
+.app.pro .tray .tbody{overflow:auto;padding:0 12px 8px}
+.app.pro .tray table{width:100%;border-collapse:collapse;font-size:12px}
+.app.pro .tray th{text-align:right;font-weight:600;color:var(--pro-ink3);font-size:10.5px;padding:3px 6px;border-bottom:1px solid var(--pro-line);white-space:nowrap;position:sticky;top:0;background:#fff}
+.app.pro .tray th:first-child{text-align:left}
+.app.pro .tray td{padding:3px 6px;border-bottom:1px solid #ececec;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.app.pro .tray td:first-child{text-align:left;color:var(--pro-ink2);white-space:normal}
+/* ---- about panel keeps the engine look but the app font ---- */
+.app.pro .aboutbox,.app.pro .aboutbox h2,.app.pro .aboutbox h3{font-family:"Segoe UI",system-ui,sans-serif;letter-spacing:0;text-transform:none}
+/* ---- phones and narrow windows ---- */
+@media (max-width:900px){
+  .app.pro,.app.pro.no-contents,.app.pro.no-side,.app.pro.no-contents.no-side{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"hdr" "map" "tray"}
+  .app.pro .rb-top{padding:4px 8px 0;gap:6px}
+  .app.pro header h1{font-size:14px;margin:0 auto 0 0}
+  .app.pro .tabs{order:6;flex-basis:100%;align-self:auto}
+  .app.pro .ccsearch{order:5;max-width:none;flex-basis:100%;margin-left:0}
+  .app.pro .rb-body{min-height:0;padding:3px 6px}
+  .rg{padding:0 8px 0 0}
+  .rgi{flex-wrap:nowrap;max-width:none}
+  .rgc{display:none}
+  .app.pro #menubtn,.app.pro #layersbtn{display:inline-block}
+  .app.pro .allmaps{display:none}
+  .contents{position:fixed;left:0;right:0;top:0;bottom:0;z-index:45;display:none;border:0}
+  .contents.open{display:block}
+  .app.pro aside{position:fixed;left:0;right:0;top:0;bottom:0;z-index:46;display:none;border:0}
+  .app.pro aside.open{display:flex}
+  .app.pro aside .tabs{display:flex;padding:6px 8px 0;border-bottom:1px solid var(--pro-line);overflow-x:auto}
+  .acts.phone{display:flex}
+  .app.pro .tray{max-height:50vh}
+  .app.pro .stats{display:none}
+  .contents .ph .collapse,.side .ph .collapse{font-size:16px}
+}
+.cctab .tag{display:inline-block;font:600 10.5px "Segoe UI",system-ui,sans-serif;letter-spacing:0;text-transform:none;color:#1a6b2f;background:#e3f3e6;border:1px solid #bfe0c6;border-radius:3px;padding:1px 6px;margin-left:4px;vertical-align:middle}
