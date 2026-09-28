@@ -88,3 +88,5 @@ header{height:auto;min-height:56px;flex-wrap:wrap;row-gap:4px;align-items:center
 .app{grid-template-rows:auto 1fr}
 @media (max-width:800px){.ccmap{flex-direction:column}.ccmap .chips{flex-wrap:nowrap;overflow-x:auto;max-width:100%;scrollbar-width:thin}.ccmap .chips button{white-space:nowrap}.ccmap .lines{align-self:flex-start}.ctrl.zoom{top:150px}.lpanel{top:150px}}
 .knowfold{margin:8px 0 2px}.knowfold summary{cursor:pointer;font:700 11px "Archivo",sans-serif;font-stretch:85%;letter-spacing:.12em;text-transform:uppercase;color:var(--maroon);padding:6px 0}.knowfold .know .kt{display:none}
+/* the command center keeps every map control in its own toolbar; the engine's overlays panel is not shown */
+.lpanel{display:none}
