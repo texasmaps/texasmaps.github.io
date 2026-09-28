@@ -1,0 +1,83 @@
+/* tx_deep_dive.css — the county command center (texas_county_deep_dive.html). Loads after tx_county_map.css and only adds. */
+header .ccbar{display:flex;align-items:center;gap:10px;flex:1 1 auto;min-width:0;flex-wrap:wrap}
+header .ccsearch{position:relative;flex:1 1 240px;min-width:220px;max-width:420px}
+header .ccsearch input{width:100%;box-sizing:border-box;font:500 15px "IBM Plex Sans",sans-serif;padding:9px 12px 9px 36px;border:1.5px solid var(--rule);border-radius:10px;background:var(--paper2);color:var(--ink);outline:none}
+header .ccsearch input:focus{border-color:var(--maroon)}
+header .ccsearch .mag{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink3);font-size:15px;pointer-events:none}
+header .ccsearch .sg{position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--paper2);border:1px solid var(--rule);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);max-height:320px;overflow:auto;z-index:60;display:none}
+header .ccsearch .sg div{padding:7px 12px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;gap:8px}
+header .ccsearch .sg div:hover,header .ccsearch .sg div.on{background:var(--cream)}
+header .ccsearch .sg small{color:var(--ink3)}
+.tabs{display:flex;gap:2px;flex-wrap:wrap}
+.tabs button{font:600 11px "Archivo",sans-serif;font-stretch:85%;letter-spacing:.05em;text-transform:uppercase;padding:6px 8px;border:1px solid var(--rule);background:var(--paper2);color:var(--ink2);border-radius:8px;cursor:pointer}
+.tabs button.on{background:var(--maroon);border-color:var(--maroon);color:#fff}
+.tabs button:hover:not(.on){background:var(--cream)}
+aside .tabs{padding:8px 12px 0;border-bottom:1px solid var(--rule);padding-bottom:8px}
+.know{margin:8px 0 4px}
+.know .kt{font:700 11px "Archivo",sans-serif;font-stretch:85%;letter-spacing:.12em;text-transform:uppercase;color:var(--maroon);margin:10px 0 4px}
+.know .st{border-left:3px solid var(--maroon);padding:6px 10px;margin:6px 0;background:var(--paper)}
+.know .st b{display:block;font-size:13.5px;line-height:1.35;margin-bottom:3px}
+.know .st .ev{font-size:12px;color:var(--ink2);line-height:1.5;font-variant-numeric:tabular-nums}
+.know .st .ev span{display:inline-block;margin-right:12px}
+.know .st .ev .chg{font-weight:700;color:var(--ink)}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.acts button,.acts a{font:600 12px "IBM Plex Sans",sans-serif;padding:7px 10px;border-radius:8px;border:1px solid var(--rule);background:var(--paper2);color:var(--ink);cursor:pointer;text-decoration:none}
+.acts button.primary{background:var(--maroon);border-color:var(--maroon);color:#fff}
+.acts button:disabled{opacity:.5;cursor:default}
+.cctab{padding:4px 0 12px}
+.cctab .h3{font:700 11px "Archivo",sans-serif;font-stretch:85%;letter-spacing:.12em;text-transform:uppercase;color:var(--maroon);margin:12px 0 2px}
+.cctab table.cmp{width:100%;border-collapse:collapse;font-size:12px;margin:6px 0 4px}
+.cctab table.cmp th{text-align:right;vertical-align:bottom;white-space:nowrap;font-weight:600;color:var(--ink3);font-size:10px;letter-spacing:.04em;text-transform:uppercase;padding:2px 4px;border-bottom:1px solid var(--rule)}
+.cctab table.cmp th:first-child{text-align:left}
+.cctab table.cmp td{padding:3px 4px;border-bottom:1px solid var(--rule);text-align:right;font-variant-numeric:tabular-nums}
+.cctab table.cmp td:first-child{text-align:left;color:var(--ink2)}
+.cctab table.cmp td.me{font-weight:600;color:var(--ink)}
+.cctab .box{font-size:12px;line-height:1.55;padding:6px 10px;margin:6px 0;background:var(--paper);border:1px solid var(--rule);border-radius:8px}
+.cctab .pair{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.cctab .pair button{font:600 12px "IBM Plex Sans",sans-serif;padding:5px 9px;border-radius:999px;border:1px solid var(--rule);background:var(--paper2);color:var(--ink2);cursor:pointer}
+.cctab .pair button.on{background:var(--ink);color:var(--paper2);border-color:var(--ink)}
+.cctab .org{font-size:12px;padding:5px 0;border-bottom:1px solid var(--rule)}
+.cctab .org small{color:var(--ink3)}
+.cctab .cat{font:700 11px "Archivo",sans-serif;font-stretch:85%;letter-spacing:.08em;text-transform:uppercase;color:var(--maroon);margin:10px 0 2px}
+.cctab details summary{cursor:pointer;font-size:12px;font-weight:600;padding:4px 0}
+.ccnote{font-size:11.5px;color:var(--ink3);line-height:1.45;padding:4px 0}
+.landing{padding:14px 16px;font-size:13.5px;line-height:1.55}
+.landing h2{font:700 20px "Archivo",sans-serif;font-stretch:85%;margin:0 0 6px}
+.landing .try{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.landing .try button{font:600 12px "IBM Plex Sans",sans-serif;padding:5px 9px;border-radius:999px;border:1px solid var(--rule);background:var(--paper2);color:var(--ink);cursor:pointer}
+/* map toolbar: color chips + district lines */
+.ccmap{position:absolute;left:12px;right:12px;top:12px;display:flex;gap:8px;align-items:flex-start;pointer-events:none;z-index:5;flex-wrap:wrap}
+.ccmap .chips{display:flex;gap:4px;flex-wrap:wrap;pointer-events:auto;background:var(--paper2);border:1px solid var(--rule);border-radius:10px;padding:6px;box-shadow:0 2px 10px rgba(0,0,0,.08);max-width:calc(100% - 300px)}
+.ccmap .chips .lab{font:700 10px "Archivo",sans-serif;font-stretch:85%;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);align-self:center;padding:0 4px}
+.ccmap .chips button{font:600 12px "IBM Plex Sans",sans-serif;padding:5px 9px;border-radius:999px;border:1px solid var(--rule);background:var(--paper2);color:var(--ink2);cursor:pointer}
+.ccmap .chips button.on{background:var(--maroon);border-color:var(--maroon);color:#fff}
+.ccmap .chips select{font:12px "IBM Plex Sans",sans-serif;padding:4px 6px;border:1px solid var(--rule);border-radius:8px;background:var(--paper2);color:var(--ink);max-width:230px}
+.ccmap .lines{pointer-events:auto;background:var(--paper2);border:1px solid var(--rule);border-radius:10px;padding:6px 8px;box-shadow:0 2px 10px rgba(0,0,0,.08);display:flex;gap:4px;align-items:center}
+.ccmap .lines .lab{font:700 10px "Archivo",sans-serif;font-stretch:85%;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding:0 4px}
+.ccmap .lines button{font:600 12px "IBM Plex Sans",sans-serif;padding:5px 9px;border-radius:999px;border:1px solid var(--rule);background:var(--paper2);color:var(--ink2);cursor:pointer}
+.ccmap .lines button.on{background:var(--ink);border-color:var(--ink);color:var(--paper2)}
+.ctrl.zoom{top:132px}
+.lpanel{top:132px}
+svg .pin.dim{display:none}
+/* compare tray */
+.tray{position:absolute;left:12px;right:12px;bottom:12px;z-index:6;background:var(--paper2);border:1px solid var(--rule);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.14);max-height:46%;display:flex;flex-direction:column}
+.tray.closed .tbody{display:none}
+.tray .th{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;flex-wrap:wrap}
+.tray .th b{font:700 12px "Archivo",sans-serif;font-stretch:85%;letter-spacing:.1em;text-transform:uppercase;color:var(--maroon)}
+.tray .chip{font:600 12px "IBM Plex Sans",sans-serif;padding:4px 8px;border-radius:999px;background:var(--cream);border:1px solid var(--rule);display:inline-flex;gap:6px;align-items:center}
+.tray .chip i{font-style:normal;cursor:pointer;color:var(--ink3)}
+.tray .th .hint{font-size:12px;color:var(--ink3)}
+.tray .th .chev{margin-left:auto;color:var(--ink3)}
+.tray .tbody{overflow:auto;padding:0 12px 10px}
+.tray table{width:100%;border-collapse:collapse;font-size:12px}
+.tray th{text-align:right;font-weight:600;color:var(--ink3);font-size:10px;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-bottom:1px solid var(--rule);white-space:nowrap}
+.tray th:first-child{text-align:left}
+.tray td{padding:3px 6px;border-bottom:1px solid var(--rule);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tray td:first-child{text-align:left;color:var(--ink2);white-space:normal}
+.legend{bottom:auto;top:auto}
+@media (max-width:800px){header .ccbar{flex-wrap:wrap}header .ccsearch{max-width:none;flex-basis:100%}.tabs{display:none}aside .tabs{display:flex}.ccmap .chips{max-width:100%}.tray{max-height:52%}}
+@media (min-width:801px){aside .tabs{display:none}}
+/* header grows with the search row and tabs */
+header{height:auto;min-height:56px;flex-wrap:wrap;row-gap:4px;align-items:center}
+.app{grid-template-rows:auto 1fr}
+@media (max-width:800px){.ccmap{flex-direction:column}.ccmap .chips{flex-wrap:nowrap;overflow-x:auto;max-width:100%;scrollbar-width:thin}.ccmap .chips button{white-space:nowrap}.ccmap .lines{align-self:flex-start}.ctrl.zoom{top:150px}.lpanel{top:150px}}

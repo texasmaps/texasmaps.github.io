@@ -22,12 +22,15 @@ and `#region=<id>` on the regions topic. Example: `texas_county_maps.html?topic=
 
 ## What is on the branch (for reviewers)
 
-Everything below is new; no pre-existing file on `main` is touched. Open `texas_county_maps.html` (or the raw.githack preview of the
-branch) and switch topics with the menu or `?topic=`. Each topic loads only its own data files.
+Everything below is new; no pre-existing file on `main` is touched. Start with `texas_county_deep_dive.html` (the command center) or
+`texas_county_maps.html` (one topic at a time, `?topic=`). Deep links on the command center: `#county=48303&tab=money&compare=48375,48029&color=turnout_2024&lines=PLANC2333`.
 
 | File | What it is | Used by |
 |---|---|---|
-| `texas_county_maps.html` | the app page (header, sidebar, county / district / pin cards, deep links) | everything |
+| `texas_county_deep_dive.html`, `tx_deep_dive.js`, `tx_deep_dive.css` | **the county command center**: search a county or city, "What to know" statements with the numbers underneath, tabs (Overview, Elections, Money, Community, Districts, Water, Data Centers), one-at-a-time map coloring with congressional lines on top, a compare tray for up to three counties, and a "Prepare roundtable" one-page brief with source links | the team's main entry point |
+| `tx_places.js` | 1,855 Texas cities, towns and CDPs with their county (Census 2024 Gazetteer) | the command center's search box |
+| `tx_county_aquifers.js` | which TWDB major and minor aquifers lie under each county, with the share of county area | Water tab, briefs |
+| `texas_county_maps.html` | the topic app (header, sidebar, county / district / pin cards, deep links) | the single-topic maps |
 | `tx_county_map.js`, `tx_county_map.css` | the county-map engine and styles (shading, pins, overlays, districts, legend, search, About) | all pages |
 | `tx_topics.js` | the topic registry: data-centers, rainfall, wells, regions, demographics, elections, turnout, districts, deep-dive | the app page |
 | `tx_districts.js`, `tx_district_crosswalk.js` | district outlines for 5 TLC plans; county x district residents and shares | every topic (District lines menu), districts, deep-dive |
