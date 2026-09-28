@@ -29,6 +29,21 @@ if(SW){
   SW.reservoirs.forEach(r=>{if(r.r){r.rings=r.r.map(decRing);delete r.r;}r.bb=bbOf(r.rings);r.pr=r.rings.map(l=>l.map(p=>px(p[0],p[1])));});
   SW.basins.forEach(b=>{if(b.r){b.rings=b.r.map(decRing);delete b.r;}b.bb=bbOf(b.rings);});
 }
+// ---------- districts (tx_districts.js + tx_district_crosswalk.js, optional) ----------
+// the district files are loaded by the page (a topic's data list), so they are read at CM.init, not here
+let DS=null,XW=null;const DXW={},DSHORT={congress:'CD',house:'HD',senate:'SD',sboe:'SBOE'},DLONG={congress:'Congressional District',house:'House District',senate:'Senate District',sboe:'SBOE District'};
+function initDistricts(){DS=window.TX_DISTRICTS||null;XW=window.TX_DISTRICT_XW||null;Object.keys(DXW).forEach(k=>delete DXW[k]);
+  if(DS)Object.keys(DS).forEach(k=>{const p=DS[k];p.id=k;p.short=DSHORT[p.kind]||'District';p.ids=p.districts.map(d=>String(d.n));
+    p.districts.forEach(d=>{if(d.r){d.rings=d.r.map(decRing);delete d.r;}if(!d.path){d.bb=bbOf(d.rings);d.path=ringsPath(d.rings);d.cc=px(d.c[0],d.c[1]);d.w=px(d.bb[2],0)[0]-px(d.bb[0],0)[0];}});});
+  // DXW[plan][district] = [[fips, residents, share of the district], ...] largest first
+  if(XW)Object.keys(XW.counties).forEach(f=>{const c=XW.counties[f];Object.keys(c).forEach(pl=>{DXW[pl]=DXW[pl]||{};c[pl].forEach(([n,pop])=>{(DXW[pl][n]=DXW[pl][n]||[]).push([f,pop]);});});});
+  Object.values(DXW).forEach(pl=>Object.values(pl).forEach(l=>{const t=l.reduce((a,b)=>a+b[1],0);l.sort((a,b)=>b[1]-a[1]);l.forEach(x=>x.push(t?x[1]/t:0));}));}
+const ensureD=()=>{if(!DS&&window.TX_DISTRICTS)initDistricts();};   // a topic's build() may ask before CM.init has run
+CM.plans=()=>{ensureD();return DS?Object.keys(DS).map(k=>DS[k]):[];};
+CM.plan=k=>{ensureD();return DS&&DS[k]||null;};
+CM.districtName=(plan,n)=>{ensureD();return ((DS&&DS[plan]&&DLONG[DS[plan].kind])||'District')+' '+n;};
+CM.districtsOf=(plan,f)=>{ensureD();return (XW&&XW.counties[f]&&XW.counties[f][plan])||[];};      // [[district, residents, share of the county], ...]
+CM.districtCounties=(plan,n)=>{ensureD();return (DXW[plan]&&DXW[plan][n])||[];};                  // [[fips, residents, share of the district], ...]
 const UNIT_KM=1.1057;  // one projected unit is about 1.1 km
 function segDist(X,Y,a,b){const dx=b[0]-a[0],dy=b[1]-a[1];const L2=dx*dx+dy*dy;let t=L2?((X-a[0])*dx+(Y-a[1])*dy)/L2:0;t=Math.max(0,Math.min(1,t));const ex=a[0]+t*dx-X,ey=a[1]+t*dy-Y;return Math.sqrt(ex*ex+ey*ey);}
 function nearestRiver(X,Y,maxU){if(!SW)return null;let best=null,bd=maxU;const lon=X/(K*100)-107,lat=37-Y/100,pad=maxU/100;
@@ -75,10 +90,11 @@ const binOf=(v,b)=>{let i=0;while(i<b.length&&v>=b[i])i++;return i;};
 function binLabels(m,vals){const b=m.bins,f=m.fmt;if(!b.length)return [vals.length?f(m.min)+(m.max>m.min?'–'+f(m.max):''):'no data'];
   const intMode=b.every(Number.isInteger)&&vals.every(Number.isInteger);const lo0=vals.length?Math.min(...vals):0;
   return b.map((x,i)=>{const lo=i?b[i-1]:lo0,hi=intMode?x-1:x;if(i===0&&!intMode)return 'under '+f(x);if(intMode&&hi<=lo)return f(lo);return f(lo)+'–'+f(hi);}).concat([f(b[b.length-1])+' and up']);}
+const idsOf=m=>(m.plan&&DS&&DS[m.plan])?DS[m.plan].ids:FIPS;
 function prepMetric(m){m.values=m.values||{};
-  if(m.categories){m.cat=true;m.fmt=m.fmt||(v=>(m.categories[v]&&m.categories[v].label)||String(v));let n=0;FIPS.forEach(f=>{const v=m.values[f];if(v==null||v===''||!m.categories[v]){delete m.values[f];return;}n++;});m.n=n;m.bins=[];m.binLabels=[];return;}
+  if(m.categories){m.cat=true;m.fmt=m.fmt||(v=>(m.categories[v]&&m.categories[v].label)||String(v));let n=0;idsOf(m).forEach(f=>{const v=m.values[f];if(v==null||v===''||!m.categories[v]){delete m.values[f];return;}n++;});m.n=n;m.bins=[];m.binLabels=[];return;}
   const skip=m.skipZero!==false;const vals=[];
-  FIPS.forEach(f=>{const v=m.values[f];if(v==null||v==='')return;const n=+v;if(isNaN(n)){delete m.values[f];return;}m.values[f]=n;if(skip&&n===0)return;vals.push(n);});
+  idsOf(m).forEach(f=>{const v=m.values[f];if(v==null||v==='')return;const n=+v;if(isNaN(n)){delete m.values[f];return;}m.values[f]=n;if(skip&&n===0)return;vals.push(n);});
   m.fmt=m.fmt||(v=>Number.isInteger(v)?num(v):Number(v).toLocaleString(undefined,{maximumFractionDigits:1}));
   m.n=vals.length;m.min=vals.length?Math.min(...vals):0;m.max=vals.length?Math.max(...vals):0;m.sum=vals.reduce((a,b)=>a+b,0);
   const nc=rampOf(m).length;
@@ -89,8 +105,8 @@ function fillFor(m,f){if(!hasValue(m,f))return '';if(m.cat)return m.categories[m
 CM.metric=k=>METRICS[k]||null;CM.metrics=()=>ORDER.map(k=>METRICS[k]);
 CM.value=(k,f)=>{const m=METRICS[k];return m&&m.values[f]!=null?m.values[f]:null;};
 CM.fmtValue=(k,f,dash='—')=>{const m=METRICS[k];if(!m||m.values[f]==null)return dash;return m.fmt(m.values[f])+(m.unit?' '+m.unit:'');};
-CM.rank=(k,n,desc=true)=>{const m=METRICS[k];if(!m)return [];const l=FIPS.filter(f=>hasValue(m,f));if(m.cat)l.sort((a,b)=>m.fmt(m.values[a]).localeCompare(m.fmt(m.values[b]))||cname[a].localeCompare(cname[b]));else l.sort((a,b)=>desc?m.values[b]-m.values[a]:m.values[a]-m.values[b]);return n?l.slice(0,n):l;};
-CM.categoryCounties=(k,v)=>{const m=METRICS[k];return m?FIPS.filter(f=>hasValue(m,f)&&String(m.values[f])===String(v)):[];};
+CM.rank=(k,n,desc=true)=>{const m=METRICS[k];if(!m)return [];const l=idsOf(m).filter(f=>hasValue(m,f));if(m.cat)l.sort((a,b)=>m.fmt(m.values[a]).localeCompare(m.fmt(m.values[b]))||String(cname[a]||a).localeCompare(String(cname[b]||b)));else l.sort((a,b)=>desc?m.values[b]-m.values[a]:m.values[a]-m.values[b]);return n?l.slice(0,n):l;};
+CM.categoryCounties=(k,v)=>{const m=METRICS[k];return m?idsOf(m).filter(f=>hasValue(m,f)&&String(m.values[f])===String(v)):[];};
 CM.rankOf=(k,f,desc=true)=>{const l=CM.rank(k,0,desc);const i=l.indexOf(f);return i<0?null:{rank:i+1,of:l.length};};
 CM.fillFor=(k,f)=>METRICS[k]?fillFor(METRICS[k],f):'';
 
@@ -101,13 +117,13 @@ const rad=p=>cfg.pinSize?cfg.pinSize(p):(p.r||(p.size?Math.max(4,Math.min(13,2.5
 CM.pins=()=>PINS;CM.byId=id=>byId[id];CM.statuses=()=>STATUS;
 
 // ---------- map state ----------
-let svg,view,gC,gL,gP,gBas,gRes,gRiv,gSWL,tip,tx=0,ty=0,sc=1,drag=null;
-const state={base:'',pins:true,rivers:false,basins:false,filter:null,hl:new Set(),selId:null};CM.state=state;
+let svg,view,gC,gL,gP,gBas,gRes,gRiv,gSWL,gD,gDL,tip,tx=0,ty=0,sc=1,drag=null;
+const state={base:'',pins:true,rivers:false,basins:false,plan:'',hld:'',filter:null,hl:new Set(),selId:null};CM.state=state;
 const fstate={status:new Set(),hot:false,sort:'metric'};CM.fstate=fstate;
 const listable=p=>fstate.status.has(p.status)&&(!fstate.hot||p.hot);
 const visible=p=>state.pins&&listable(p)&&(!state.filter||state.filter(p));
 CM.visible=visible;
-function apply(){view.setAttribute('transform',`translate(${tx} ${ty}) scale(${sc})`);const k=1/sc;
+function apply(){view.setAttribute('transform',`translate(${tx} ${ty}) scale(${sc})`);const k=1/sc;scaleDistricts(k);
   PINS.forEach(p=>{if(p.el)p.el.setAttribute('r',rad(p)*Math.sqrt(k));});
   gL.style.display=sc>(cfg.labelsAt||2.2)?'':'none';gL.querySelectorAll('text').forEach(t=>t.setAttribute('font-size',9*k*1.3));
   gSWL.querySelectorAll('text').forEach(t=>{const kind=t.dataset.k;t.setAttribute('font-size',(kind==='basin'?10.5:kind==='river'?9.5:8.5)*k*1.25);t.setAttribute('stroke-width',(kind==='basin'?3:2.5)*k);t.style.opacity=kind==='basin'?((t.dataset.coastal==='1'&&sc<=1.5)?0:1):kind==='river'?(sc>1.3?1:0):(sc>1.8?1:0);});}
@@ -123,8 +139,8 @@ Object.assign(CM,{fit,zoomTo,zoomAt,
 
 CM.init=function(c){
   cfg=Object.assign({metrics:[],base:'',pins:[],pinStatuses:null,pinLabel:'Sites',pinSingular:'site',pinPlural:'sites',hotLabel:'Red ring: flagged',hotChip:'Flagged only',hotFlag:'Flagged',
-    controls:['pins','rivers','basins','base'],pages:[],about:'',sources:'',caveats:'',legendNote:'',listMetric:null,listSortLabel:'this map',showPins:true,rivers:false,basins:false},c);
-  METRICS={};ORDER=[];(cfg.metrics||[]).forEach(m=>{prepMetric(m);METRICS[m.key]=m;ORDER.push(m.key);});
+    controls:['pins','rivers','basins','districts','base'],pages:[],about:'',sources:'',caveats:'',legendNote:'',listMetric:null,listSortLabel:'this map',showPins:true,rivers:false,basins:false},c);
+  initDistricts();METRICS={};ORDER=[];(cfg.metrics||[]).forEach(m=>{prepMetric(m);METRICS[m.key]=m;ORDER.push(m.key);});
   PINS=(cfg.pins||[]).filter(p=>p&&p.id!=null);byId={};
   PINS.forEach(p=>{byId[p.id]=p;if(!p.fips&&p.lon!=null&&p.lat!=null)p.fips=CM.countyAt(p.lon,p.lat);if(!p.county&&p.fips)p.county=cname[p.fips];});
   STATUS=cfg.pinStatuses||{};
@@ -132,11 +148,12 @@ CM.init=function(c){
   const first=Object.keys(STATUS)[0];PINS.forEach(p=>{if(!p.status||!STATUS[p.status])p.status=first;});
   Object.keys(STATUS).forEach((k,i)=>STATUS[k].i=i);
   fstate.status=new Set(Object.keys(STATUS).filter(k=>STATUS[k].on!==false));fstate.hot=false;fstate.sort='metric';
-  Object.assign(state,{base:METRICS[cfg.base]?cfg.base:'',pins:!!PINS.length&&cfg.showPins!==false,rivers:!!SW&&!!cfg.rivers,basins:!!SW&&!!cfg.basins,filter:null,hl:new Set(),selId:null});
-  // shareable links work the same on every page: #shade=<metric key>|none and #layers=rivers,basins (plus #county=<fips> and #pin=<id>, opened by CM.openHash())
+  Object.assign(state,{base:METRICS[cfg.base]?cfg.base:'',pins:!!PINS.length&&cfg.showPins!==false,rivers:!!SW&&!!cfg.rivers,basins:!!SW&&!!cfg.basins,plan:(DS&&DS[cfg.plan])?cfg.plan:'',hld:'',filter:null,hl:new Set(),selId:null});
+  // shareable links work the same on every page: #shade=<metric key>|none, #layers=rivers,basins and #districts=<plan id>|none (plus #county=<fips>, #pin=<id> and #district=<plan>:<n>, opened by the page)
   const hh=decodeURIComponent(location.hash||'').replace(/^#/,'');let hm;
   if((hm=/(?:^|&)shade=([^&]+)/.exec(hh))){if(hm[1]==='none')state.base='';else if(METRICS[hm[1]])state.base=hm[1];}
   if((hm=/(?:^|&)layers=([a-z,]*)/.exec(hh))){const L=hm[1].split(',');state.rivers=!!SW&&L.includes('rivers');state.basins=!!SW&&L.includes('basins');}
+  if((hm=/(?:^|&)districts=([A-Za-z0-9]+)/.exec(hh))){state.plan=(DS&&DS[hm[1]])?hm[1]:'';}
   svg=$('map');tip=$('tip');
   // overlays panel lives on the map (collapsed by default on phones)
   const oldL=$('layers');if(oldL)oldL.remove();
@@ -146,12 +163,12 @@ CM.init=function(c){
   const sideEl=$('side');if(sideEl&&!sideEl.dataset.wired){sideEl.dataset.wired='1';
     sideEl.addEventListener('click',e=>{const h=e.target.closest('.blk>h3');if(h){h.parentElement.classList.toggle('closed');return;}
       const ch=e.target.closest('#allpins .chip');if(ch){if(ch.dataset.hot){fstate.hot=!fstate.hot;ch.classList.toggle('on',fstate.hot);}else{const k=ch.dataset.s;if(fstate.status.has(k))fstate.status.delete(k);else fstate.status.add(k);ch.classList.toggle('off',!fstate.status.has(k));}CM.update();return;}
-      const r=e.target.closest('.row[data-county],.row[data-pin]');if(!r)return;
-      if(r.dataset.county){if(cfg.onCounty)cfg.onCounty(r.dataset.county);}else if(byId[r.dataset.pin]&&cfg.onPin)cfg.onPin(byId[r.dataset.pin]);CM.closeAside();});
-    sideEl.addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('.row[data-county],.row[data-pin]');if(r)r.click();}});
+      const r=e.target.closest('.row[data-county],.row[data-pin],.row[data-district]');if(!r)return;
+      if(r.dataset.district){const [pl,n]=r.dataset.district.split(':');if(cfg.onDistrict)cfg.onDistrict(pl,+n);}else if(r.dataset.county){if(cfg.onCounty)cfg.onCounty(r.dataset.county);}else if(byId[r.dataset.pin]&&cfg.onPin)cfg.onPin(byId[r.dataset.pin]);CM.closeAside();});
+    sideEl.addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('.row[data-county],.row[data-pin],.row[data-district]');if(r)r.click();}});
     sideEl.addEventListener('change',e=>{if(e.target.id==='lsort'){fstate.sort=e.target.value;renderRows();}});}
-  svg.innerHTML='<g id="view"><g id="counties"></g><g id="basins"></g><g id="reservoirs"></g><g id="rivers"></g><g id="clabels"></g><g id="sw-labels"></g><g id="pins"></g></g>';
-  view=$('view');gC=$('counties');gL=$('clabels');gP=$('pins');gBas=$('basins');gRes=$('reservoirs');gRiv=$('rivers');gSWL=$('sw-labels');
+  svg.innerHTML='<g id="view"><g id="counties"></g><g id="districts"></g><g id="basins"></g><g id="reservoirs"></g><g id="rivers"></g><g id="clabels"></g><g id="sw-labels"></g><g id="dlabels"></g><g id="pins"></g></g>';
+  view=$('view');gC=$('counties');gL=$('clabels');gP=$('pins');gBas=$('basins');gRes=$('reservoirs');gRiv=$('rivers');gSWL=$('sw-labels');gD=$('districts');gDL=$('dlabels');buildDistricts();
   if(SW){
     const linesPath=ls=>{let d='';ls.forEach(l=>l.forEach((p,i)=>{d+=(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1);}));return d;};
     SW.basins.forEach(b=>{const p=svgEl('path');p.setAttribute('d',ringsPath(b.rings));p.setAttribute('class','basin');p.dataset.n=b.n;gBas.appendChild(p);
@@ -203,7 +220,7 @@ function initSearch(){const aside=document.querySelector('aside'),side=$('side')
   q.addEventListener('keydown',e=>{if(e.key==='Enter'&&items.length)pick(items[0]);if(e.key==='Escape')sg.style.display='none';});
   q.addEventListener('blur',()=>setTimeout(()=>sg.style.display='none',150));}
 function initWelcome(){const here=(location.pathname.split('/').pop()||'map');const key=cfg.welcomeKey||('txmaps_welcome_'+here);let seen=false;try{seen=localStorage.getItem(key)==='1';}catch(e){}if(seen||cfg.noWelcome)return;
-  const m0=ORDER.length?METRICS[state.base||ORDER[0]]:null;const tips=cfg.welcomeTips||[(m0?'Counties are colored by '+m0.label.toLowerCase()+'. Hover one for its '+(m0.cat?'name':'number')+', click it for details.':'Hover a county for details; click it to see more.'),
+  const m0=ORDER.length?METRICS[state.base||ORDER[0]]:null;const tips=cfg.welcomeTips||[(m0?(m0.plan?'Districts':'Counties')+' are colored by '+m0.label.toLowerCase()+'. Hover one for its '+(m0.cat?'name':'number')+', click it for details.':'Hover a county for details; click it to see more.'),
     PINS.length?'Every dot is a '+cfg.pinSingular+'; click one for its details.':'The lists on the left rank the counties; click any row to jump there.',
     'Use <b>Map overlays</b> (top right) to change what colors the map'+(SW?' and to add rivers and river basins':'')+'.'];
   if(window.innerWidth<=800)tips.push('Tap <b>List</b> for search and the rankings.');
@@ -253,6 +270,7 @@ CM.pinHTML=function(p,extra=''){const st=STATUS[p.status]||{label:p.status};cons
 // ---------- clicks, tooltips, controls, legend ----------
 function click(e,t){
   if(t.classList.contains('pin')){if(cfg.onPin)cfg.onPin(byId[t.dataset.id]);return;}
+  if(t.classList.contains('district')){if(cfg.onDistrict)cfg.onDistrict(t.dataset.plan,+t.dataset.n);return;}
   if(t.classList.contains('county')){if(cfg.onCounty)cfg.onCounty(t.dataset.fips);return;}
   if(cfg.onBackground)cfg.onBackground();}
 function pinTip(p){if(cfg.pinTip)return cfg.pinTip(p);const st=STATUS[p.status]||{label:''};const lines=[];
@@ -262,12 +280,14 @@ function pinTip(p){if(cfg.pinTip)return cfg.pinTip(p);const st=STATUS[p.status]|
 function countyTip(f,e){const lines=[];const m=METRICS[state.base];if(m)lines.push(esc(m.label)+': '+(hasValue(m,f)?CM.fmtValue(m.key,f):esc(m.noneLabel||'none')));
   if(PINS.length){const n=PINS.filter(p=>p.fips===f&&visible(p)).length;lines.push(n+' '+(n===1?cfg.pinSingular:cfg.pinPlural)+(state.pins?'':' (hidden)'));}
   if(cfg.countyTip){const x=cfg.countyTip(f);if(x)lines.push(...[].concat(x).filter(Boolean));}
+  const dpl=activePlan();if(dpl&&XW){const ds=CM.districtsOf(dpl,f);if(ds.length)lines.push(ds.length===1?esc(CM.districtName(dpl,ds[0][0])):ds.map(d=>esc(DS[dpl].short)+' '+d[0]+' ('+Math.round(d[2]*100)+'%)').join(', '));}
   const [lon,lat]=cursorLonLat(e);
   if(state.rivers&&SW){const [X,Y]=px(lon,lat);const rs=nearestReservoir(X,Y,lon,lat,0.01);if(rs&&rs.km===0)lines.push(esc(rs.n)+(rs.r.a?' · '+Math.round(rs.r.a*0.3861)+' sq mi':''));const rv=nearestRiver(X,Y,8/sc);if(rv)lines.push(esc(rv.n));}
   if(state.basins&&SW){const b=basinOf(lon,lat);if(b)lines.push(esc(b.n)+' River Basin');}
   return `<b>${esc(cname[f])} County</b>${lines.map(l=>`<small>${l}</small>`).join('')}`;}
 function showTip(e){const t=e.target;const r=svg.getBoundingClientRect();
   if(t.classList.contains('pin'))tip.innerHTML=pinTip(byId[t.dataset.id]);
+  else if(t.classList.contains('district'))tip.innerHTML=districtTip(t.dataset.plan,+t.dataset.n);
   else if(t.classList.contains('county'))tip.innerHTML=countyTip(t.dataset.fips,e);
   else{tip.style.display='none';return;}
   tip.style.display='block';const x=e.clientX-r.left+14,y=e.clientY-r.top+14;tip.style.left=Math.min(x,r.width-300)+'px';tip.style.top=Math.min(y,r.height-90)+'px';}
@@ -276,16 +296,21 @@ function buildControls(){const L=$('layers');if(!L)return;const parts=[];
   if(cfg.controls.includes('pins')&&PINS.length)parts.push(`<label><input type="checkbox" id="c-pins"${state.pins?' checked':''}> ${esc(cfg.pinLabel)}</label>`);
   if(cfg.controls.includes('rivers')&&SW)parts.push(`<label><input type="checkbox" id="c-rivers"${state.rivers?' checked':''}> Rivers &amp; lakes</label>`);
   if(cfg.controls.includes('basins')&&SW)parts.push(`<label><input type="checkbox" id="c-basins"${state.basins?' checked':''}> River basins</label>`);
+  if(cfg.controls.includes('districts')&&DS){const fm=METRICS[state.base],forced=fm&&fm.plan?fm.plan:'';parts.push(`<label class="lsel" for="c-dist">District lines</label><select id="c-dist" aria-label="District lines"${forced?' disabled':''}><option value="">None</option>${Object.keys(DS).map(k=>`<option value="${esc(k)}"${(forced||state.plan)===k?' selected':''}>${esc(DS[k].label)}</option>`).join('')}</select>`);}
   if(cfg.controls.includes('base')&&ORDER.length){const groups=[...new Set(ORDER.map(k=>METRICS[k].group||''))];
     const opt=k=>`<option value="${esc(k)}"${state.base===k?' selected':''}>${esc(METRICS[k].label)}</option>`;
     parts.push(`<label class="lsel" for="c-base">Color the map by</label><select id="c-base" aria-label="Color the map by"><option value="">Nothing (plain map)</option>${groups.map(g=>g?`<optgroup label="${esc(g)}">${ORDER.filter(k=>(METRICS[k].group||'')===g).map(opt).join('')}</optgroup>`:ORDER.filter(k=>!METRICS[k].group).map(opt).join('')).join('')}</select><div class="lcap" id="c-cap">${caption()}</div>`);}
   L.innerHTML=parts.join('');
   const on=(id,fn)=>{const el=$(id);if(el)el.onchange=e=>{fn(e.target);CM.update();};};
-  on('c-pins',el=>state.pins=el.checked);on('c-rivers',el=>state.rivers=el.checked);on('c-basins',el=>state.basins=el.checked);on('c-base',el=>{state.base=el.value;const cap=$('c-cap');if(cap)cap.innerHTML=caption();});}
+  on('c-pins',el=>state.pins=el.checked);on('c-rivers',el=>state.rivers=el.checked);on('c-basins',el=>state.basins=el.checked);on('c-dist',el=>state.plan=el.value);on('c-base',el=>{state.base=el.value;const cap=$('c-cap');if(cap)cap.innerHTML=caption();});}
 CM.update=function(){const m=METRICS[state.base]||null;
   svg.classList.toggle('choro',!!m);document.body.classList.toggle('shaded',!!m);
   gC.querySelectorAll('.county').forEach(p=>{const f=p.dataset.fips;if(m){const c=fillFor(m,f);p.style.fill=c||'';p.classList.toggle('nodata',!c);}else{p.style.fill='';p.classList.remove('nodata');}p.classList.toggle('hl',state.hl.has(f));});
   const hv=HV[isDark()?'dark':'light'];Object.keys(STATUS).forEach(k=>{const s=STATUS[k];document.body.style.setProperty('--pin-'+css(k),m?(s.shaded||hv[s.i%hv.length]):s.color);});
+  const dpl=activePlan(),dm=(m&&m.plan&&DS&&DS[m.plan])?m:null;svg.classList.toggle('dfill',!!dm);
+  if(DS){gD.querySelectorAll('g.plan').forEach(g=>g.style.display=g.dataset.plan===dpl?'':'none');gDL.querySelectorAll('g.plan').forEach(g=>g.style.display=g.dataset.plan===dpl?'':'none');
+    gD.querySelectorAll('path.district').forEach(p=>{if(dm&&p.dataset.plan===dpl){const c=fillFor(dm,p.dataset.n);p.style.fill=c||'';p.classList.add('dfill');p.classList.toggle('nodata',!c);}else{p.style.fill='';p.classList.remove('dfill','nodata');}p.classList.toggle('hl',state.hld===p.dataset.plan+':'+p.dataset.n);});
+    const dsel=$('c-dist');if(dsel){dsel.disabled=!!dm;dsel.value=dpl;}}
   gBas.style.display=state.basins?'':'none';gRes.style.display=state.rivers?'':'none';gRiv.style.display=state.rivers?'':'none';gSWL.querySelectorAll('text').forEach(t=>t.style.display=(t.dataset.k==='basin'?state.basins:state.rivers)?'':'none');
   PINS.forEach(p=>{if(!p.el)return;p.el.classList.toggle('dim',!visible(p));p.el.classList.toggle('sel',p.id===state.selId);});
   if(state.selId&&byId[state.selId]&&byId[state.selId].el)gP.appendChild(byId[state.selId].el);
@@ -295,12 +320,27 @@ CM.setLayers=o=>{Object.assign(state,o);buildControls();CM.update();};
 CM.setFilter=fn=>{state.filter=fn;CM.update();};
 CM.highlightCounty=f=>{state.hl=new Set(f?[f]:[]);CM.update();};
 CM.highlightCounties=list=>{state.hl=new Set(list||[]);CM.update();};
+CM.highlightDistrict=(plan,n)=>{state.hld=plan?plan+':'+n:'';CM.update();};
+CM.setPlan=k=>{state.plan=(DS&&DS[k])?k:'';buildControls();CM.update();};
+CM.zoomDistrict=(plan,n)=>{const p=DS&&DS[plan];const d=p&&p.districts.find(x=>x.n==n);if(!d)return;const [x0,y0]=px(d.bb[0],d.bb[3]),[x1,y1]=px(d.bb[2],d.bb[1]);zoomTo(x0,y0,x1-x0,y1-y0);};
+const activePlan=()=>{const m=METRICS[state.base];return (m&&m.plan&&DS&&DS[m.plan])?m.plan:((DS&&DS[state.plan])?state.plan:'');};CM.activePlan=activePlan;
+function buildDistricts(){if(!DS)return;Object.keys(DS).forEach(k=>{const p=DS[k];const g=svgEl('g');g.setAttribute('class','plan');g.dataset.plan=k;g.style.display='none';const gl=svgEl('g');gl.setAttribute('class','plan');gl.dataset.plan=k;gl.style.display='none';
+  p.districts.forEach(d=>{const e=svgEl('path');e.setAttribute('d',d.path);e.setAttribute('class','district');e.dataset.plan=k;e.dataset.n=d.n;g.appendChild(e);
+    const t=svgEl('text');t.setAttribute('class','dlabel');t.setAttribute('x',d.cc[0]);t.setAttribute('y',d.cc[1]+3);t.textContent=d.n;t.dataset.plan=k;t.dataset.w=d.w;gl.appendChild(t);});gD.appendChild(g);gDL.appendChild(gl);});}
+function scaleDistricts(k){if(!gDL)return;gDL.querySelectorAll('text').forEach(t=>{t.setAttribute('font-size',10*k*1.3);t.setAttribute('stroke-width',3*k);t.style.opacity=(+t.dataset.w)*sc>34?1:0;});}
+function districtTip(plan,n){const m=METRICS[state.base];const lines=[];if(m&&m.plan===plan)lines.push(esc(m.label)+': '+(hasValue(m,String(n))?CM.fmtValue(m.key,String(n)):esc(m.noneLabel||'none')));
+  const cs=CM.districtCounties(plan,n);if(cs.length)lines.push((cs.length>4?cs.slice(0,4).map(c=>esc(cname[c[0]])).join(', ')+' and '+(cs.length-4)+' more':cs.map(c=>esc(cname[c[0]])).join(', '))+(cs.length===1?' County':' counties'));
+  if(cfg.districtTip){const x=cfg.districtTip(plan,n);if(x)lines.push(...[].concat(x).filter(Boolean));}
+  return `<b>${esc(CM.districtName(plan,n))}</b><small>${esc(DS[plan].label)}</small>${lines.map(l=>`<small>${l}</small>`).join('')}`;}
+// a district row (click -> cfg.onDistrict)
+CM.districtRow=(plan,n,val,sub)=>{const m=METRICS[state.base];const c=(m&&m.plan===plan&&fillFor(m,String(n)))||'var(--county-line)';return `<div class="row" data-district="${esc(plan)}:${n}" tabindex="0"><span class="sw" style="--c:${c};background:${c}"></span><div><div class="n">${esc(CM.districtName(plan,n))}</div>${sub?`<div class="m">${sub}</div>`:''}</div><span class="v"><b>${val??''}</b></span></div>`;};
 CM.select=id=>{state.selId=id;CM.update();};
 function legend(){const L=$('legend');if(!L)return;let h='';
   if(state.pins&&PINS.length)h+=`<b>${esc(cfg.pinLabel)}</b>`+Object.keys(STATUS).map(k=>`<div class="r"><i class="pc" style="background:var(--pin-${css(k)})"></i>${esc(STATUS[k].label)}</div>`).join('')+(PINS.some(p=>p.hot)?`<div class="r"><i class="ring"></i>${esc(cfg.hotLabel)}</div>`:'')+(cfg.pinSizeNote?`<div class="foot">${cfg.pinSizeNote}</div>`:'');
   if(state.rivers&&SW)h+='<b>Rivers &amp; lakes</b><div class="r"><i class="rivsw"></i>Major river (hover for its name)</div><div class="r"><i class="ressw"></i>Major lake (names appear as you zoom in)</div>';
   if(state.basins&&SW)h+='<b>River basins</b><div class="r"><i class="bassw"></i>Basin boundary: all the land that drains to that river</div>';
-  const m=METRICS[state.base];if(m){h+=`<b>${esc(m.legendTitle||m.label)}</b>`;if(m.cat)h+=Object.keys(m.categories).map(k=>`<div class="r"><i class="ramp" style="background:${m.categories[k].color};box-shadow:0 0 0 1px var(--county-line)"></i>${esc(m.categories[k].label||k)}</div>`).join('');else{const cols=colorsFor(m);h+=m.binLabels.map((l,i)=>`<div class="r"><i class="ramp" style="background:${cols[Math.min(i,cols.length-1)]}"></i>${esc(l)}</div>`).join('');}h+=`<div class="r"><i class="ramp none"></i>${esc(m.noneLabel||'None or no data')}</div>`;}
+  const dpl=activePlan(),dmet=METRICS[state.base];if(dpl&&!(dmet&&dmet.plan))h+=`<b>District lines</b><div class="r"><i class="distsw"></i>${esc(DS[dpl].label)}${DS[dpl].districts.length>60?' (numbers appear as you zoom in)':''}</div>`;
+  const m=METRICS[state.base];if(m){h+=`<b>${esc(m.legendTitle||m.label)}</b>`;if(m.cat)h+=Object.keys(m.categories).map(k=>`<div class="r"><i class="ramp" style="background:${m.categories[k].color};box-shadow:0 0 0 1px var(--county-line)"></i>${esc(m.categories[k].label||k)}</div>`).join('');else{const cols=colorsFor(m);h+=m.binLabels.map((l,i)=>`<div class="r"><i class="ramp" style="background:${cols[Math.min(i,cols.length-1)]}"></i>${esc(l)}</div>`).join('');}h+=`<div class="r"><i class="ramp none"></i>${esc(m.noneLabel||'None or no data')}</div>`;if(m.plan&&DS[m.plan])h+=`<div class="foot">Each shape is one district of ${esc(DS[m.plan].label)}; county lines show through faintly. Hover or click a district.</div>`;}
   if(cfg.legendNote)h+=`<div class="foot">${cfg.legendNote}</div>`;
   L.innerHTML=`<button class="lgt" type="button" aria-label="Show or hide the legend">Legend ▾</button><div class="lgbody">${h}</div>`;
   L.querySelector('.lgt').onclick=()=>L.classList.toggle('open');}

@@ -207,3 +207,18 @@ body.shaded .pin.sel{stroke:#FFFFFF;stroke-width:3}
 /* the same pin colors in the sidebar and legend (a white dot needs a ring to show on a white panel) */
 body.shaded .pc:not(.hot){box-shadow:0 0 0 1px var(--ink)}
 body.shaded .legend .r i.ring{background:var(--paper2);box-shadow:0 0 0 2px var(--hot)}
+/* ---- district outlines and district shading (tx_districts.js): plum lines, filled shapes when a district metric is chosen ---- */
+:root{--dist:#4A1D63}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--dist:#DCC3F0}}
+:root[data-theme="dark"]{--dist:#DCC3F0}
+.district{fill:none;stroke:var(--dist);stroke-width:1.8;vector-effect:non-scaling-stroke;stroke-linejoin:round;pointer-events:none}
+.district.hl{stroke:var(--maroon);stroke-width:3.4}
+.district.dfill{pointer-events:auto;fill-opacity:.88;stroke:var(--ink);stroke-width:1;cursor:pointer}
+.district.dfill:hover{stroke-width:2.4;fill-opacity:1}
+.district.dfill.hl{stroke:var(--maroon);stroke-width:3.4}
+.district.dfill.nodata{fill:var(--county);fill-opacity:.35}
+svg.dfill .county{pointer-events:none}
+.dlabel{font-family:"Archivo",sans-serif;font-weight:700;font-stretch:85%;fill:var(--dist);paint-order:stroke;stroke:var(--paper2);stroke-linejoin:round;text-anchor:middle;pointer-events:none;transition:opacity .15s}
+svg.dfill .dlabel{fill:var(--ink);stroke:var(--paper2)}
+:root[data-theme="light"] .dlabel{stroke:#FFFFFF}
+.legend .r i.distsw{width:18px;height:0;border-radius:0;border-top:2.5px solid var(--dist)}
