@@ -108,7 +108,7 @@ Incentives, local decisions and timelines are not in the Data Center Watch extra
 
 - **Turnout** = votes in the top statewide race that year (the race with the most votes statewide, applied to every county) divided by registered voters at that election. This is the Secretary of State's convention and matches its statewide figures exactly for 2006-2018. Counting every ballot would put turnout about half a point higher; the workbook keeps that TLC count in `total_ballots_tlc`.
 - **Primary turnout** = each party's top statewide primary race (2014 Governor, 2016 President, 2018 U.S. Senator), Democratic plus Republican, divided by registration as of March. The SOS statewide primary figure counts all ballots, so it runs slightly higher.
-- **Margin** = Republican share minus Democratic share of all votes in the race, in points; shares include third parties, so they do not sum to 100%.
+- **Margin** = Republican share minus Democratic share of all votes in the race, in points; shares include third parties, so they do not sum to 100%. On the pages a margin is shown with the winner's name and the points, for example "Trump +13.7" (2024 President, statewide) or "Abbott +10.9" (2022 Governor).
 - **Change** = the later election minus the earlier one, in points, always like for like (presidential with presidential, midterm with midterm).
 - **District lean of a county** = the margins of its congressional district(s), weighted by the share of the county's 2020 residents in each; "residents with a new district number" compares each Census block's district under PLANC2193 and PLANC2333.
 - **Results on the 2026 lines** are the Texas Legislative Council's re-tabulations of actual precinct votes onto those lines, not elections held under them.
