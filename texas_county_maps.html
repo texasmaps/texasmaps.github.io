@@ -6,7 +6,7 @@
 <title>Texas County Maps</title>
 <meta name="description" content="One map, many topics: every Texas county colored by the dataset you pick, with ranked lists, search, county details and district overlays. Add ?topic=elections, turnout, districts, demographics, rainfall, wells, regions or data-centers.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="tx_county_map.css?v=20260928-2">
+<link rel="stylesheet" href="tx_county_map.css?v=20260928-3">
 <style>
 .topic{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2);white-space:nowrap}
 .topic select{border:1px solid var(--rule);background:var(--paper);border-radius:6px;padding:5px 6px;font-size:12px;cursor:pointer;color:var(--ink);max-width:150px}
@@ -39,14 +39,14 @@ aside .topic select{flex:1;max-width:none}
 </main>
 </div>
 <!-- shared: the county layer, the rivers/basins overlay, the engine and the topic registry. Each topic loads its own data file on demand. -->
-<script src="tx_counties.js?v=20260928-2"></script>
-<script src="tx_surface_water.js?v=20260928-2"></script>
-<script src="tx_districts.js?v=20260928-2"></script>
-<script src="tx_district_crosswalk.js?v=20260928-2"></script>
-<script src="tx_county_map.js?v=20260928-2"></script>
-<script src="tx_topics.js?v=20260928-2"></script>
+<script src="tx_counties.js?v=20260928-3"></script>
+<script src="tx_surface_water.js?v=20260928-3"></script>
+<script src="tx_districts.js?v=20260928-3"></script>
+<script src="tx_district_crosswalk.js?v=20260928-3"></script>
+<script src="tx_county_map.js?v=20260928-3"></script>
+<script src="tx_topics.js?v=20260928-3"></script>
 <script>
-const V='20260928-2',PAGE='texas_county_maps.html';
+const V='20260928-3',PAGE='texas_county_maps.html';
 const {esc,num,cname}=CM,$=id=>document.getElementById(id);
 const TOPICS=window.TX_TOPICS||{},keys=Object.keys(TOPICS);
 const want=new URLSearchParams(location.search).get('topic'),key=TOPICS[want]?want:keys[0],T=TOPICS[key];

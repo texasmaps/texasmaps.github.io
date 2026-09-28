@@ -29,8 +29,8 @@ and `#region=<id>` on the regions topic. Example: `texas_county_maps.html?topic=
 | `tx_county_map.js` | the county-map engine (projection, county outlines, shading, pins, sidebar, search, overlays, legend, welcome, About) |
 | `tx_county_map.css` | the styles, copied from `tx_water_map.css` with the aquifer rules removed and county-shading rules added |
 | `tx_regions.js` | county → campaign region, built from `tx_counties_by_region.csv` by `tools/csv_to_js.py` |
-| `tx_county_elections.js` | 99 fields per county + a `state` block: presidential/governor/Senate shares and margins by year, point changes, turnout, ballots, registered voters (see the file header for sources) |
-| `tx_county_demographics.js` | 38 fields per county: TDC preliminary Vintage 2025 population + ACS 2020-24 5-year (see the file header for tables); percent fields are fractions |
+| `tx_county_elections.js` | 99 fields per county + vote counts (`<office>_R_votes_<year>`, `_D_votes_`, `_total_votes_`) + a `state` block: presidential/governor/Senate shares and margins by year, point changes, turnout, ballots, registered voters (see the file header for sources) |
+| `tx_county_demographics.js` | 39 fields per county (incl. adults 18+ from ACS B01001) + the State of Texas row `TX_DEMOGRAPHICS_STATE`: TDC preliminary Vintage 2025 population + ACS 2020-24 5-year (see the file header for tables); percent fields are fractions |
 | `tx_districts.js` | district outlines for five TLC plans (PLANC2333 = Congress 2026, PLANC2193 = Congress 2024, PLANH2316 House, PLANS2168 Senate, PLANE2106 SBOE), generalized, same ring encoding as `tx_surface_water.js` |
 | `tx_district_crosswalk.js` | county × district: 2020 residents and shares for every plan, plus each county's share of residents whose congressional district number changed from the 2024 map to the 2026 map |
 | `tx_district_results.js` | TLC Red-206 results by district, 2012-2024 (President, Governor, U.S. Senate: shares, margin, votes; registered voters; ballots) for all five plans |
@@ -40,7 +40,7 @@ and `#region=<id>` on the regions topic. Example: `texas_county_maps.html?topic=
 | `tools/csv_to_js.py` | turns any CSV with a county or FIPS column into a `tx_*.js` data file |
 
 Reused as they are: `tx_counties.js` (county outlines), `tx_surface_water.js` (rivers, lakes, basins), `tx_dc_sites.js` (data center pins),
-`tx_county_water.js` (county rainfall and well counts). The version tag on every local script and stylesheet link is `?v=20260928-2`;
+`tx_county_water.js` (county rainfall and well counts). The version tag on every local script and stylesheet link is `?v=20260928-3`;
 bump it in the page whenever the engine, the registry or a data file changes (GitHub Pages caches files for 10 minutes).
 
 ## Adding a topic
@@ -61,8 +61,14 @@ bump it in the page whenever the engine, the registry or a data file changes (Gi
 
 ## The County Deep Dive topic (`?topic=deep-dive`)
 
-A statewide county-level political intelligence view: demographics, turnout, political change, the 2026 districts and ballot,
-and community organizations in one county card, each figure next to the Texas figure (`window.TX_DEMOGRAPHICS_STATE` in
+A county political capacity and electoral change dashboard built around five questions (who can vote here, who turns out,
+how they vote, where campaign money is flowing, how redistricting changed the political geography). The county card opens with
+five plain-English findings ("What to know"), then Voter base (adults 18+, registered voters, growth since the 2022 midterm,
+ballots, turnout and its changes), How the county voted (2024 presidential vote counts and shares, Trump and Democratic shares
+2016-2024, governor and Senate margins), Campaign money (state-district races on the ballot with raised, cash, spent, filing date,
+associated committees and rank within the race; a race in the top quarter of statewide totals is flagged as higher-funded),
+Redistricting (2024 vs 2026 districts, the split statement, the 2024 presidential result under the old and the re-tabulated
+new district), Who lives here, Community organizations and the 2026 ballot, each figure next to the Texas figure (`window.TX_DEMOGRAPHICS_STATE` in
 `tx_county_demographics.js` holds the state row) with a **Compare with** menu that adds any second county. The list view has a
 Regions block (click a campaign region to highlight it and get votes-weighted summaries), a sortable table of all 254 counties
 (`window.TX_DD.sortBy`), and ranked lists. The topic sets `countyKv:false` (the page skips the generic metric list) and
