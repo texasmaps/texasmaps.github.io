@@ -1,0 +1,232 @@
+/* tx_county_map.css — shared styles for the county-level Texas maps (engine: tx_county_map.js), v 20260927-1.
+   Copied from tx_water_map.css (the water-map base) with the aquifer/raster rules removed and county-shading rules added at the end. */
+:root{
+  --paper:#F3F5F8; --paper2:#FFFFFF; --ink:#161B26; --ink2:#4A5060; --ink3:#7C8494; --rule:#E1E5EC;
+  --maroon:#4A0404; --maroon2:#6E1A1A; --olive:#6B8E23; --tan:#D2B48C; --cream:#EAF0F8;
+  --water:#E6EBF1; --county:#FFFFFF; --county-line:#C7CDD8;
+  --op:#3B5B8C; --uc:#C8842A; --pr:#A3262A; --wd:#9A9A9A; --hot:#E0242E; --shadow:0 10px 30px rgba(27,31,39,.12);
+  --river:#1E88A8; --river-case:#FFFFFF; --basin:#8A6D1F;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#15171C; --paper2:#1E2128; --ink:#ECE8E0; --ink2:#B6B2A9; --ink3:#7E7B74; --rule:#2F333B;
+  --maroon:#E0B1B1; --maroon2:#C98C8C; --cream:#3A3320; --water:#1A2028; --county:#232730; --county-line:#454A55;
+  --op:#7FA3D6; --uc:#E2A75A; --pr:#E06A6E; --wd:#6B6B6B; --hot:#FF5A62; --shadow:0 10px 30px rgba(0,0,0,.5);
+  --river:#5CE1E6; --river-case:#0B1B2B; --basin:#E8D8A0;
+}}
+:root[data-theme="dark"]{
+  --paper:#15171C; --paper2:#1E2128; --ink:#ECE8E0; --ink2:#B6B2A9; --ink3:#7E7B74; --rule:#2F333B;
+  --maroon:#E0B1B1; --maroon2:#C98C8C; --cream:#3A3320; --water:#1A2028; --county:#232730; --county-line:#454A55;
+  --op:#7FA3D6; --uc:#E2A75A; --pr:#E06A6E; --wd:#6B6B6B; --hot:#FF5A62; --shadow:0 10px 30px rgba(0,0,0,.5);
+  --river:#5CE1E6; --river-case:#0B1B2B; --basin:#E8D8A0;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--paper);color:var(--ink);font:14px/1.45 "IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;overflow:hidden}
+button,input,select{font:inherit;color:inherit}
+a{color:var(--maroon);text-decoration:none;border-bottom:1px solid var(--tan)}
+a:hover{border-bottom-color:var(--maroon)}
+.app{display:grid;grid-template-columns:340px 1fr;grid-template-rows:56px 1fr;height:100vh}
+header{grid-column:1/3;display:flex;align-items:center;gap:14px;padding:0 18px;border-bottom:1px solid var(--rule);background:var(--paper2)}
+header h1{font:800 20px/1 "Archivo",system-ui,sans-serif;font-stretch:80%;letter-spacing:.01em;margin:0;text-transform:uppercase;white-space:nowrap}
+header h1 span{color:var(--maroon)}
+.allmaps,.aboutbtn{font-size:12px;font-weight:600;border:1px solid var(--rule);border-radius:6px;padding:5px 9px;background:var(--paper);white-space:nowrap;color:var(--ink);cursor:pointer}
+.mapnav{display:flex;gap:2px;border-left:1px solid var(--rule);padding-left:10px}
+.mapnav a{font-size:12px;padding:5px 9px;border-radius:6px;border:0;color:var(--ink2);white-space:nowrap}
+.mapnav a:hover{background:var(--cream);color:var(--ink)}
+.mapnav a.cur{background:var(--cream);color:var(--ink);font-weight:600}
+.search{padding:10px 14px 6px;position:relative;border-bottom:1px solid var(--rule)}
+.search input{width:100%;padding:9px 12px;border:1px solid var(--rule);border-radius:8px;background:var(--paper);font-size:13.5px}
+.search input:focus{outline:2px solid var(--olive);outline-offset:1px}
+.sugg{position:absolute;left:14px;right:14px;top:50px;background:var(--paper2);border:1px solid var(--rule);border-radius:8px;box-shadow:var(--shadow);z-index:30;max-height:320px;overflow:auto;display:none}
+.sugg div{padding:8px 12px;cursor:pointer;display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.sugg div:hover{background:var(--cream)}
+.sugg small{color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;font-size:10px;white-space:nowrap}
+.welcome{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9;width:min(440px,calc(100% - 32px));background:var(--paper2);border:1px solid var(--rule);border-radius:12px;box-shadow:var(--shadow);padding:20px 22px 18px}
+.welcome h2{font:800 20px/1.15 "Archivo",sans-serif;font-stretch:85%;margin:0 0 10px;color:var(--ink)}
+.welcome ol{margin:0 0 14px;padding-left:20px;font-size:14px;line-height:1.5;color:var(--ink2)}
+.welcome li{margin:6px 0}
+.welcome button{border:0;background:var(--maroon);color:#fff;font-weight:700;font-size:14px;padding:10px 16px;border-radius:8px;cursor:pointer;width:100%}
+:root[data-theme="dark"] .welcome button{color:#15171C}
+.about{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;display:none;overflow:auto;padding:5vh 16px}
+.about.open{display:block}
+.aboutbox{position:relative;max-width:640px;margin:0 auto;background:var(--paper2);border:1px solid var(--rule);border-radius:12px;padding:22px 26px 20px;box-shadow:var(--shadow);font-size:14px;line-height:1.55;color:var(--ink2)}
+.aboutbox h2{font:800 22px/1.15 "Archivo",sans-serif;font-stretch:85%;margin:0 0 8px;color:var(--ink)}
+.aboutbox h3{font:700 12px "Archivo",sans-serif;font-stretch:85%;letter-spacing:.1em;text-transform:uppercase;color:var(--maroon);margin:18px 0 6px}
+.aboutbox p{margin:6px 0}
+.aboutbox ul{margin:4px 0;padding-left:20px}
+.aboutbox li{margin:5px 0}
+.aboutbox .close{position:absolute;right:12px;top:10px;border:0;background:none;font-size:24px;cursor:pointer;color:var(--ink3)}
+.aboutbox .fine{font-size:12px;color:var(--ink3);margin-top:14px}
+.glance .facts{list-style:none;margin:0;padding:2px 14px 10px}
+.glance .facts li{position:relative;padding:6px 0 6px 16px;font-size:13.5px;line-height:1.45;color:var(--ink);border-bottom:1px dashed var(--rule)}
+.glance .facts li:last-child{border-bottom:0}
+.glance .facts li::before{content:'';position:absolute;left:2px;top:13px;width:7px;height:7px;border-radius:50%;background:var(--maroon)}
+.glance .facts b{color:var(--ink)}
+.src{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink3);border-left:1px solid var(--rule);padding-left:14px;white-space:nowrap}
+.stats{display:flex;gap:16px;margin-left:auto;font-variant-numeric:tabular-nums}
+.stat{display:flex;flex-direction:column;align-items:flex-end;line-height:1.1}
+.stat b{font:700 18px "Archivo",sans-serif;font-stretch:85%}
+.stat small{font-size:11px;color:var(--ink3);white-space:nowrap}
+#menubtn{display:none;border:1px solid var(--rule);background:var(--paper);border-radius:6px;padding:6px 10px;cursor:pointer;font-weight:600;font-size:13px}
+aside{border-right:1px solid var(--rule);background:var(--paper2);display:flex;flex-direction:column;min-height:0}
+.intro{padding:12px 14px 10px;font-size:12.5px;color:var(--ink2);border-bottom:1px solid var(--rule);line-height:1.45}
+.layers{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--ink2);padding:9px 14px;border-bottom:1px solid var(--rule)}
+.layers label{display:flex;align-items:center;gap:5px;cursor:pointer}
+.layers select{border:1px solid var(--rule);background:var(--paper);border-radius:6px;padding:3px 6px;font-size:12px;cursor:pointer;max-width:100%}
+.side{overflow:auto;flex:1;min-height:0;padding-bottom:30px}
+.blk{border-bottom:1px solid var(--rule)}
+.blk h3{font:700 11px "Archivo",sans-serif;font-stretch:85%;letter-spacing:.12em;text-transform:uppercase;color:var(--maroon);margin:0;padding:11px 14px 6px;display:flex;justify-content:space-between;align-items:baseline}
+.blk h3 small{font:500 10px "IBM Plex Sans",sans-serif;letter-spacing:0;text-transform:none;color:var(--ink3);margin-left:auto}
+.blk h3{cursor:pointer;user-select:none}
+.blk h3::after{content:'▾';margin-left:8px;color:var(--ink3);font-size:11px}
+.blk.closed h3::after{content:'show ▸';font-size:10px;letter-spacing:.04em;text-transform:none;font-family:"IBM Plex Sans",sans-serif;font-weight:500}
+.secbar{padding:8px 14px 2px;display:flex;justify-content:flex-end}
+.secbar button{border:1px solid var(--rule);background:var(--paper);border-radius:999px;padding:4px 11px;font-size:11.5px;font-weight:600;color:var(--maroon);cursor:pointer}
+.secbar button:hover{background:var(--cream)}
+.blk.closed>*:not(h3){display:none}
+.blk h3:hover{background:var(--cream)}
+.row{display:grid;grid-template-columns:14px 1fr auto;gap:9px;align-items:center;padding:7px 14px;border-bottom:1px solid var(--rule);cursor:pointer}
+.row:hover,.row.sel{background:var(--cream)}
+.row:last-child{border-bottom:0}
+.row .sw{width:12px;height:12px;border-radius:3px;background:var(--c);opacity:.8;flex:none}
+.row .sw.dot{border-radius:50%;opacity:1;width:10px;height:10px}
+.row .sw.dot.hot{box-shadow:0 0 0 2px var(--paper2),0 0 0 3px var(--hot)}
+.row .n{font-weight:600;line-height:1.25;font-size:14px}
+.row .m{font-size:12.5px;color:var(--ink2)}
+.row .v{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink3);white-space:nowrap;text-align:right;line-height:1.3}
+.row .v b{color:var(--ink);font-weight:600}
+.bar{height:5px;background:var(--rule);border-radius:3px;overflow:hidden;margin-top:5px}
+.bar i{display:block;height:100%;background:var(--c,var(--olive))}
+.empty{color:var(--ink3);font-size:13px;font-style:italic;padding:10px 14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:4px 14px 8px}
+.chip{border:1px solid var(--rule);background:var(--paper);border-radius:999px;padding:4px 10px 4px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--ink)}
+.chip i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.chip.off{opacity:.5}
+.chip[data-hot] i{box-shadow:0 0 0 1.5px var(--hot);background:transparent}
+.chip[data-hot].on{background:var(--cream);border-color:var(--maroon)}
+.chip[data-hot].on i{background:var(--hot)}
+.listhead{padding:2px 14px 6px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);display:flex;justify-content:space-between;align-items:center}
+.listhead select{border:0;background:none;font-size:11px;text-transform:none;letter-spacing:0;cursor:pointer;color:var(--ink2)}
+.detail{padding:12px 14px}
+.detail .status{display:inline-flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--ink2)}
+.detail .status i{width:9px;height:9px;border-radius:50%}
+.detail h2{font:700 18px/1.15 "Archivo",sans-serif;font-stretch:85%;margin:6px 0 4px;text-wrap:balance}
+.detail .sub{color:var(--ink2);font-size:13px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13px;margin:10px 0 6px}
+.kv dt{color:var(--ink3);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding-top:3px}
+.kv dd{margin:0;font-variant-numeric:tabular-nums}
+.note{font-size:12px;color:var(--ink3);line-height:1.5;padding:10px 14px}
+.note a{color:var(--maroon);font-weight:600}
+.actions{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}
+.actions a,.actions button{border:1px solid var(--rule);border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:var(--paper);cursor:pointer;color:var(--ink)}
+.actions a.primary{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+:root[data-theme="dark"] .actions a.primary{color:#15171C}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .actions a.primary{color:#15171C}}
+.back{border:0;background:none;color:var(--maroon);cursor:pointer;font-weight:600;font-size:12px;padding:0}
+.hotflag{display:inline-block;background:var(--hot);color:#fff;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;padding:2px 7px;border-radius:3px;margin-left:6px;vertical-align:middle}
+main{position:relative;min-height:0;background:var(--water)}
+svg#map{width:100%;height:100%;display:block;cursor:grab}
+svg#map.drag{cursor:grabbing}
+.county{fill:var(--county);stroke:var(--county-line);stroke-width:.6;vector-effect:non-scaling-stroke}
+.county:hover{fill:var(--cream)}
+.county.hl{fill:var(--cream);stroke:var(--maroon);stroke-width:2}
+.clabel{font-family:"IBM Plex Sans",sans-serif;font-weight:500;fill:var(--ink3);pointer-events:none;text-anchor:middle}
+.pin{cursor:pointer;stroke:var(--paper2);stroke-width:1.2;vector-effect:non-scaling-stroke}
+.pin.hot{stroke:var(--hot);stroke-width:2}
+.pin.sel{stroke:var(--ink);stroke-width:2.5}
+.pin.dim{opacity:.12;pointer-events:none}
+.river-case{fill:none;stroke:var(--river-case);stroke-width:3.4;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round;pointer-events:none}
+.river{fill:none;stroke:var(--river);stroke-width:1.7;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round;pointer-events:none}
+.res{fill:var(--river);fill-opacity:.85;stroke:var(--river-case);stroke-width:.9;vector-effect:non-scaling-stroke;fill-rule:evenodd;pointer-events:none}
+.basin{fill:none;stroke:var(--basin);stroke-width:1.5;stroke-dasharray:7 4;vector-effect:non-scaling-stroke;stroke-linejoin:round;pointer-events:none}
+.swlabel{font-family:"IBM Plex Sans",sans-serif;font-weight:600;font-style:italic;fill:var(--river);paint-order:stroke;stroke:var(--river-case);stroke-linejoin:round;pointer-events:none;text-anchor:middle;transition:opacity .15s}
+.swlabel.basin{font-family:"Archivo",sans-serif;font-weight:700;font-stretch:85%;font-style:normal;letter-spacing:.1em;text-transform:uppercase;fill:var(--basin);stroke:var(--paper2);opacity:.95}
+.legend .r i.rivsw{width:16px;height:3px;border-radius:2px;background:var(--river);box-shadow:0 0 0 1px var(--river-case)}
+.legend .r i.ressw{border-radius:2px;background:var(--river);opacity:.9}
+.legend .r i.bassw{border-radius:2px;background:none;border:1.5px dashed var(--basin)}
+.ctrl{position:absolute;left:12px;top:12px;display:flex;flex-direction:column;gap:4px}
+.lpanel{position:absolute;right:12px;top:12px;z-index:6;background:var(--paper2);border:1px solid var(--rule);border-radius:8px;box-shadow:var(--shadow);font-size:12px;color:var(--ink2);max-width:270px}
+.lpanel .lpt{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;padding:8px 12px;font-weight:600;font-size:12px;cursor:pointer;color:var(--ink);text-align:left}
+.lpanel .lpt .chev{margin-left:auto;color:var(--ink3)}
+.lpanel.closed .lpt .chev{transform:rotate(-90deg)}
+.lpanel .lbody{display:flex;flex-direction:column;gap:6px;padding:0 12px 10px;border-top:1px solid var(--rule);padding-top:8px}
+.lpanel.closed .lbody{display:none}
+.lpanel label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.lpanel select{border:1px solid var(--rule);background:var(--paper);border-radius:6px;padding:4px 6px;font-size:12px;cursor:pointer;max-width:100%}
+.lpanel .lsel{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-top:4px;cursor:default}
+.lpanel .lcap{font-size:11px;color:var(--ink3);line-height:1.35}
+:root[data-theme="light"] .swlabel{stroke:#FFFFFF}
+.ctrl button{width:32px;height:32px;border:1px solid var(--rule);background:var(--paper2);border-radius:6px;cursor:pointer;font-size:16px;box-shadow:var(--shadow)}
+.legend{position:absolute;left:12px;bottom:12px;background:var(--paper2);border:1px solid var(--rule);border-radius:8px;padding:10px 12px;font-size:11px;box-shadow:var(--shadow);max-width:240px;max-height:calc(100vh - 140px);overflow:auto}
+.legend b{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin:8px 0 5px}
+.legend b:first-child{margin-top:0}
+.legend .r{display:flex;align-items:center;gap:7px;margin:3px 0}
+.legend .r i{width:10px;height:10px;border-radius:50%;flex:none}
+.legend .r i.ramp{border-radius:2px}
+.legend .r i.ring{background:var(--paper2);box-shadow:0 0 0 2px var(--hot)}
+.legend .foot{margin-top:6px;color:var(--ink3)}
+.legend .lgt{display:none;border:0;background:none;padding:0;font:600 11px "IBM Plex Sans",sans-serif;color:var(--maroon);cursor:pointer}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--paper);padding:6px 9px;border-radius:5px;font-size:12px;display:none;z-index:30;max-width:280px;box-shadow:var(--shadow)}
+.tip small{display:block;opacity:.75}
+@media (max-width:1360px){.mapnav{display:none}}
+@media (max-width:1100px){.stat:nth-child(n+3){display:none}}
+@media (max-width:940px){.stat:nth-child(n+2){display:none}}
+@media (max-width:800px){
+  .app{grid-template-columns:1fr;grid-template-rows:56px 1fr}
+  header{grid-column:1;min-width:0;overflow:hidden;gap:10px;padding:0 12px}
+  #menubtn{display:inline-flex}
+  aside{position:absolute;left:0;top:56px;bottom:0;width:min(340px,90vw);z-index:28;box-shadow:var(--shadow);transform:translateX(-102%);transition:transform .22s}
+  aside.open{transform:none}
+  .stats,.src,.mapnav{display:none}
+  header h1{font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .aboutbtn{padding:5px 7px;font-size:11px}
+  .welcome{top:auto;bottom:16px;transform:translateX(-50%)}
+  .allmaps{flex:none}
+  .legend{max-width:220px;max-height:42vh}
+  .lpanel{right:8px;top:8px;max-width:230px}
+  .legend .lgt{display:block}
+  .legend:not(.open){padding:8px 12px}
+  .legend:not(.open) .lgbody{display:none}
+}
+@media (prefers-reduced-motion:reduce){aside{transition:none}}
+button:focus-visible,input:focus-visible,.row:focus-visible{outline:2px solid var(--olive);outline-offset:1px}
+
+/* ---- county shading (choropleth): tx_county_map.js sets each county's fill inline ---- */
+svg.choro .county{stroke:var(--county-line);stroke-width:.6}
+svg.choro .county:hover{stroke:var(--ink);stroke-width:1.6}
+svg.choro .county.hl{stroke:var(--maroon);stroke-width:2.4}
+svg.choro .county.nodata{fill:var(--county)}
+.legend .r i.ramp.none{background:var(--county);border:1px solid var(--county-line)}
+/* pins on a shaded map: the engine switches their fills to high-contrast colors; give them a dark outline */
+body.shaded .pin{stroke:#15171C;stroke-width:1.6}
+body.shaded .pin.hot{stroke:var(--hot);stroke-width:2.6}
+body.shaded .pin.sel{stroke:#FFFFFF;stroke-width:3}
+:root[data-theme="light"] body.shaded .pin{stroke:var(--ink);stroke-width:1.5}
+:root[data-theme="light"] body.shaded .pin.hot{stroke:var(--hot);stroke-width:2.6}
+:root[data-theme="light"] body.shaded .pin.sel{stroke:#161B26;stroke-width:3}
+/* the same pin colors in the sidebar and legend (a white dot needs a ring to show on a white panel) */
+body.shaded .pc:not(.hot){box-shadow:0 0 0 1px var(--ink)}
+body.shaded .legend .r i.ring{background:var(--paper2);box-shadow:0 0 0 2px var(--hot)}
+/* ---- district outlines and district shading (tx_districts.js): plum lines, filled shapes when a district metric is chosen ---- */
+:root{--dist:#4A1D63}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--dist:#DCC3F0}}
+:root[data-theme="dark"]{--dist:#DCC3F0}
+.district{fill:none;stroke:var(--dist);stroke-width:1.8;vector-effect:non-scaling-stroke;stroke-linejoin:round;pointer-events:none}
+.district.hl{stroke:var(--maroon);stroke-width:3.4}
+.district.dfill{pointer-events:auto;fill-opacity:.88;stroke:var(--ink);stroke-width:1;cursor:pointer}
+.district.dfill:hover{stroke-width:2.4;fill-opacity:1}
+.district.dfill.hl{stroke:var(--maroon);stroke-width:3.4}
+.district.dfill.nodata{fill:var(--county);fill-opacity:.35}
+svg.dfill .county{pointer-events:none}
+.dlabel{font-family:"Archivo",sans-serif;font-weight:700;font-stretch:85%;fill:var(--dist);paint-order:stroke;stroke:var(--paper2);stroke-linejoin:round;text-anchor:middle;pointer-events:none;transition:opacity .15s}
+svg.dfill .dlabel{fill:var(--ink);stroke:var(--paper2)}
+:root[data-theme="light"] .dlabel{stroke:#FFFFFF}
+.legend .r i.distsw{width:18px;height:0;border-radius:0;border-top:2.5px solid var(--dist)}
+
+/* aquifer overlay (TWDB outlines from tx_aquifers.js): translucent fills for the major aquifers, faint dashed fill for minor ones */
+.aq{pointer-events:none;fill-rule:evenodd;fill-opacity:.42;stroke-width:1.1;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.aq.minor{fill:var(--ink2);fill-opacity:.10;stroke:var(--ink2);stroke-width:.8;stroke-dasharray:3 2}
+.aqlabel{font-family:"Archivo",sans-serif;font-weight:700;font-stretch:85%;letter-spacing:.06em;text-transform:uppercase;fill:#3b2f1f;paint-order:stroke;stroke:#fff;stroke-linejoin:round;pointer-events:auto;cursor:pointer;text-anchor:middle}
+.aq.dim{fill-opacity:.1}.aq.hl{fill-opacity:.6;stroke-width:2.4}
+.aqlabel.mi{font-family:"IBM Plex Sans",sans-serif;font-weight:600;font-style:italic;text-transform:none;letter-spacing:0;fill:var(--ink2)}
+.legend .r i.aqmisw{border-radius:2px;background:repeating-linear-gradient(45deg,var(--ink2) 0 1px,transparent 1px 4px);border:1px dashed var(--ink2)}
