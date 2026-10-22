@@ -4,7 +4,7 @@ Day 3 · Through Oct 21: 1,783,240 early votes · 99% on the list · 21% of expe
 
 Model estimate from public data, not a vote count.
 
-| County | Projected margin | 80% range (pts) | Chance the leader wins | Rating | Within 3 pts if the state is close | Change since yesterday | Early voters on the list | Data status |
+| County | Projected margin | 8 in 10 runs land between (pts) | Chance to win | Rating | Within 3 pts if the state is close | Change since yesterday | Early voters on the list | Data status |
 |---|---|---|---|---|---|---|---|---|
 | Tarrant | Hinojosa +6.8 | -2.2 to +15.8 | 83% to win | Likely Hinojosa | 12% | +0.2 pts (new data) | 115,209 | complete |
 | Brazoria | Abbott +4.7 | -14.3 to +5.1 | 73% to win | Lean Abbott | 34% | +0.3 pts (new data) | 35,068 | complete |
@@ -35,7 +35,7 @@ Model estimate from public data, not a vote count.
 
 ## Closest to 50/50 (toss-up counties)
 
-| County | Chance the leader wins | Rating | Projected margin | 80% range (pts) | Expected votes |
+| County | Chance to win | Rating | Projected margin | 8 in 10 runs land between (pts) | Expected votes |
 |---|---|---|---|---|---|
 | Duval | 50% to win | Toss-up (Abbott 50%) | Abbott +0.9 | -21.8 to +19.1 | 3,337 |
 | Starr | Hinojosa 51% to win | Toss-up (Hinojosa 51%) | Abbott +2.4 | -29.8 to +20.0 | 12,160 |
