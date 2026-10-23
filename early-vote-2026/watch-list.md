@@ -52,13 +52,13 @@ The early vote so far leans Hinojosa, at an estimated 53.6% of the Hinojosa-vs-A
 | Nueces | 70% to win | Lean Abbott | Abbott +3.8 | -13.0 to +5.4 | 86,309 |
 | Hidalgo | 71% to win | Lean Hinojosa | Hinojosa +9.2 | -12.8 to +30.1 | 160,520 |
 
-Statewide: Hinojosa wins in 41% of draws (Tilt Abbott); expected official margin -1.1 pts (80% -7.1 to +5.1); projected turnout 8,450,439.
+Statewide: Hinojosa wins in 41% of draws (Tilt Abbott); expected official margin -1.1 pts (80% -7.1 to +5.1); projected turnout 8,450,438.
 
 ## Projected final result, from each day's data
 
 | Day | Date | Hinojosa votes | Abbott votes | Third party | Margin | Hinojosa wins | Projected turnout |
 |---|---|---|---|---|---|---|---|
 | 1 | Oct 19 | 4,299,112 | 4,358,281 | 82,347 | Abbott +1.6 | 37% | 8,740,004 |
-| 2 | Oct 20 | 4,419,294 | 4,442,806 | 84,710 | Abbott +1.2 | 40% | 8,947,467 |
+| 2 | Oct 20 | 4,419,294 | 4,442,806 | 84,710 | Abbott +1.2 | 40% | 8,947,466 |
 | 3 | Oct 21 | 4,422,527 | 4,442,749 | 85,148 | Abbott +1.1 | 41% | 8,951,413 |
-| 4 | Oct 22 | 4,178,322 | 4,189,940 | 80,872 | Abbott +1.1 | 41% | 8,450,439 |
+| 4 | Oct 22 | 4,178,321 | 4,189,939 | 80,872 | Abbott +1.1 | 41% | 8,450,438 |
