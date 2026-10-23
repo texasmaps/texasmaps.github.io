@@ -1,11 +1,11 @@
 # Watch list through Oct 23 (day 5)
 
-Day 5 · Through Oct 23: 2,809,829 early votes · 103% on the list · 31% of expected vote in · 253/254 counties complete (1 partial, 0 missing)
+Day 5 · Through Oct 23: 2,877,803 early votes (state count 2,809,829) · 32% of expected vote in · 253/254 counties complete (1 partial, 0 missing)
 
 Model estimate from public data, not a vote count.
 ## Where things stand
 
-The early vote so far leans Hinojosa, at an estimated 53.5% of the Hinojosa-vs-Abbott vote among the 2,873,558 people on the state's list (103% of the 2,809,829 votes the state has counted). Because the voters still to come, especially on Election Day, are expected to lean Republican, the model still projects Abbott ahead statewide by about 0.7 points. That gap narrowed from 1.6 points after day 1 to 0.7 after day 5. Hinojosa wins in 45% of the 10,000 runs, and 8 in 10 runs land between Abbott +6.8 and Hinojosa +5.5, so the race remains close. Model estimate from public data, not a vote count.
+The early vote so far leans Hinojosa, at an estimated 53.5% of the Hinojosa-vs-Abbott vote among the 2,877,803 early votes so far (in-person voters on the state's lists plus mail ballots counted; the state's posted total is 2,809,829). Because the voters still to come, especially on Election Day, are expected to lean Republican, the model still projects Abbott ahead statewide by about 0.7 points. That gap narrowed from 1.6 points after day 1 to 0.7 after day 5. Hinojosa wins in 45% of the 10,000 runs, and 8 in 10 runs land between Abbott +6.8 and Hinojosa +5.5, so the race remains close. Model estimate from public data, not a vote count.
 
 
 | County | Projected margin | 8 in 10 runs land between (pts) | Chance to win | Rating | Within 3 pts if the state is close | Change since yesterday | Early voters on the list | Data status |
