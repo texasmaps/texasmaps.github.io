@@ -58,6 +58,6 @@ Statewide: Hinojosa wins in 41% of draws (Tilt Abbott); expected official margin
 
 | Day | Date | Hinojosa votes | Abbott votes | Third party | Margin | Hinojosa wins | Projected turnout |
 |---|---|---|---|---|---|---|---|
-| 1 | Oct 19 | 4,298,915 | 4,358,053 | 82,344 | Abbott +1.6 | 37% | 8,739,575 |
-| 2 | Oct 20 | 4,419,294 | 4,442,806 | 84,710 | Abbott +1.2 | 40% | 8,947,467 |
+| 1 | Oct 19 | 4,299,112 | 4,358,281 | 82,347 | Abbott +1.6 | 37% | 8,740,004 |
+| 2 | Oct 20 | 4,419,294 | 4,442,806 | 84,710 | Abbott +1.2 | 40% | 8,947,466 |
 | 3 | Oct 21 | 4,422,527 | 4,442,749 | 85,148 | Abbott +1.1 | 41% | 8,951,413 |
