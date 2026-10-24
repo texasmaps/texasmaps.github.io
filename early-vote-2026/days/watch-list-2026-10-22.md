@@ -20,7 +20,7 @@ The early vote so far leans Hinojosa, at an estimated 53.7% of the Hinojosa-vs-A
 | Bell | Abbott +12.9 | -23.2 to -2.2 | 94% to win | Likely Abbott | 7% | +0.1 pts (new data) | 30,315 | complete |
 | Brazos | Abbott +12.3 | -24.3 to -0.3 | 91% to win | Likely Abbott | 8% | +0.4 pts (new data) | 18,641 | complete |
 | Jefferson | Abbott +12.3 | -22.0 to -2.3 | 94% to win | Likely Abbott | 9% | +0.0 pts (new data) | 24,940 | complete |
-| Webb | Hinojosa +16.7 | -6.6 to +37.2 | 82% to win | Likely Hinojosa | 7% | +0.0 pts (late upload) | 16,785 | complete |
+| Webb | Hinojosa +16.7 | -6.6 to +37.2 | 82% to win | Likely Hinojosa | 7% | -0.5 pts (new data) | 16,785 | complete |
 | Caldwell | Abbott +8.8 | -16.9 to -0.8 | 92% to win | Likely Abbott | 15% | +0.2 pts (new data) | 4,817 | complete |
 | Kleberg | Abbott +6.0 | -16.8 to +4.8 | 76% to win | Lean Abbott | 24% | +0.1 pts (new data) | 2,740 | complete |
 | Starr | Abbott +2.1 | -29.4 to +20.6 | Hinojosa 52% to win | Toss-up (Hinojosa 52%) | 12% | +0.0 pts (new data) | 4,043 | complete |
@@ -58,6 +58,6 @@ Statewide: Hinojosa wins in 46% of draws (Toss-up (Abbott 54%)); expected offici
 | Day | Date | Hinojosa votes | Abbott votes | Third party | Margin | Hinojosa wins | Projected turnout |
 |---|---|---|---|---|---|---|---|
 | 1 | Oct 19 | 4,302,454 | 4,360,093 | 82,387 | Abbott +1.6 | 37% | 8,745,197 |
-| 2 | Oct 20 | 4,431,282 | 4,450,046 | 84,887 | Abbott +1.1 | 41% | 8,966,872 |
-| 3 | Oct 21 | 4,504,727 | 4,498,277 | 86,443 | Abbott +0.9 | 43% | 9,090,436 |
+| 2 | Oct 20 | 4,434,133 | 4,451,648 | 84,919 | Abbott +1.1 | 41% | 8,971,357 |
+| 3 | Oct 21 | 4,510,127 | 4,501,376 | 86,505 | Abbott +0.8 | 43% | 9,098,997 |
 | 4 | Oct 22 | 4,568,693 | 4,531,009 | 87,746 | Abbott +0.5 | 46% | 9,188,770 |
