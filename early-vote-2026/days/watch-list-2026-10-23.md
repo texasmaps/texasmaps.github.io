@@ -58,7 +58,7 @@ Statewide: Hinojosa wins in 46% of draws (Toss-up (Abbott 54%)); expected offici
 | Day | Date | Hinojosa votes | Abbott votes | Third party | Margin | Hinojosa wins | Projected turnout |
 |---|---|---|---|---|---|---|---|
 | 1 | Oct 19 | 4,302,454 | 4,360,093 | 82,387 | Abbott +1.6 | 37% | 8,745,197 |
-| 2 | Oct 20 | 4,431,282 | 4,450,046 | 84,887 | Abbott +1.1 | 41% | 8,966,872 |
-| 3 | Oct 21 | 4,504,727 | 4,498,277 | 86,443 | Abbott +0.9 | 43% | 9,090,436 |
+| 2 | Oct 20 | 4,434,133 | 4,451,648 | 84,919 | Abbott +1.1 | 41% | 8,971,357 |
+| 3 | Oct 21 | 4,510,127 | 4,501,376 | 86,505 | Abbott +0.8 | 43% | 9,098,997 |
 | 4 | Oct 22 | 4,568,693 | 4,531,009 | 87,746 | Abbott +0.5 | 46% | 9,188,770 |
 | 5 | Oct 23 | 4,630,605 | 4,593,599 | 88,953 | Abbott +0.5 | 46% | 9,314,490 |
