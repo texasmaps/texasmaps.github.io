@@ -61,6 +61,7 @@ Every map's title shows how much data it rests on, for example "Through Oct 21: 
 - Early voters so far
 - Completeness and share of expected vote in
 - What changed since yesterday, and why: new votes, late revisions, a correction, or a new poll
+- Three sources for the selected day, one row each: the state's posted count, the state's voter list, and the county's own report where a county publishes one (for example Bexar, Harris, Dallas, Fort Bend; most counties do not). The model counts the voter lists; the other two are checks.
 
 ## Quick reading order
 1. **Check the status line.** How solid is today's data?
