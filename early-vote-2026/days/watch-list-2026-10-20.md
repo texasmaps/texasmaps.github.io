@@ -1,18 +1,18 @@
 # Watch list through Oct 20 (day 2)
 
-Day 2 · Through Oct 20: 1,627,101 early votes (state count 1,665,357) · 18% of expected vote in · 251/254 counties complete (3 partial, 0 missing) · revised from 243/254
+Day 2 · Through Oct 20: 1,627,129 early votes (state count 1,665,394) · 18% of expected vote in · 251/254 counties complete (3 partial, 0 missing) · revised from 243/254
 
 Model estimate from public data, not a vote count.
 ## Where things stand
 
-The early vote so far leans Hinojosa, at an estimated 54.6% of the Hinojosa-vs-Abbott vote among the 1,627,101 early votes so far (voters on the state's lists, in person and mail; the state's posted total is 1,665,357). In 6 counties the posted count differs from the voter list by more than a tenth (Wise, Coryell, Fannin, Wilbarger…); they keep their rating on the list and the gap is flagged in the hover. Because the voters still to come, especially on Election Day, are expected to lean Republican, the model still projects Abbott ahead statewide by about 1.8 points. That gap narrowed from 2.2 points after day 1 to 1.8 after day 2. Hinojosa wins in 36% of the 10,000 runs, and 8 in 10 runs land between Abbott +8.0 and Hinojosa +4.5, so the race remains close. Model estimate from public data, not a vote count.
+The early vote so far leans Hinojosa, at an estimated 54.6% of the Hinojosa-vs-Abbott vote among the 1,627,129 early votes so far (voters on the state's lists, in person and mail; the state's posted total is 1,665,394). In 6 counties the posted count differs from the voter list by more than a tenth (Wise, Coryell, Fannin, Wilbarger…); they keep their rating on the list and the gap is flagged in the hover. Because the voters still to come, especially on Election Day, are expected to lean Republican, the model still projects Abbott ahead statewide by about 1.8 points. That gap narrowed from 2.2 points after day 1 to 1.8 after day 2. Hinojosa wins in 36% of the 10,000 runs, and 8 in 10 runs land between Abbott +8.0 and Hinojosa +4.5, so the race remains close. Model estimate from public data, not a vote count.
 
 
 | County | Projected margin | 8 in 10 runs land between (pts) | Chance to win | Rating | Within 3 pts if the state is close | Change since yesterday | Early voters on the list | Data status |
 |---|---|---|---|---|---|---|---|---|
 | Tarrant | Hinojosa +5.6 | -3.4 to +14.6 | 78% to win | Lean Hinojosa | 17% | +0.2 pts (new data) | 111,480 | complete |
 | Brazoria | Abbott +5.8 | -15.5 to +4.0 | 78% to win | Lean Abbott | 33% | +0.3 pts (new data) | 27,306 | complete |
-| Denton | Hinojosa +7.5 | -4.5 to +19.7 | 78% to win | Lean Hinojosa | 10% | +0.1 pts (new data) | 69,467 | complete |
+| Denton | Hinojosa +7.5 | -4.5 to +19.7 | 78% to win | Lean Hinojosa | 10% | +0.1 pts (new data) | 69,469 | complete |
 | Nueces | Abbott +3.2 | -12.6 to +6.2 | 67% to win | Lean Abbott | 34% | +0.0 pts (new data) | 17,292 | complete |
 | Hidalgo | Hinojosa +11.5 | -10.6 to +32.3 | 75% to win | Lean Hinojosa | 11% | -0.0 pts (new data) | 37,723 | complete |
 | Cameron | Hinojosa +5.5 | -13.8 to +24.7 | 65% to win | Tilt Hinojosa | 14% | -0.1 pts (new data) | 18,322 | complete |
@@ -51,11 +51,11 @@ The early vote so far leans Hinojosa, at an estimated 54.6% of the Hinojosa-vs-A
 | Dimmit | 68% to win | Lean Hinojosa | Hinojosa +8.4 | -14.7 to +30.7 | 2,620 |
 | Frio | 72% to win | Lean Abbott | Abbott +9.5 | -30.4 to +11.2 | 4,190 |
 
-Statewide: Hinojosa wins in 36% of draws (Tilt Abbott); expected official margin -1.8 pts (80% -8.0 to +4.5); projected turnout 8,972,705.
+Statewide: Hinojosa wins in 36% of draws (Tilt Abbott); expected official margin -1.8 pts (80% -8.0 to +4.5); projected turnout 8,972,718.
 
 ## Projected final result, from each day's data
 
 | Day | Date | Hinojosa votes | Abbott votes | Third party | Margin | Hinojosa wins | Projected turnout |
 |---|---|---|---|---|---|---|---|
-| 1 | Oct 19 | 4,274,319 | 4,393,573 | 82,369 | Abbott +2.2 | 32% | 8,743,500 |
-| 2 | Oct 20 | 4,405,281 | 4,488,395 | 84,918 | Abbott +1.8 | 36% | 8,972,705 |
+| 1 | Oct 19 | 4,274,319 | 4,393,573 | 82,369 | Abbott +2.2 | 32% | 8,743,501 |
+| 2 | Oct 20 | 4,405,282 | 4,488,406 | 84,918 | Abbott +1.8 | 36% | 8,972,718 |
