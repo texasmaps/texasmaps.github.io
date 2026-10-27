@@ -196,7 +196,7 @@ footer{max-width:1180px;margin:0 auto;padding:var(--s4);font-size:var(--fs-tiny)
 <footer id="foot"></footer>
 <script>
 "use strict";
-const BUILD="202610271143",BASE="tracker-with-precincts/";
+const BUILD="202610271320",BASE="tracker-with-precincts/";
 const $=id=>document.getElementById(id);
 const num=x=>x==null?"n/a":Math.round(x).toLocaleString("en-US");
 const g5=x=>x==null?"n/a":(x>0&&x<5?"fewer than 5":Math.round(x).toLocaleString("en-US"));
@@ -263,6 +263,7 @@ function gcol(x){if(x==null)return NODATA;let i=0;while(i<5&&x>=BRK[i])i++;retur
 function chgcol(x){if(x==null)return NODATA;let i=0;while(i<5&&x>=DBRK[i])i++;return PUOR[i];}
 const sgnp=(x,d=1)=>x==null||!isFinite(x)?"n/a":(x>0?"▲ +":x<0?"▼ −":"")+Math.abs(x).toFixed(d)+" pts";
 const party3=x=>({R:x.h[0]+x.h[1],D:x.h[2]+x.h[3],N:x.h[4]+x.h[5]});
+const p26txt=x=>x&&x.p26?'March 2026 primary only: <b style="color:#b2403f">R '+num(x.p26[0])+'</b> · <b style="color:#2e5f9a">D '+num(x.p26[1])+'</b> · neither '+num(x.p26[2])+' ('+(x.p26[1]>=x.p26[0]?'D':'R')+' +'+num(Math.abs(x.p26[1]-x.p26[0]))+')':'';
 let S=null,DAYS=[],day=0,county=null,view="chase",pinned=null,timer=null,lhide=false;
 const DATA={},SHAPES={};
 let lmap,pmap,clayer,player=null,sites=null,arrows=null,addrMk=null,annot=null;
@@ -301,7 +302,7 @@ function paintState(){const md=S.md[DAYS[day]],x=TV("texas"),A_=TA("texas");
  $("statecard").innerHTML='<div class="stat"><div class="l">Voted early so far</div><div class="v">'+num(x.ev)+'</div><div class="s">'+(ev22?(x.ev>=ev22?"▲ +":"▼ −")+Math.abs(Math.round(100*(x.ev/ev22-1)))+"% vs. the same day in 2022 ("+num(ev22)+")":"")+'</div></div>'+
  '<div class="stat"><div class="l">Registered voters</div><div class="v">'+num(A_.reg)+'</div><div class="s">The state\'s count for this election</div></div>'+
  '<div class="stat"><div class="l">Turnout so far</div><div class="v">'+pct(t,1)+'</div><div class="s">'+sgnp(100*(t-o))+' vs. the same day in 2022 ('+pct(o,1)+')</div></div>'+
- '<div class="stat"><div class="l">Early voters by primary record</div><div class="s" style="margin-top:4px"><b style="color:#b2403f">Republican '+num(p.R)+'</b> · <b style="color:#2e5f9a">Democratic '+num(p.D)+'</b> · No primary '+num(p.N)+'</div><div class="s">'+(ad>=0?'Democratic primary voters lead by ':'Republican primary voters lead by ')+num(Math.abs(ad))+'</div></div>'+
+ '<div class="stat"><div class="l">Early voters by primary record</div><div class="s" style="margin-top:4px">Any primary 2022–26: <b style="color:#b2403f">Republican '+num(p.R)+'</b> · <b style="color:#2e5f9a">Democratic '+num(p.D)+'</b> · No primary '+num(p.N)+'</div><div class="s">'+(ad>=0?'Democratic primary voters lead by ':'Republican primary voters lead by ')+num(Math.abs(ad))+'</div><div class="s" style="margin-top:4px">'+p26txt(x)+'</div></div>'+
  '<div class="stat"><div class="l">How to read the map</div><div class="s" style="margin-top:4px">Counties are shaded by <b>turnout so far</b>. <b>Click a county</b> for its turnout by party record and its precincts, or search above. Everything here is a <b>count of people</b>.</div></div>';
  const lab=mview==="to"?["under "+pct(BRK[0],0)].concat([1,2,3,4].map(i=>pct(BRK[i-1],0)+"–"+pct(BRK[i],0))).concat([pct(BRK[4],0)+"+"]):["below −3","−3 to 0","0 to +3","+3 to +6","+6 to +10","+10 or more"];
  $("lkey").innerHTML='<div class="t">'+(mview==="to"?"Turnout so far by county · six equal-size groups (set on the latest day)":"Turnout vs. the same day in 2022, in points")+'</div><div class="bar7">'+(mview==="to"?GREENS:PUOR).map(c=>'<i style="background:'+c+'"></i>').join("")+'</div><div class="labs">'+lab.map(l=>"<span>"+l+"</span>").join("")+'</div><div class="sent">'+(mview==="to"?"Darker green means a larger share of the county's registered voters has voted early. The groups are fixed, so pressing Play shows the counties filling in.":"Purple means more of the county has voted than at the same point in 2022; orange means less.")+'<span class="nd"></span>no data</div>';}
@@ -398,7 +399,7 @@ function paintStrip(k){const x=TV(k),A_=TA(k);if(!x||!A_){$("mstrip").innerHTML=
   cell("Democratic primary voters",num(p.D),pct(p.D/ev,0)+" of early voters · about "+pct(pde?pd/pde:null,0)+" of past Democratic primary voters have voted","#2e5f9a")+
   cell("No primary record",num(p.N),pct(p.N/ev,0)+" of early voters (voted in a general only, or new)")+'</div>'+
   '<div class="pbar" aria-hidden="true"><i style="width:'+(100*p.R/ev).toFixed(2)+'%;background:#b2403f"></i><i style="width:'+(100*p.D/ev).toFixed(2)+'%;background:#2e5f9a"></i><i style="width:'+(100*p.N/ev).toFixed(2)+'%;background:#9a9a9a"></i></div>'+
-  '<div class="note">'+(ad>=0?"Democratic":"Republican")+' primary voters lead by '+num(Math.abs(ad))+'. Primary record = which party\'s March primary or runoff someone voted in (2022–2026), not how they will vote. "About X% have voted" is approximate (past lists include people who have moved). <a href="turnout-raw-data.html#county='+LK(k)+'&day='+(i+1)+'&tab=who">All of '+esc(A_.name)+'\'s turnout numbers →</a></div>';}
+  '<div class="note">Any primary 2022–26: '+(ad>=0?"Democratic":"Republican")+' primary voters lead by '+num(Math.abs(ad))+'. '+p26txt(x)+'. Primary record = which party\'s March primary or runoff someone voted in, not how they will vote. "About X% have voted" is approximate (past lists include people who have moved). <a href="turnout-raw-data.html#county='+LK(k)+'&day='+(i+1)+'&tab=who">All of '+esc(A_.name)+'\'s turnout numbers →</a></div>';}
 
 function closeCounty(){county=null;pinned=null;needFit=null;document.body.classList.remove("split","lhide");lhide=false;$("handle").textContent="‹";hideCard();paintLeft();saveHash();}
 /* maps re-measure whenever their box changes size (the split slides open, the state map is hidden, the window turns); a county is fitted only once its map has real width */
