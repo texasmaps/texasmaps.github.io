@@ -1,0 +1,264 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Turnout Raw Data · Texas 2026 early vote</title>
+<meta name="description" content="Texas 2026 early vote, counts only: who has voted in every county, each day, compared with the same day in 2022 and 2024. No model, no projections.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
+<style>
+:root{
+ --ink:#121212;--ink2:#363636;--muted:#6b6b6b;--rule:#dcdcdc;--rule2:#ececec;--paper:#fff;--wash:#f7f7f5;--focus:#2f6aa8;
+ --serif:"Source Serif 4",Georgia,"Times New Roman",serif;--sans:"Libre Franklin","Helvetica Neue",Helvetica,Arial,sans-serif;
+ --rep:#b2403f;--mixr:#e3a59a;--dem:#2e5f9a;--mixd:#9cbfdc;--gen:#5a8f3c;--none:#9a9a9a;
+ --y26:#121212;--y24:#8a8a8a;--y22:#c9a227;--up:#2f7d32;--down:#b2403f;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45;-webkit-text-size-adjust:100%}
+a{color:var(--focus)} button{font-family:var(--sans)} :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.tnum,td.n,.v{font-variant-numeric:tabular-nums}
+.wrap{max-width:1240px;margin:0 auto;padding:0 16px}
+header.top{padding:24px 0 10px}
+.kicker{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+.kicker b{color:#fff;background:#3d6b2f;padding:2px 6px;border-radius:2px;margin-right:6px}
+h1{font-family:var(--serif);font-weight:700;font-size:34px;line-height:1.1;margin:8px 0;letter-spacing:-.01em}
+.dek{font-size:17px;line-height:1.4;margin:0;color:var(--ink2);max-width:780px} .meta{font-size:12.5px;color:var(--muted);margin-top:8px}
+.bar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.97);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.bar .in{display:flex;gap:10px 22px;align-items:center;flex-wrap:wrap;padding:8px 16px;max-width:1240px;margin:0 auto}
+.search{position:relative;flex:1 1 240px;max-width:340px}
+.search input{width:100%;font:inherit;font-size:15px;padding:7px 10px;border:1px solid #b9b9b9;border-radius:3px}
+.sugg{position:absolute;left:0;right:0;top:100%;margin:2px 0 0;padding:0;list-style:none;background:#fff;border:1px solid #b9b9b9;border-radius:3px;box-shadow:0 6px 18px rgba(0,0,0,.12);display:none;max-height:300px;overflow:auto;z-index:60}
+.sugg li{padding:7px 10px;cursor:pointer;border-top:1px solid var(--rule2)} .sugg li:first-child{border-top:0} .sugg li[aria-selected=true],.sugg li:hover{background:#eef3f9}
+.days{display:flex;align-items:center;gap:8px;flex:2 1 380px} .days input{flex:1;min-width:120px;accent-color:var(--ink)} .days .d{font-weight:600;white-space:nowrap;min-width:150px}
+.btn{border:1px solid var(--ink);background:#fff;color:var(--ink);border-radius:3px;padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap} .btn:hover{background:var(--ink);color:#fff}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:14px 0 6px}
+.tile{border-top:2px solid var(--ink);padding-top:8px} .tile .l{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.tile .v{font-family:var(--serif);font-size:26px;font-weight:700;line-height:1.15;margin-top:2px} .tile .s{font-size:12.5px;color:var(--ink2)}
+.up{color:var(--up)} .down{color:var(--down)}
+#grid{display:grid;grid-template-columns:minmax(0,46fr) minmax(0,54fr);gap:24px;margin-top:10px}
+.mapbox{position:relative} #map{width:100%;height:auto;display:block;background:#fff}
+#map path{stroke:#fff;stroke-width:.5;cursor:pointer;vector-effect:non-scaling-stroke} #map path:hover{stroke:#121212;stroke-width:1.5} #map path.sel{stroke:#121212;stroke-width:2.4}
+.hover{position:absolute;z-index:20;background:#fff;border:1px solid var(--ink);padding:9px 11px;width:250px;font-size:12.5px;line-height:1.45;pointer-events:none;display:none;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.hover h4{margin:0 0 3px;font-size:15px;font-family:var(--serif)} .hover .go{color:var(--muted);font-style:italic;margin-top:3px}
+.key{font-size:11px;color:var(--ink2);margin-top:6px} .key .t{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:4px}
+.key .sw{display:flex} .key .sw span{flex:1;height:12px} .key .lb{display:flex} .key .lb span{flex:1;text-align:center}
+.note{font-size:12.5px;color:var(--ink2);margin:6px 0}
+.mv{display:flex;gap:6px;margin:0 0 8px;flex-wrap:wrap} .mv .btn.on{background:var(--ink);color:#fff}
+.fill{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;background:#fff4c7;color:#5b4a00;border:1px solid #e3cf7a;padding:1px 6px;border-radius:2px;margin-left:6px}
+#panel{border-left:1px solid var(--rule);padding-left:22px;min-width:0}
+.ph{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap} .ph h2{font-family:var(--serif);font-size:28px;margin:0;line-height:1.1}
+.ph .back{margin-left:auto}
+.tabs{display:flex;gap:2px;flex-wrap:wrap;border-bottom:1px solid var(--ink);margin:12px 0 14px}
+.tabs button{border:1px solid var(--rule);border-bottom:0;background:var(--wash);padding:7px 11px;font-size:12.5px;font-weight:600;cursor:pointer;border-radius:3px 3px 0 0;color:var(--ink2)}
+.tabs button[aria-selected=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.sec h3{font-family:var(--serif);font-size:19px;margin:16px 0 4px} .sec h3:first-child{margin-top:0}
+.sec .lede,.lede{font-size:14.5px;margin:0 0 8px;color:var(--ink2)} .sec .base{font-size:11.5px;color:var(--muted);margin:2px 0 8px}
+.plain{font-size:12.5px;color:var(--ink2);background:var(--wash);border-left:3px solid #3d6b2f;padding:7px 10px;margin:8px 0}
+.plain b{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#3d6b2f}
+.sbar{display:flex;height:26px;margin:3px 0} .sbar span{display:block;height:100%;position:relative;min-width:0;border-right:1px solid #fff}
+.sbar span i{position:absolute;left:4px;top:5px;font-style:normal;font-size:11px;font-weight:600;color:#fff;white-space:nowrap;text-shadow:0 0 2px rgba(0,0,0,.35)}
+.srow{display:grid;grid-template-columns:78px 1fr;align-items:center;gap:8px;font-size:12px}
+.lg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11.5px;margin:6px 0} .lg i{display:inline-block;width:11px;height:11px;margin-right:4px;vertical-align:-1px}
+table.t{border-collapse:collapse;width:100%;font-size:12.5px;margin:6px 0} table.t th{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:right;border-bottom:1px solid var(--ink);padding:4px 6px;vertical-align:bottom}
+table.t th:first-child,table.t td:first-child{text-align:left} table.t td{border-bottom:1px solid var(--rule2);padding:4px 6px;text-align:right} table.t tr.tot td{font-weight:700;border-top:1px solid var(--ink)}
+table.t .hint{display:block;font-size:11px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0}
+svg.chart{width:100%;height:auto;display:block} svg.chart text{font-family:var(--sans);font-size:11px;fill:#363636}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.full{margin-top:30px;border-top:2px solid var(--ink);padding-top:10px}
+.full h2{font-family:var(--serif);font-size:24px;margin:0 0 6px}
+#all{max-height:640px;overflow:auto;border:1px solid var(--rule)} #all table{margin:0} #all th{position:sticky;top:0;background:#fff;cursor:pointer} #all th:hover{color:var(--ink)} #all tr{cursor:pointer} #all tr:hover td{background:#f3f6fa}
+dl.defs dt{font-weight:700;margin-top:10px} dl.defs dd{margin:2px 0 0} dl.defs dd .pl{display:block;color:var(--ink2);font-size:12.5px;margin-top:2px}
+footer{color:var(--muted);font-size:12px;margin:30px 0 40px}
+@media (max-width:900px){#grid{grid-template-columns:1fr} #panel{border-left:0;padding-left:0;border-top:1px solid var(--rule);padding-top:12px} .tiles{grid-template-columns:repeat(2,minmax(0,1fr))} .two{grid-template-columns:1fr} h1{font-size:27px} #all{max-height:480px} table.t{font-size:11.5px} table.t th,table.t td{padding:4px 3px} table.t th{font-size:9.5px;letter-spacing:.02em} .days{flex-wrap:wrap} .days .d{white-space:normal;min-width:0}}
+.tw{overflow-x:auto;max-width:100%}
+@media print{.bar,.tabs,.back,#printbtn,.dl{display:none!important} #grid{grid-template-columns:1fr} #panel{border:0;padding:0} #all{max-height:none;overflow:visible}}
+</style></head><body>
+<header class="top wrap">
+ <div class="kicker"><b>Counts only</b>Texas governor 2026 · early vote</div>
+ <h1>Turnout Raw Data: who has voted early in Texas</h1>
+ <p class="dek">Counts from the state's daily early-voting lists, county by county and day by day, beside the same day of early voting in 2022 and 2024. No model and no projections: every number here is a count of people on public lists.</p>
+ <div class="meta" id="meta"></div>
+ <div class="tiles" id="tiles"></div>
+</header>
+<div class="bar"><div class="in">
+ <div class="search"><input id="q" type="search" placeholder="Find a county" autocomplete="off" aria-label="Find a county" aria-controls="sugg"><ul class="sugg" id="sugg" role="listbox"></ul></div>
+ <div class="days"><button class="btn" id="play" aria-label="Play the days">▶ Play</button><input type="range" id="day" min="1" max="1" value="1" aria-label="Day of early voting"><span class="d" id="dlab"></span></div>
+ <button class="btn" id="printbtn" onclick="window.print()">Print / PDF</button>
+</div></div>
+<main class="wrap">
+ <div id="grid">
+  <section>
+   <div class="mv" role="group" aria-label="Map view"><button class="btn on" data-v="to" aria-pressed="true">Turnout so far</button><button class="btn" data-v="d22" aria-pressed="false">Change vs. same day 2022</button></div><div class="kicker" id="mapk">Turnout so far: early voters ÷ registered voters</div>
+   <div class="mapbox"><svg id="map" role="img" aria-label="Texas counties shaded by early-vote turnout"></svg><div class="hover" id="hover"></div></div>
+   <div class="key" id="key"></div>
+   <p class="note" id="mapnote"></p>
+   <h3 style="font-family:var(--serif);font-size:18px;margin:16px 0 4px">10 largest counties</h3>
+   <div id="big10"></div>
+  </section>
+  <section id="panel" aria-live="polite"></section>
+ </div>
+ <section class="full">
+  <h2>Every county</h2>
+  <p class="note">All 254 counties on the day picked. Click a column to sort, click a row to open that county. <a href="#" class="dl" id="dl">Download this table (CSV)</a></p>
+  <div id="all"></div>
+ </section>
+ <section class="full"><h2>What the numbers mean</h2><dl class="defs" id="defs"></dl></section>
+ <section class="full"><h2>About the data</h2><div class="note" id="about"></div></section>
+ <footer>Prepared for Gina for Texas. County totals only; no names or voter IDs appear anywhere on this page.</footer>
+</main>
+<script>
+const V='8484912e';
+const GROUPS=[['Rep (no D)','--rep','Voted in a Republican primary or runoff and never in a Democratic one'],['Mixed / R','--mixr','Voted in both parties\' primaries; their most recent primary or runoff was Republican'],['Dem (no R)','--dem','Voted in a Democratic primary or runoff and never in a Republican one'],['Mixed / D','--mixd','Voted in both parties\' primaries; their most recent primary or runoff was Democratic'],['General only','--gen','No primary on record, but voted in the November 2022 or 2024 general'],['No history','--none','On none of the 2022–2026 primary, runoff or general lists we hold']];
+const GH=[['Both generals','Voted in November 2022 and November 2024'],['2024 only','Voted in November 2024, not 2022'],['2022 only','Voted in November 2022, not 2024'],['Neither','On no 2022 or 2024 general-election list']];
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const num=x=>x==null||isNaN(x)?'–':Math.round(x).toLocaleString('en-US');
+const pct=(x,d=1)=>x==null||!isFinite(x)?'–':(100*x).toFixed(d)+'%';
+const sgn=(x,d=1,u=' pts')=>x==null||!isFinite(x)?'–':(x>0?'▲ +':x<0?'▼ −':'')+Math.abs(x).toFixed(d)+u;
+const cls=x=>x>0?'up':x<0?'down':'';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const md=s=>new Date(s+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+const sum=a=>a.reduce((s,v)=>s+v,0);
+let DATA,GEO,day=1,area='texas',tab='who',playing=null,sortk='to',sortd=-1,BRK=[],mview='to';
+const TABS=[['who','Who is voting'],['pace','Pace by day'],['method','How they voted'],['primary','Primary voters'],['general','Past generals']];
+function A(a){return DATA.areas[a]} function Dy(a,k){return A(a).days[(k||day)-1]}
+function turn(a,k){return A(a).reg?Dy(a,k).ev/A(a).reg:null}
+function t22(a,k){const r=A(a);return r.reg22?r.cum22[(k||day)-1]/r.reg22:null}
+function t24(a,k){const r=A(a);return r.reg24?r.cum24[(k||day)-1]/r.reg24:null}
+const adv=x=>x.h[2]+x.h[3]-x.h[0]-x.h[1];
+const filling=k=>(k||day)==DATA.meta.days.length&&DATA.meta.filling;
+const FILL='<span class="fill" title="Most counties send each day\'s list the next morning, so this day will still grow.">still filling in</span>';
+Promise.all([fetch('turnout-raw-data/data.json?v='+V).then(r=>r.json()),fetch('turnout-raw-data/counties.json?v='+V).then(r=>r.json())]).then(([d,g])=>{DATA=d;GEO=g;init()}).catch(e=>{document.getElementById('panel').innerHTML='<p>Could not load the data: '+esc(e)+'</p>'});
+function init(){
+ const n=DATA.meta.days.length,s=document.getElementById('day');s.max=n;day=n;
+ const h=new URLSearchParams(location.hash.slice(1));if(h.get('county')&&DATA.areas[h.get('county')])area=h.get('county');if(+h.get('day')>=1&&+h.get('day')<=n)day=+h.get('day');if(TABS.some(t=>t[0]==h.get('tab')))tab=h.get('tab');if(h.get('view')=='d22')mview='d22';
+ s.value=day;s.oninput=()=>{stop();day=+s.value;render()};
+ document.getElementById('play').onclick=()=>playing?stop():play();
+ document.querySelectorAll('.mv .btn').forEach(b=>b.onclick=()=>{mview=b.dataset.v;document.querySelectorAll('.mv .btn').forEach(x=>{x.classList.toggle('on',x==b);x.setAttribute('aria-pressed',x==b)});render()});
+ const M=DATA.meta;document.getElementById('meta').textContent='Through '+md(M.through)+' (day '+n+' of '+M.ndays+'). Built '+M.built+' from the state\'s lists, the same download the Race Tracker uses.';
+ const tl=Object.keys(DATA.areas).filter(a=>a!='texas').map(a=>turn(a,n)).sort((a,b)=>a-b);BRK=[1,2,3,4,5].map(i=>tl[Math.floor(i*tl.length/6)]);
+ drawMap();search();defs();about();render();
+}
+function play(){document.getElementById('play').textContent='❚❚ Pause';if(day>=DATA.meta.days.length)day=0;const step=()=>{day++;document.getElementById('day').value=day;render();if(day>=DATA.meta.days.length)stop()};step();playing=setInterval(step,1100)}
+function stop(){clearInterval(playing);playing=null;document.getElementById('play').textContent='▶ Play'}
+const GREENS=['#edf5e1','#cfe6b4','#a6d28a','#74b464','#428f43','#1d6332'];
+const PUOR=['#b35806','#f1a340','#fee0b6','#d8daeb','#998ec3','#542788'],DBRK=[-3,0,3,6,10];
+function dcol(x){if(x==null||!isFinite(x))return'#e6e6e6';let i=0;while(i<5&&x>=DBRK[i])i++;return PUOR[i]}
+const d22=a=>{const o=t22(a),t=turn(a);return o==null||t==null?null:100*(t-o)};
+function tcol(x){if(x==null)return'#e6e6e6';let i=0;while(i<5&&x>=BRK[i])i++;return GREENS[i]}
+function drawMap(){
+ const svg=document.getElementById('map'),c=Math.cos(31*Math.PI/180);let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+ const P=pt=>[pt[0]*c,-pt[1]],R=f=>f.geometry.type=='Polygon'?[f.geometry.coordinates]:f.geometry.coordinates;
+ GEO.features.forEach(f=>R(f).forEach(p=>p.forEach(r=>r.forEach(pt=>{const[x,y]=P(pt);x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}))));
+ const W=700,k=W/(x1-x0),H=Math.round((y1-y0)*k);svg.setAttribute('viewBox','0 0 '+W+' '+H);
+ let out='';GEO.features.forEach(f=>{const a=f.properties.k.replace(/[^a-z]/g,'');if(!DATA.areas[a])return;
+  const d=R(f).map(p=>p.map(r=>'M'+r.map(pt=>{const[x,y]=P(pt);return((x-x0)*k).toFixed(1)+','+((y-y0)*k).toFixed(1)}).join('L')+'Z').join('')).join('');out+='<path data-a="'+a+'" d="'+d+'" tabindex="0" aria-label="'+esc(A(a).name)+'"></path>'});
+ svg.innerHTML=out;const hv=document.getElementById('hover'),box=svg.parentNode;
+ svg.querySelectorAll('path').forEach(p=>{const a=p.dataset.a;
+  p.onmousemove=e=>{const r=box.getBoundingClientRect(),x=Dy(a),tt=turn(a),o=t22(a);hv.innerHTML='<h4>'+esc(A(a).name)+'</h4>Turnout so far <b>'+pct(tt)+'</b><br>'+num(x.ev)+' early voters of '+num(A(a).reg)+' registered<br>Same day in 2022: '+pct(o)+' <span class="'+cls(tt-o)+'">('+sgn(100*(tt-o))+')</span><br>Votes vs. same day 2022: '+(x.ev22?pct(x.ev/x.ev22,0):'–')+'<div class="go">Click for everything on '+esc(A(a).name)+'</div>';
+   hv.style.display='block';let L=e.clientX-r.left+14;if(L+260>r.width)L=e.clientX-r.left-264;hv.style.left=Math.max(0,L)+'px';hv.style.top=(e.clientY-r.top+14)+'px'};
+  p.onmouseleave=()=>hv.style.display='none';p.onclick=()=>pick(a);p.onkeydown=e=>{if(e.key=='Enter')pick(a)}});
+}
+function paint(){document.querySelectorAll('#map path').forEach(p=>{p.setAttribute('fill',mview=='to'?tcol(turn(p.dataset.a)):dcol(d22(p.dataset.a)));p.classList.toggle('sel',p.dataset.a==area)});
+ const sel=document.querySelector('#map path.sel');if(sel)sel.parentNode.appendChild(sel);
+ const lab=['under '+pct(BRK[0],0)].concat([1,2,3,4].map(i=>pct(BRK[i-1],0)+'–'+pct(BRK[i],0))).concat([pct(BRK[4],0)+'+']);
+ const dlab=['below −3','−3 to 0','0 to +3','+3 to +6','+6 to +10','+10 or more'];
+ document.getElementById('mapk').textContent=mview=='to'?'Turnout so far: early voters ÷ registered voters':'Turnout so far minus turnout on the same day in 2022 (points)';
+ document.getElementById('key').innerHTML=mview=='to'?'<div class="t">Turnout so far · six equal-size groups of counties (set on the latest day)</div><div class="sw">'+GREENS.map(c=>'<span style="background:'+c+'"></span>').join('')+'</div><div class="lb">'+lab.map(l=>'<span>'+l+'</span>').join('')+'</div>':'<div class="t">Change vs. same day 2022, in points · orange = behind 2022, purple = ahead</div><div class="sw">'+PUOR.map(c=>'<span style="background:'+c+'"></span>').join('')+'</div><div class="lb">'+dlab.map(l=>'<span>'+l+'</span>').join('')+'</div>';
+ const tx=A('texas'),x=Dy('texas');document.getElementById('mapnote').innerHTML='Statewide, <b>'+num(x.ev)+'</b> of '+num(tx.reg)+' registered voters (<b>'+pct(turn('texas'))+'</b>) have voted early through '+md(DATA.meta.days[day-1])+(filling()?' (this day is still filling in)':'')+'. '+(mview=='to'?'Darker green = a larger share of the county has voted.':'Purple = more of the county has voted than at this point in 2022; orange = less.')+' Press ▶ Play to watch the days fill in; click any county for all of its numbers.';
+}
+function pick(a){area=a;stop();render();if(innerWidth<900)document.getElementById('panel').scrollIntoView({behavior:'smooth'})}
+function search(){const q=document.getElementById('q'),ul=document.getElementById('sugg');let opts=[],sel=0;
+ const names=Object.keys(DATA.areas).map(a=>[a,A(a).name,A(a).reg]);
+ const show=()=>{ul.innerHTML=opts.map((o,i)=>'<li role="option" aria-selected="'+(i==sel)+'" data-a="'+o[0]+'">'+esc(o[1])+'</li>').join('');ul.style.display=opts.length?'block':'none';ul.querySelectorAll('li').forEach(li=>li.onmousedown=()=>go(li.dataset.a))};
+ const go=a=>{q.value='';opts=[];show();pick(a)};
+ q.oninput=()=>{const s=q.value.trim().toLowerCase();opts=s?names.filter(n=>n[1].toLowerCase().includes(s)).sort((a,b)=>(b[1].toLowerCase().startsWith(s)-a[1].toLowerCase().startsWith(s))||(b[2]-a[2])).slice(0,8):[];sel=0;show()};
+ q.onkeydown=e=>{if(e.key=='ArrowDown'){sel=Math.min(sel+1,opts.length-1);show();e.preventDefault()}else if(e.key=='ArrowUp'){sel=Math.max(sel-1,0);show();e.preventDefault()}else if(e.key=='Enter'&&opts[sel])go(opts[sel][0]);else if(e.key=='Escape'){opts=[];show()}};
+ q.onblur=()=>setTimeout(()=>{opts=[];show()},150)}
+function render(){
+ document.getElementById('dlab').innerHTML='Day '+day+' · '+md(DATA.meta.days[day-1])+(filling()?FILL:'');
+ history.replaceState(null,'','#county='+area+'&day='+day+'&tab='+tab+(mview=='d22'?'&view=d22':''));
+ document.querySelectorAll('.mv .btn').forEach(x=>{x.classList.toggle('on',x.dataset.v==mview);x.setAttribute('aria-pressed',x.dataset.v==mview)});
+ tiles();paint();panel();big10();allTable();
+}
+function tiles(){const r=A('texas'),x=Dy('texas'),tt=turn('texas'),o=t22('texas'),ad=adv(x);
+ document.getElementById('tiles').innerHTML=
+ '<div class="tile"><div class="l">Early votes cast, Texas'+(filling()?FILL:'')+'</div><div class="v">'+num(x.ev)+'</div><div class="s"><span class="'+cls(x.ev-x.ev22)+'">'+sgn(100*(x.ev/x.ev22-1),0,'%')+'</span> vs. same day 2022 · '+sgn(100*(x.ev/x.ev24-1),0,'%')+' vs. 2024</div></div>'+
+ '<div class="tile"><div class="l">Registered voters</div><div class="v">'+num(r.reg)+'</div><div class="s">State count for this election</div></div>'+
+ '<div class="tile"><div class="l">Turnout so far</div><div class="v">'+pct(tt)+'</div><div class="s"><span class="'+cls(tt-o)+'">'+sgn(100*(tt-o))+'</span> vs. same day 2022 ('+pct(o)+')</div></div>'+
+ '<div class="tile"><div class="l">Primary voters, D minus R</div><div class="v" style="color:'+(ad>=0?css('--dem'):css('--rep'))+'">'+(ad>=0?'D +':'R +')+num(Math.abs(ad))+'</div><div class="s">Early voters with a Democratic primary record minus those with a Republican one</div></div>';
+}
+function panel(){const a=area,r=A(a),x=Dy(a);
+ let h='<div class="ph"><h2>'+esc(r.name)+(a=='texas'?'':' County')+'</h2><span class="note">'+(a=='texas'?'all 254 counties · click a county on the map to open it':'')+'</span>'+(a=='texas'?'':'<button class="btn back" onclick="pick(\'texas\')">← All of Texas</button>')+'</div>';
+ h+='<p class="lede" style="margin-top:6px"><b>'+num(x.ev)+'</b> early voters through '+md(DATA.meta.days[day-1])+(filling()?FILL:'')+': <b>'+pct(turn(a))+'</b> of '+num(r.reg)+' registered. Same day in 2022: '+num(x.ev22)+' ('+pct(t22(a))+'); in 2024: '+num(x.ev24)+' ('+pct(t24(a))+').</p>';
+ h+='<div class="tabs" role="tablist">'+TABS.map(t=>'<button role="tab" aria-selected="'+(t[0]==tab)+'" onclick="tab=\''+t[0]+'\';render()">'+t[1]+'</button>').join('')+'</div>';
+ h+='<div class="sec">'+({who,pace,method,primary,general})[tab](a,r,x)+'</div>';
+ document.getElementById('panel').innerHTML=h;
+}
+function stack(vals,cols,labels){const t=sum(vals)||1;return '<div class="sbar">'+vals.map((v,i)=>{const w=100*v/t;return w<=0?'':'<span style="width:'+w.toFixed(3)+'%;background:'+cols[i]+'" title="'+esc(labels[i])+': '+num(v)+' ('+pct(v/t)+')">'+(w>=7?'<i>'+Math.round(w)+'%</i>':'')+'</span>'}).join('')+'</div>'}
+function who(a,r,x){const G=GROUPS.map(g=>css(g[1])),t=x.ev||1,ad=adv(x);
+ let h='<h3>Who is voting, by past primaries</h3><p class="lede">'+(ad>=0?'Early voters with a Democratic primary record outnumber those with a Republican one by <b>'+num(ad)+'</b>.':'Early voters with a Republican primary record outnumber those with a Democratic one by <b>'+num(-ad)+'</b>.')+'</p>';
+ h+='<div class="lg">'+GROUPS.map((g,i)=>'<span><i style="background:'+G[i]+'"></i>'+g[0]+'</span>').join('')+'</div>'+stack(x.h,G,GROUPS.map(g=>g[0]));
+ h+='<table class="t"><tr><th>Group</th><th>Early voters</th><th>Share</th></tr>'+GROUPS.map((g,i)=>'<tr><td><i style="display:inline-block;width:10px;height:10px;background:'+G[i]+';margin-right:6px"></i>'+g[0]+'<span class="hint">'+g[2]+'</span></td><td class="n">'+num(x.h[i])+'</td><td class="n">'+pct(x.h[i]/t)+'</td></tr>').join('')+'<tr class="tot"><td>All early voters on the lists</td><td class="n">'+num(x.ev)+'</td><td class="n">100%</td></tr></table>';
+ h+='<div class="plain"><b>In plain terms</b><br>Each early voter is sorted by the party primaries they have voted in (March 2022, 2024 and 2026, and the May 2022 and 2026 runoffs). Someone who has voted in both parties\' primaries counts with the party of their most recent one. A primary vote shows which party\'s ballot someone chose then, not how they will vote for governor.</div>';
+ h+='<h3>Day by day: Republican, Democratic and no primary record</h3><p class="base">Cumulative: everyone in each group who has voted early from day 1 through that day. Republican = Rep (no D) + Mixed / R; Democratic = Dem (no R) + Mixed / D; no primary record = General only + No history. The three add up to the total.</p>';
+ h+='<div class="tw"><table class="t"><tr><th>Day</th><th style="color:'+css('--rep')+'">Republican</th><th style="color:'+css('--dem')+'">Democratic</th><th>No primary record</th><th>Total so far</th><th>D minus R</th></tr>';
+ r.days.slice(0,day).forEach((z,i)=>{const R=z.h[0]+z.h[1],Dm=z.h[2]+z.h[3],N=z.h[4]+z.h[5],t=z.ev||1,ad=Dm-R;h+='<tr'+(i==day-1?' style="background:#f3f6fa"':'')+'><td>'+(i+1)+' · '+md(DATA.meta.days[i]).replace(/^\w+, /,'')+(filling(i+1)?FILL:'')+'</td><td class="n">'+num(R)+' · '+pct(R/t,0)+'</td><td class="n">'+num(Dm)+' · '+pct(Dm/t,0)+'</td><td class="n">'+num(N)+' · '+pct(N/t,0)+'</td><td class="n">'+num(z.ev)+'</td><td class="n" style="color:'+(ad>=0?css('--dem'):css('--rep'))+'">'+(ad>=0?'D +':'R +')+num(Math.abs(ad))+'</td></tr>'});
+ h+='</table></div>';
+ const y=x.ya,q=x.y24,ty=sum(y)||1,tq=sum(q)||1;
+ h+='<h3>Compared with the same day in 2024</h3><p class="base">Early in-person voters in both years, each sorted by the two March primaries and the November general before it (2026: 2024 and 2026 primaries, Nov 2024; 2024: 2022 and 2024 primaries, Nov 2022). ▲▼ = change in share since the same day in 2024.</p>';
+ h+='<div class="srow"><span>2026</span>'+stack(y,G,GROUPS.map(g=>g[0]))+'</div><div class="srow"><span>2024</span>'+stack(q,G,GROUPS.map(g=>g[0]))+'</div>';
+ h+='<table class="t"><tr><th>Group</th><th>2026</th><th>2024 same day</th><th>Change in share</th></tr>'+GROUPS.map((g,i)=>{const d=100*(y[i]/ty-q[i]/tq);return '<tr><td>'+g[0]+'</td><td class="n">'+num(y[i])+' · '+pct(y[i]/ty)+'</td><td class="n">'+num(q[i])+' · '+pct(q[i]/tq)+'</td><td class="n '+cls(d)+'">'+sgn(d)+'</td></tr>'}).join('')+'</table>';
+ const b=x.yb,p=x.y22,tb=sum(b)||1,tp=sum(p)||1,L22=['Voted in that March\'s Republican primary','Voted in that March\'s Democratic primary','Did not vote in that March\'s primary'],C22=[css('--rep'),css('--dem'),'#cfcfcf'];
+ h+='<h3>Compared with the same day in 2022 (primary groups only)</h3><p class="base">Early in-person voters in both years, sorted by that year\'s March primary only (we hold no 2018 or 2020 primary lists, so this is the fair yardstick for 2022). ▲▼ = change in share since the same day in 2022.</p>';
+ h+='<div class="srow"><span>2026</span>'+stack(b,C22,L22)+'</div><div class="srow"><span>2022</span>'+stack(p,C22,L22)+'</div>';
+ h+='<table class="t"><tr><th>Group</th><th>2026</th><th>2022 same day</th><th>Change in share</th></tr>'+L22.map((g,i)=>{const d=100*(b[i]/tb-p[i]/tp);return '<tr><td>'+g+'</td><td class="n">'+num(b[i])+' · '+pct(b[i]/tb)+'</td><td class="n">'+num(p[i])+' · '+pct(p[i]/tp)+'</td><td class="n '+cls(d)+'">'+sgn(d)+'</td></tr>'}).join('')+'</table>';
+ const a26=b[1]-b[0],a22=p[1]-p[0];h+='<p class="note">That year\'s primary voters, D minus R: <b>'+(a26>=0?'D +':'R +')+num(Math.abs(a26))+'</b> in 2026 vs. '+(a22>=0?'D +':'R +')+num(Math.abs(a22))+' on the same day in 2022.</p>';
+ return h}
+function line(series,labels,cols,n,fmt){const W=560,H=230,L=44,R=74,Tp=12,B=30,vals=series.flat().filter(v=>v!=null),mx=(vals.length?Math.max(...vals):0)*1.08||1;
+ const X=i=>L+(W-L-R)*i/(n-1),Y=v=>Tp+(H-Tp-B)*(1-v/mx);let s='<svg class="chart" viewBox="0 0 '+W+' '+H+'">';
+ for(let j=0;j<=4;j++){const v=mx*j/4;s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="#ececec"/><text x="'+(L-6)+'" y="'+(Y(v)+4)+'" text-anchor="end">'+fmt(v)+'</text>'}
+ for(let i=0;i<n;i++)s+='<text x="'+X(i)+'" y="'+(H-14)+'" text-anchor="middle">'+(i+1)+'</text>';
+ const ends=[];series.forEach((sr,k)=>{const pts=sr.map((v,i)=>v==null?null:[X(i),Y(v)]).filter(Boolean);if(!pts.length)return;s+='<polyline fill="none" stroke="'+cols[k]+'" stroke-width="'+(k==0?3:2)+'" points="'+pts.map(p=>p.join(',')).join(' ')+'"/>';const e=pts[pts.length-1];s+='<circle cx="'+e[0]+'" cy="'+e[1]+'" r="3" fill="'+cols[k]+'"/>';ends.push([e[0],e[1],k,sr.filter(v=>v!=null).slice(-1)[0]])});
+ ends.sort((a,b)=>a[1]-b[1]);for(let i=1;i<ends.length;i++)if(Math.abs(ends[i][0]-ends[i-1][0])<40&&ends[i][1]-ends[i-1][1]<13)ends[i][1]=ends[i-1][1]+13;
+ ends.forEach(e=>s+='<text x="'+(e[0]+6)+'" y="'+(e[1]+4)+'" style="font-weight:600;fill:'+cols[e[2]]+'">'+labels[e[2]]+' '+fmt(e[3])+'</text>');
+ return s+'<text x="'+((L+W-R)/2)+'" y="'+(H-1)+'" text-anchor="middle" style="fill:#6b6b6b">day of early voting</text></svg>'}
+function pace(a,r,x){const n=DATA.meta.ndays,d=r.days,c26=d.slice(0,day).map(z=>z.ev/r.reg),c22=r.cum22.map(v=>v/r.reg22),c24=r.cum24.map(v=>v/r.reg24);
+ let h='<h3>Turnout by day, 2026 vs. 2022 and 2024</h3><p class="lede">'+esc(r.name)+' is at <b>'+pct(turn(a))+'</b> after '+day+' day'+(day>1?'s':'')+', vs. '+pct(t22(a))+' at this point in 2022 and '+pct(t24(a))+' in 2024.</p>';
+ h+=line([c26.concat(Array(n-day).fill(null)),c24,c22],['2026','2024','2022'],[css('--y26'),css('--y24'),css('--y22')],n,v=>Math.round(100*v)+'%');
+ h+='<p class="base">Cumulative early voters ÷ registered voters that year. The 2022 and 2024 lines run all 12 days; 2026 stops at the day picked.</p>';
+ h+='<div class="tw"><table class="t"><tr><th>Day</th><th>2026 that day</th><th>2026 so far</th><th>2022 so far</th><th>2024 so far</th><th>Pace vs. 2022</th><th>Pace vs. 2024</th></tr>';
+ for(let i=0;i<n;i++){const z=i<day?d[i]:null;h+='<tr'+(i==day-1?' style="background:#f3f6fa"':'')+'><td>'+(i+1)+'</td><td class="n">'+(z?num(z.add):'')+'</td><td class="n">'+(z?num(z.ev):'')+'</td><td class="n">'+num(r.cum22[i])+'</td><td class="n">'+num(r.cum24[i])+'</td><td class="n">'+(z&&r.cum22[i]?pct(z.ev/r.cum22[i],0):'')+'</td><td class="n">'+(z&&r.cum24[i]?pct(z.ev/r.cum24[i],0):'')+'</td></tr>'}
+ h+='<tr class="tot"><td>Final, all votes</td><td></td><td></td><td class="n">'+num(r.votes22)+'</td><td class="n">'+num(r.votes24)+'</td><td></td><td></td></tr></table></div>';
+ h+='<div class="plain"><b>In plain terms</b><br>Pace = early voters so far in 2026 as a share of early voters by the same day in 2022 (or 2024). 150% means half again as many people have voted early as at this point in 2022. Day 1 of each year includes the mail ballots listed before early voting opened. The newest day fills in as counties send their lists.</div>';
+ return h}
+function method(a,r,x){const C=['#3d6b2f','#c9a227','#8a8a8a'],L=['Early in person','By mail','Election Day'],tf22=r.fin22_ip+r.fin22_ml+r.fin22_ed,tf24=r.fin24_ip+r.fin24_ml+r.fin24_ed;
+ let h='<h3>How people are voting</h3><p class="lede">So far in 2026: <b>'+num(x.ip)+'</b> early in person and <b>'+num(x.ml)+'</b> by mail on the state\'s lists. The state has posted '+num(x.stml)+' mail ballots counted.</p>';
+ h+='<div class="lg">'+L.map((l,i)=>'<span><i style="background:'+C[i]+'"></i>'+l+'</span>').join('')+'</div>';
+ h+='<div class="srow"><span>2026 so far</span>'+stack([x.ip,x.ml,0],C,L)+'</div><div class="srow"><span>2024, day '+day+'</span>'+stack([x.ip24,x.ml24,0],C,L)+'</div><div class="srow"><span>2022, day '+day+'</span>'+stack([x.ip22,x.ml22,0],C,L)+'</div><div class="srow"><span>2024 final</span>'+stack([r.fin24_ip,r.fin24_ml,r.fin24_ed],C,L)+'</div><div class="srow"><span>2022 final</span>'+stack([r.fin22_ip,r.fin22_ml,r.fin22_ed],C,L)+'</div>';
+ h+='<table class="t"><tr><th></th><th>In person</th><th>Mail</th><th>Election Day</th><th>Total</th></tr><tr><td>2026 so far (lists)</td><td class="n">'+num(x.ip)+'</td><td class="n">'+num(x.ml)+'</td><td class="n">–</td><td class="n">'+num(x.ev)+'</td></tr><tr><td>2026 so far (state\'s posted counts)</td><td class="n">'+num(x.stip)+'</td><td class="n">'+num(x.stml)+'</td><td class="n">–</td><td class="n">'+num(x.st)+'</td></tr><tr><td>2024, same day</td><td class="n">'+num(x.ip24)+'</td><td class="n">'+num(x.ml24)+'</td><td class="n">–</td><td class="n">'+num(x.ev24)+'</td></tr><tr><td>2022, same day</td><td class="n">'+num(x.ip22)+'</td><td class="n">'+num(x.ml22)+'</td><td class="n">–</td><td class="n">'+num(x.ev22)+'</td></tr><tr><td>2024 final</td><td class="n">'+num(r.fin24_ip)+'</td><td class="n">'+num(r.fin24_ml)+'</td><td class="n">'+num(r.fin24_ed)+'</td><td class="n">'+num(tf24)+'</td></tr><tr><td>2022 final</td><td class="n">'+num(r.fin22_ip)+'</td><td class="n">'+num(r.fin22_ml)+'</td><td class="n">'+num(r.fin22_ed)+'</td><td class="n">'+num(tf22)+'</td></tr></table>';
+ h+='<div class="plain"><b>In plain terms</b><br>Two sources: <b style="font-size:inherit;letter-spacing:0;text-transform:none;color:inherit">the lists</b> (the state\'s downloadable daily lists of who voted, the official count everywhere on this page) and <b style="font-size:inherit;letter-spacing:0;text-transform:none;color:inherit">the state\'s posted counts</b> (the totals on its turnout page, shown only as a check). The lists name almost every in-person voter but only some mail voters, because mail ballots are listed after they are processed, so the posted mail count runs higher. Finals for 2022 and 2024 are every voter on that year\'s early and Election Day lists (within 3% of the official canvass totals). Mail on the 2026 lists counts only the mail voters the lists name, not every mail ballot cast.</div>';
+ return h}
+function primary(a,r,x){const one=(P,el,vot,col,key)=>{const nv=el.map((e,i)=>Math.max(e-vot[i],0)),tot=sum(nv);let h='<h3 style="color:'+col+'">'+P+' primary voters</h3><table class="t"><tr><th>Primaries voted<span class="hint">of 2022, 2024, 2026</span></th><th>On record<span class="hint">approximate</span></th><th>Voted early<span class="hint">exact</span></th><th>Not yet<span class="hint">approximate</span></th><th>Rate<span class="hint">approximate</span></th></tr>';
+  el.forEach((e,i)=>{h+='<tr><td>'+(i+1)+P[0]+'</td><td class="n">'+num(e)+'</td><td class="n">'+num(vot[i])+'</td><td class="n">'+num(nv[i])+'</td><td class="n">'+pct(e?vot[i]/e:null,0)+'</td></tr>'});
+  h+='<tr class="tot"><td>All</td><td class="n">'+num(sum(el))+'</td><td class="n">'+num(sum(vot))+'</td><td class="n">'+num(tot)+'</td><td class="n">'+pct(sum(vot)/(sum(el)||1),0)+'</td></tr></table>';
+  const ser=[2,1,0].map(i=>r.days.slice(0,day).map(z=>el[i]?z[key][i]/el[i]:null).concat(Array(DATA.meta.ndays-day).fill(null)));
+  h+=line(ser,['3'+P[0],'2'+P[0],'1'+P[0]],[col,col+'bb',col+'77'],DATA.meta.ndays,v=>Math.round(100*v)+'%');
+  return h+'<p class="note">Not yet voted: about <b>'+num(tot)+'</b> '+P+' primary voters (some have moved or left the rolls).</p>'};
+ let h='<p class="lede">Of the people who voted in a March primary in 2022, 2024 or 2026, how many have voted early so far, by how many of those primaries they voted in.</p>';
+ h+='<div>'+one('Democratic',r.pdel,x.pd,css('--dem'),'pd')+'</div><div style="margin-top:18px">'+one('Republican',r.prel,x.pr,css('--rep'),'pr')+'</div>';
+ h+='<div class="plain"><b>In plain terms</b><br>"3D" = voted in all three Democratic March primaries (2022, 2024, 2026); "1D" = just one. Someone who has voted in both parties\' primaries is counted in each party\'s table. Rates are approximate and run low: "on record" counts everyone on past primary lists, including people who have since moved, died or been removed from the rolls. Each person is placed in the county where they last voted. The lines show each group\'s rate by day in 2026.</div>';
+ return h}
+function general(a,r,x){const el=r.gel,v=x.gh,C=['#1d6332','#74b464','#cfe6b4','#9a9a9a'];let h='<h3>Early voters by past November voting</h3><p class="lede">'+pct(v[0]/(x.ev||1),0)+' of early voters so far voted in both the 2022 and 2024 generals; '+pct(v[3]/(x.ev||1),0)+' voted in neither.</p>';
+ h+='<div class="lg">'+GH.map((g,i)=>'<span><i style="background:'+C[i]+'"></i>'+g[0]+'</span>').join('')+'</div>'+stack(v,C,GH.map(g=>g[0]));
+ h+='<table class="t"><tr><th>Group</th><th>Voted early</th><th>Share</th><th>On record<span class="hint">approximate</span></th><th>Rate<span class="hint">approximate</span></th></tr>'+GH.map((g,i)=>'<tr><td>'+g[0]+'<span class="hint">'+g[1]+'</span></td><td class="n">'+num(v[i])+'</td><td class="n">'+pct(v[i]/(x.ev||1))+'</td><td class="n">'+(i==3?'about ':'')+num(el[i])+'</td><td class="n">'+pct(el[i]?v[i]/el[i]:null,0)+'</td></tr>').join('')+'</table>';
+ h+='<div class="plain"><b>In plain terms</b><br>2022 was the last midterm and 2024 the last presidential election. "On record" for the first three groups counts everyone on those years\' lists (including people who have since moved or died, so rates run low); "Neither" is registered voters minus the other three groups, so it is rough. We hold no 2018 or 2020 lists.</div>';
+ return h}
+function rows(){return Object.keys(DATA.areas).filter(a=>a!='texas').map(a=>{const r=A(a),x=Dy(a),tt=turn(a);return{a,name:r.name,reg:r.reg,ev:x.ev,add:x.add,to:tt,d22:100*(tt-t22(a)),p22:x.ev22?x.ev/x.ev22:null,dem:x.h[2]+x.h[3],rep:x.h[0]+x.h[1],nop:x.h[4]+x.h[5],adv:adv(x),gen:x.h[4],none:x.h[5],ml:x.ml}})}
+const COLS=[['name','County'],['reg','Registered'],['ev','Early votes'],['add','New that day'],['to','Turnout'],['d22','vs. 2022 (pts)'],['p22','Pace vs. 2022'],['dem','Dem primary voters'],['rep','Rep primary voters'],['nop','No primary record'],['adv','D minus R'],['gen','General only'],['none','No history'],['ml','Mail on lists']];
+const fmtc=(k,v)=>k=='name'?esc(v):k=='to'?pct(v):k=='p22'?pct(v,0):k=='d22'?sgn(v):k=='adv'?(v>=0?'D +':'R +')+num(Math.abs(v)):num(v);
+function allTable(){const R=rows().sort((p,q)=>sortk=='name'?sortd*p.name.localeCompare(q.name):sortd*((p[sortk]??-1e9)-(q[sortk]??-1e9)));
+ document.getElementById('all').innerHTML='<table class="t"><tr>'+COLS.map(c=>'<th data-k="'+c[0]+'">'+c[1]+(c[0]==sortk?(sortd<0?' ▼':' ▲'):'')+'</th>').join('')+'</tr>'+R.map(x=>'<tr data-a="'+x.a+'"'+(x.a==area?' style="background:#eef3f9"':'')+'>'+COLS.map(c=>'<td'+(c[0]=='name'?'':' class="n"')+'>'+fmtc(c[0],x[c[0]])+'</td>').join('')+'</tr>').join('')+'</table>';
+ document.querySelectorAll('#all th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;sortd=k==sortk?-sortd:(k=='name'?1:-1);sortk=k;allTable()});
+ document.querySelectorAll('#all tr[data-a]').forEach(tr=>tr.onclick=()=>{pick(tr.dataset.a);scrollTo({top:0,behavior:'smooth'})});
+ document.getElementById('dl').onclick=e=>{e.preventDefault();const csv=[COLS.map(c=>c[1]).join(',')].concat(rows().map(x=>COLS.map(c=>c[0]=='name'?'"'+x.name+'"':x[c[0]]==null?'':c[0]=='to'||c[0]=='p22'?x[c[0]].toFixed(4):c[0]=='d22'?x[c[0]].toFixed(2):x[c[0]]).join(','))).join('\n');const b=new Blob([csv],{type:'text/csv'}),u=URL.createObjectURL(b),l=document.createElement('a');l.href=u;l.download='turnout-raw-data-day'+day+'-'+DATA.meta.days[day-1]+'.csv';l.click();URL.revokeObjectURL(u)}}
+function big10(){const R=rows().sort((p,q)=>q.reg-p.reg).slice(0,10);document.getElementById('big10').innerHTML='<table class="t"><tr><th>County</th><th>Registered</th><th>Early votes</th><th>Turnout</th><th>vs. 2022</th></tr>'+R.map(x=>'<tr style="cursor:pointer" onclick="pick(\''+x.a+'\')"><td>'+esc(x.name)+'</td><td class="n">'+num(x.reg)+'</td><td class="n">'+num(x.ev)+'</td><td class="n">'+pct(x.to)+'</td><td class="n '+cls(x.d22)+'">'+sgn(x.d22)+'</td></tr>').join('')+'</table>'}
+function defs(){const D=[['Early votes cast','Everyone on the state\'s daily early-voting lists through the day picked: in-person voters plus the mail voters the lists name.','The number of people the state has listed as having voted early so far.'],['Registered voters','The state\'s registered-voter count for each county for this election (2022 and 2024: that year\'s canvass).','How many people could vote.'],['Turnout so far','Early votes cast ÷ registered voters.','The share of the county that has already voted.'],['Same day in 2022 / 2024','Day 7 = the seventh day of early voting each year. Early voting opened on a Monday all three years (Oct 24, 2022; Oct 21, 2024; Oct 19, 2026), so the days line up, weekends included.','Where things stood at the same point in the last two elections.'],['Pace vs. 2022','2026 early votes so far ÷ 2022 early votes by the same day.','Above 100% means more people have voted than at this point in 2022.']].concat(GROUPS.map(g=>[g[0],g[2]+'. Uses every primary, runoff and general list we hold from 2022 to 2026.',g[0]=='No history'?'New voters, people who moved here, or people who skipped every recent election.':'Their past ballots show which primary they chose, not their vote for governor.'])).concat([['Primary voters, D minus R','(Dem (no R) + Mixed / D) minus (Rep (no D) + Mixed / R), among early voters.','Whether more Democratic-primary or Republican-primary voters have shown up so far.'],['Same yardstick','The comparisons with 2022 and 2024 sort each year\'s in-person voters only by elections held before that year\'s November vote, and by the same number of them: vs. 2024, that year\'s March primary, the one before it and the previous November general; vs. 2022, that year\'s March primary only (no 2020 lists exist to go further back, so the 2022 comparison has primary groups only). Nobody gets credit for a primary they voted in later.','Apples to apples: a change in share is a real change, not a gap in our records.'],['On record / rate','Everyone on past lists in that group, placed in the county where they last voted. Rate = voted early ÷ on record.','Approximate: it includes people who have moved, died or been removed, so rates run low.']]);
+ document.getElementById('defs').innerHTML=D.map(d=>'<dt>'+d[0]+'</dt><dd>'+d[1]+'<span class="pl">In plain terms: '+d[2]+'</span></dd>').join('')}
+function about(){document.getElementById('about').innerHTML='<p><b>Sources.</b> 2026: the Texas Secretary of State\'s daily early-voting lists (every kept version, read the same way as the Race Tracker) and county counts (registered voters, posted in-person and mail votes). 2022 and 2024: the state\'s early-voting lists with the date each person voted (legacy portal) and each year\'s canvass. Past voting: the state\'s lists for the March 2022, 2024 and 2026 primaries, the May 2022 and 2026 runoffs and the November 2022 and 2024 generals. '+pct(DATA.meta.found,1)+' of 2026 early voters appear on at least one of those lists.</p><p><b>Exact counts.</b> Early votes (statewide, every county, every day); in person and mail on the lists; daily and cumulative totals for 2026, 2024 and 2022 and pace; turnout so far and the change vs. 2022 and 2024; early voters by past-primary group, D minus R, 1/2/3 primaries and past-general group (matched by voter ID to the state\'s lists). The newest day can still grow until the next morning.</p><p><b>Approximate, and labelled so.</b> "On record", "not yet voted" and every rate in Primary voters and Past generals (past lists still include people who have moved, died or been removed), and the "Neither" row in Past generals (registered minus the other groups).</p><p><b>Not included, and why.</b> Gender, age and ethnicity are not on the public lists (they need a purchased voter file). The 2018 and 2020 lists and the May 2024 runoffs were not available from the state\'s portal, so primary history runs 2022–2026 (three primaries).</p><p><b>Other reports will differ a little.</b> Private early-vote reports (for example Ryan Data &amp; Research) match county lists to a purchased voter file, so their totals and groups will not match these exactly. The totals here are the state\'s public lists, the same counts the Race Tracker uses.</p><p><b>No model.</b> Nothing here is a projection or an estimate of how anyone voted. For the model, see the <a href="race-tracker.html">Race Tracker</a>; for precincts, the <a href="tracker-with-precincts.html">Race Tracker with precincts</a>.</p>'}
+</script></body></html>
