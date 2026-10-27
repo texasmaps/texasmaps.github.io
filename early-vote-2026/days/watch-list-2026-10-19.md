@@ -1,16 +1,16 @@
 # Watch list through Oct 19 (day 1)
 
-Day 1 · Through Oct 19: 800,007 early votes (state count 911,365) · 9% of expected vote in · 252/254 counties complete (2 partial, 0 missing) · revised from 221/254
+Day 1 · Through Oct 19: 801,143 early votes (state count 912,012) · 9% of expected vote in · 253/254 counties complete (1 partial, 0 missing) · revised from 221/254
 
 Model estimate from public data, not a vote count.
 ## Where things stand
 
-The early vote so far leans Hinojosa, at an estimated 55.4% of the Hinojosa-vs-Abbott vote among the 800,007 early votes so far (voters on the state's lists, in person and mail; the state's posted total is 911,365). In 1 county the posted count differs from the voter list by more than a tenth (Hill); it keeps its rating on the list and the gap is flagged in the hover. Because the voters still to come, especially on Election Day, are expected to lean Republican, the model still projects Abbott ahead statewide by about 2.2 points. Hinojosa wins in 32% of the 10,000 runs, and 8 in 10 runs land between Abbott +8.4 and Hinojosa +4.0, so the race remains close. Model estimate from public data, not a vote count.
+The early vote so far leans Hinojosa, at an estimated 55.4% of the Hinojosa-vs-Abbott vote among the 801,143 early votes so far (voters on the state's lists, in person and mail; the state's posted total is 912,012). Because the voters still to come, especially on Election Day, are expected to lean Republican, the model still projects Abbott ahead statewide by about 2.2 points. Hinojosa wins in 32% of the 10,000 runs, and 8 in 10 runs land between Abbott +8.4 and Hinojosa +4.0, so the race remains close. Model estimate from public data, not a vote count.
 
 
 | County | Projected margin | 8 in 10 runs land between (pts) | Chance to win | Rating | Within 3 pts if the state is close | Change since yesterday | Early voters on the list | Data status |
 |---|---|---|---|---|---|---|---|---|
-| Tarrant | Hinojosa +5.4 | -3.5 to +14.3 | 78% to win | Lean Hinojosa | 15% | first day | 51,059 | complete |
+| Tarrant | Hinojosa +5.4 | -3.5 to +14.3 | 78% to win | Lean Hinojosa | 15% | first day | 51,060 | complete |
 | Brazoria | Abbott +6.1 | -15.7 to +3.7 | 79% to win | Lean Abbott | 34% | first day | 14,574 | complete |
 | Nueces | Abbott +3.2 | -12.5 to +6.2 | 67% to win | Lean Abbott | 35% | first day | 7,824 | complete |
 | Denton | Hinojosa +7.4 | -4.6 to +19.5 | 78% to win | Lean Hinojosa | 8% | first day | 34,572 | complete |
@@ -18,9 +18,9 @@ The early vote so far leans Hinojosa, at an estimated 55.4% of the Hinojosa-vs-A
 | Cameron | Hinojosa +5.6 | -13.6 to +24.7 | 65% to win | Tilt Hinojosa | 14% | first day | 9,639 | complete |
 | Bastrop | Abbott +7.3 | -16.0 to +1.4 | 86% to win | Likely Abbott | 25% | first day | 3,197 | complete |
 | Brazos | Abbott +14.7 | -26.7 to -2.7 | 94% to win | Likely Abbott | 8% | first day | 4,564 | complete |
-| Jefferson | Abbott +13.3 | -22.8 to -3.6 | 96% to win | Safe Abbott | 8% | first day | 7,018 | complete |
-| Caldwell | Abbott +9.1 | -16.8 to -1.2 | 93% to win | Likely Abbott | 15% | first day | 1,643 | complete |
+| Jefferson | Abbott +13.3 | -22.8 to -3.6 | 96% to win | Safe Abbott | 8% | first day | 7,017 | complete |
 | Kleberg | Abbott +5.3 | -16.2 to +5.7 | 74% to win | Lean Abbott | 28% | first day | 923 | complete |
+| Caldwell | Abbott +9.1 | -16.8 to -1.2 | 93% to win | Likely Abbott | 15% | first day | 1,643 | complete |
 | Starr | Abbott +0.7 | -27.9 to +22.4 | Hinojosa 54% to win | Toss-up (Hinojosa 54%) | 10% | first day | 1,054 | complete |
 | Jim Wells | Abbott +11.0 | -28.2 to +6.5 | 79% to win | Lean Abbott | 12% | first day | 854 | complete |
 | Brewster | Abbott +4.7 | -17.6 to +8.0 | 68% to win | Lean Abbott | 30% | first day | 438 | complete |
@@ -51,10 +51,10 @@ The early vote so far leans Hinojosa, at an estimated 55.4% of the Hinojosa-vs-A
 | Dimmit | 68% to win | Lean Hinojosa | Hinojosa +8.5 | -14.6 to +30.8 | 2,588 |
 | Frio | 72% to win | Lean Abbott | Abbott +9.3 | -30.2 to +11.4 | 4,096 |
 
-Statewide: Hinojosa wins in 32% of draws (Lean Abbott); expected official margin -2.2 pts (80% -8.4 to +4.0); projected turnout 8,743,501.
+Statewide: Hinojosa wins in 32% of draws (Lean Abbott); expected official margin -2.2 pts (80% -8.4 to +4.0); projected turnout 8,744,608.
 
 ## Projected final result, from each day's data
 
 | Day | Date | Hinojosa votes | Abbott votes | Third party | Margin | Hinojosa wins | Projected turnout |
 |---|---|---|---|---|---|---|---|
-| 1 | Oct 19 | 4,274,319 | 4,393,573 | 82,369 | Abbott +2.2 | 32% | 8,743,501 |
+| 1 | Oct 19 | 4,274,490 | 4,394,501 | 82,377 | Abbott +2.2 | 32% | 8,744,608 |
