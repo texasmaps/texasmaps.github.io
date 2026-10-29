@@ -96,7 +96,7 @@ footer{color:var(--muted);font-size:12px;margin:30px 0 40px}
 </header>
 <div class="bar"><div class="in">
  <div class="search"><input id="q" type="search" placeholder="Find a county" autocomplete="off" aria-label="Find a county" aria-controls="sugg"><ul class="sugg" id="sugg" role="listbox"></ul></div>
- <div class="days"><button class="btn" id="play" aria-label="Play the days">▶ Play</button><input type="range" id="day" min="1" max="1" value="1" aria-label="Day of early voting"><span class="d" id="dlab"></span></div>
+ <div class="days"><button class="btn" id="play" aria-label="Play the days">Play</button><input type="range" id="day" min="1" max="1" value="1" aria-label="Day of early voting"><span class="d" id="dlab"></span></div>
  <button class="btn" id="printbtn" onclick="printing=true;render();setTimeout(()=>window.print(),50)">Print / PDF</button>
 </div></div>
 <main class="wrap">
@@ -155,8 +155,8 @@ function init(){
  const tl=Object.keys(DATA.areas).filter(a=>a!='texas').map(a=>turn(a,n)).sort((a,b)=>a-b);BRK=[1,2,3,4,5].map(i=>tl[Math.floor(i*tl.length/6)]);
  drawMap();search();defs();about();render();
 }
-function play(){document.getElementById('play').textContent='❚❚ Pause';if(day>=DATA.meta.days.length)day=0;const step=()=>{day++;document.getElementById('day').value=day;render();if(day>=DATA.meta.days.length)stop()};step();playing=setInterval(step,1100)}
-function stop(){clearInterval(playing);playing=null;document.getElementById('play').textContent='▶ Play'}
+function play(){document.getElementById('play').textContent='Pause';if(day>=DATA.meta.days.length)day=0;const step=()=>{day++;document.getElementById('day').value=day;render();if(day>=DATA.meta.days.length)stop()};step();playing=setInterval(step,1100)}
+function stop(){clearInterval(playing);playing=null;document.getElementById('play').textContent='Play'}
 const GREENS=['#edf5e1','#cfe6b4','#a6d28a','#74b464','#428f43','#1d6332'];
 const PUOR=['#b35806','#f1a340','#fee0b6','#d8daeb','#998ec3','#542788'],DBRK=[-3,0,3,6,10];
 function dcol(x){if(x==null||!isFinite(x))return'#e6e6e6';let i=0;while(i<5&&x>=DBRK[i])i++;return PUOR[i]}
@@ -181,7 +181,7 @@ function paint(){document.querySelectorAll('#map path').forEach(p=>{p.setAttribu
  const dlab=['below −3','−3 to 0','0 to +3','+3 to +6','+6 to +10','+10 or more'];
  document.getElementById('mapk').textContent=mview=='to'?'Turnout so far: early voters ÷ registered voters':'Turnout so far minus turnout on the same day in 2022 (points)';
  document.getElementById('key').innerHTML=mview=='to'?'<div class="t">Turnout so far · six equal-size groups of counties (set on the latest day)</div><div class="sw">'+GREENS.map(c=>'<span style="background:'+c+'"></span>').join('')+'</div><div class="lb">'+lab.map(l=>'<span>'+l+'</span>').join('')+'</div>':'<div class="t">Change vs. same day 2022, in points · orange = behind 2022, purple = ahead</div><div class="sw">'+PUOR.map(c=>'<span style="background:'+c+'"></span>').join('')+'</div><div class="lb">'+dlab.map(l=>'<span>'+l+'</span>').join('')+'</div>';
- const tx=A('texas'),x=Dy('texas');document.getElementById('mapnote').innerHTML='Statewide, <b>'+num(x.ev)+'</b> of '+num(tx.reg)+' registered voters (<b>'+pct(turn('texas'))+'</b>) have voted early through '+md(DATA.meta.days[day-1])+(filling()?' (this day is still filling in)':'')+'. '+(mview=='to'?'Darker green = a larger share of the county has voted.':'Purple = more of the county has voted than at this point in 2022; orange = less.')+' '+(printing?'':'Press ▶ Play to watch the days fill in; click any county for all of its numbers.');
+ const tx=A('texas'),x=Dy('texas');document.getElementById('mapnote').innerHTML='Statewide, <b>'+num(x.ev)+'</b> of '+num(tx.reg)+' registered voters (<b>'+pct(turn('texas'))+'</b>) have voted early through '+md(DATA.meta.days[day-1])+(filling()?' (this day is still filling in)':'')+'. '+(mview=='to'?'Darker green = a larger share of the county has voted.':'Purple = more of the county has voted than at this point in 2022; orange = less.')+' '+(printing?'':'Press Play to watch the days fill in; click any county for all of its numbers.');
 }
 function pick(a){area=a;stop();render();if(innerWidth<900)document.getElementById('panel').scrollIntoView({behavior:'smooth'})}
 function search(){const q=document.getElementById('q'),ul=document.getElementById('sugg');let opts=[],sel=0;

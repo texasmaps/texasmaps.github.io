@@ -136,7 +136,7 @@ footer{max-width:1180px;margin:0 auto;padding:var(--s4);font-size:var(--fs-tiny)
 <section class="statecard" id="statecard" aria-label="Statewide numbers"></section>
 <div class="bar"><div class="in">
  <div class="search"><input id="q" type="search" autocomplete="off" placeholder="Search a county, a precinct (Dallas 3805) or an address" role="combobox" aria-expanded="false" aria-controls="sugg" aria-autocomplete="list" aria-label="Search a county, precinct or address"><ul class="sugg" id="sugg" role="listbox"></ul></div>
- <div class="days"><button class="btn" id="play" aria-label="Play the days of early voting">▶ Play</button><input type="range" id="day" min="0" max="0" value="0" aria-label="Day of early voting"><span class="d tnum" id="dlabel"></span></div>
+ <div class="days"><button class="btn" id="play" aria-label="Play the days of early voting">Play</button><input type="range" id="day" min="0" max="0" value="0" aria-label="Day of early voting"><span class="d tnum" id="dlabel"></span></div>
  <div class="msg" id="msg" role="status" aria-live="polite"></div>
 </div></div>
 <main id="grid">
@@ -409,7 +409,7 @@ function watchSize(){if(!window.ResizeObserver)return;let lw=0;new ResizeObserve
 function initPmap(){pmap=L.map("pmap",{zoomSnap:0.25,zoomControl:false,maxZoom:17,attributionControl:true});L.control.zoom({position:"topleft"}).addTo(pmap);if(!window.ResizeObserver)setInterval(tryFit,400);pmap.attributionControl.setPrefix("");pmap.createPane("sites");pmap.getPane("sites").style.zIndex=660;pmap._base=addBase(pmap);pmap.on("zoomend",()=>{if(view==="shift")drawArrows();});}
 /* ---------- day ---------- */
 function setDay(i){day=Math.max(0,Math.min(DAYS.length-1,i));$("day").value=day;$("dlabel").innerHTML="Day "+(day+1)+" · "+S.md[DAYS[day]]+(filling()?FILLCHIP:"");paintState();paintLeft();if(county&&DATA[county]&&S.counties[county].status!=="updating"){$("chead").textContent=chead(county);paintStrip(county);paintPrecincts();paintBelow();if(pinned)showCard(pinned);}saveHash();}
-function play(){const b=$("play");if(timer){clearInterval(timer);timer=null;b.textContent="▶ Play";return;}b.textContent="❚❚ Pause";if(day>=DAYS.length-1)setDay(0);timer=setInterval(()=>{if(day>=DAYS.length-1){clearInterval(timer);timer=null;b.textContent="▶ Play";return;}setDay(day+1);},1200);}
+function play(){const b=$("play");if(timer){clearInterval(timer);timer=null;b.textContent="Play";return;}b.textContent="Pause";if(day>=DAYS.length-1)setDay(0);timer=setInterval(()=>{if(day>=DAYS.length-1){clearInterval(timer);timer=null;b.textContent="Play";return;}setDay(day+1);},1200);}
 /* ---------- links ---------- */
 function saveHash(){const h=new URLSearchParams();if(county)h.set("county",county);if(county&&view!=="chase")h.set("view",view);if(pinned)h.set("precinct",pinned);if(day!==DAYS.length-1)h.set("day",DAYS[day]);if(mview!=="to")h.set("map","d22");const s=h.toString();history.replaceState(null,"",s?"#"+s:location.pathname+location.search);}
 function copyLink(){saveHash();const u=location.href;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>say("Link copied. It reopens this county, view, precinct and day."),()=>say("Copy this link: "+u));}
