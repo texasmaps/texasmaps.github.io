@@ -15,7 +15,7 @@ Every map's title shows how much data it rests on, for example "Through Oct 21: 
 - **Grey** = fewer than 500 votes.
 - **Lighter shading** = projected mostly from history; little of this year's vote is in.
 - **Outline** = on the watch list of close counties.
-- **Small symbol** = the leader flips depending on whether the model starts from 2022 or 2024.
+- **Small symbol (diamond)** = the projected winner differs between the four readings shown in the county hover (headline, if the polls caught the surge, if the polls missed the surge, if 2022 repeats).
 
 ## Ratings (same scale everywhere)
 | Rating | Chance the leader wins |
@@ -28,13 +28,13 @@ Every map's title shows how much data it rests on, for example "Through Oct 21: 
 
 ---
 
-## Texas Early Vote Snapshot: seven views
+## Texas Early Vote Snapshot: ten views
 
 1. **Close Counties** (default)
    - **Color:** who leads, deeper for more confidence.
    - **Labels:** outlined counties carry their projected margin and odds, for example "Hinojosa +2.4 · 62%."
    - **Use it to:** see which counties could decide a tight race and which way each is tipping.
-2. **Final Projection:** each county's projected final margin, out of all votes. This is the bottom line for each county.
+2. **Headline:** each county's projected final margin, out of all votes, with each run drawing how much of this year's turnout gain the polls missed. This is the bottom line for each county. The next three tabs show the same map if the polls caught the surge, if they missed it, and if 2022 repeats.
 3. **Early Vote Lean:** the estimated split among people who have already voted. Early voters often lean more Democratic than Election Day voters, so a blue early vote can still end red.
 4. **Early Vote Lead Odds:** the chance Hinojosa leads each county's early vote. 50% is even, toward 100% she likely leads, toward 0% Abbott likely does.
 5. **Who's Voting:** the early-voter mix by primary history. Real data, no modeling. It shows which party's habitual voters are showing up.
