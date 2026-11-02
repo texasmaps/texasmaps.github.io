@@ -1,3 +1,0 @@
-# Where things stand, through Oct 30 (day 12)
-
-The early vote so far leans Hinojosa, at an estimated 51.2% of the Hinojosa-vs-Abbott vote among the 7,673,191 early votes so far (voters on the state's lists, in person and mail; the state's posted total is 7,716,720). In 1 county the posted count differs from the voter list by more than a tenth (Waller); it keeps its rating on the list and the gap is flagged in the hover. The model projects Hinojosa ahead statewide by about 0.4 points. That gap narrowed from 1.0 points after day 1 to 0.4 after day 12. Hinojosa wins in 52% of the 10,000 runs, and 8 in 10 runs land between Abbott +6.6 and Hinojosa +7.5, so the race remains close. Model estimate from public data, not a vote count.
